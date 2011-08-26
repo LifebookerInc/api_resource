@@ -16,6 +16,7 @@ group :development do
   gem 'rspec-rails'
   gem 'factory_girl'
   gem 'simplecov'
+  gem 'faker'
   gem 'guard'
   gem 'guard-rspec'
   gem 'mocha'

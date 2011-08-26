@@ -8,10 +8,15 @@ module ApiResource
     # Redefine these methods to 
     included do
       %w( create save update destroy ).each do |method|
-        class_eval <<-EOE, __FILE__, __LINE__ + 1
-          def #{method}(*args, &block)
+        alias_method_chain method, :observers
+    end
+    
+    module InstanceMethods
+      %w( create save update destroy ).each do |method|
+        module_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{method}_with_observers(*args)
             notify_observers(:before_#method)
-            if result = super
+            if result = #{method}_without_observers(*args)
               notify_observers(:after_#{method})
             end
             return result

@@ -66,12 +66,10 @@ module ApiResource
     def put(path, body = {}, headers = {})
       # If there's a file to send then we can't use JSON or XML
       if !body.is_a?(String) && RestClient::Payload.has_file?(body)
-        request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path)))
+        format.decode(request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path))))
       else
-        request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path)))
+        format.decode(request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path))))
       end
-      # unless there's an error this succeeded
-      return true
     end
     
     def post(path, body = {}, headers = {})

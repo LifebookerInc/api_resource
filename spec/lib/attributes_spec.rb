@@ -10,13 +10,13 @@ describe "Attributes" do
   
   context "Defining, getting, and setting attributes" do
     it "should be able to define known attributes" do
-      TestResource.known_attributes :attr1, :attr2
+      TestResource.define_attributes :attr1, :attr2
       TestResource.attribute?(:attr1).should be_true
       TestResource.attribute?(:attr2).should be_true
     end
     
     it "should define methods for testing for reading and writing known attributes" do
-      TestResource.known_attributes :attr1, :attr2
+      TestResource.define_attributes :attr1, :attr2
       tst = TestResource.new
       tst.respond_to?(:attr1).should be_true
       tst.respond_to?(:attr1=).should be_true
@@ -24,7 +24,7 @@ describe "Attributes" do
     end
     
     it "should be able to set and change attributes" do
-      TestResource.known_attributes :attr1, :attr2
+      TestResource.define_attributes :attr1, :attr2
       tst = TestResource.new
       tst.attr1.should be_nil
       tst.attr1?.should be_false
@@ -36,7 +36,7 @@ describe "Attributes" do
   
   context "Protected attributes" do
     it "should allow protected attributes that cannot be changed" do
-      TestResource.protected_attributes :pattr3
+      TestResource.define_protected_attributes :pattr3
       lambda {
         tst = TestResource.new
         tst.attr3 = "test"
@@ -47,7 +47,7 @@ describe "Attributes" do
   context "Dirty tracking" do
     context "Changes to attributes" do
       it "should implement dirty tracking for attributes" do
-        TestResource.known_attributes :attr1, :attr2
+        TestResource.define_attributes :attr1, :attr2
         tst = TestResource.new
         tst.changed.should be_blank
         tst.attr1 = "Hello"
@@ -64,7 +64,7 @@ describe "Attributes" do
     context "Resetting and marking attributes current" do
       
       before(:each) do
-        TestResource.known_attributes :attr1, :attr2
+        TestResource.define_attributes :attr1, :attr2
       end
       
       it "should be able to mark any list of attributes as current (unchanged)" do

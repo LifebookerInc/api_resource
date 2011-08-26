@@ -35,7 +35,8 @@ module ApiResource
             raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
             args.each do |arg|
               self.related_objects[:#{assoc}][arg.to_sym] = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
-              # We don't need to also define methods here because attributes takes care of that at load time
+              # We need to define reader and writer methods here
+              define_association_as_attribute(:#{assoc}, arg)
             end
           end
           
@@ -58,6 +59,12 @@ module ApiResource
       def scope(name, hsh)
         raise ArgumentError, "Expecting an attributes hash given #{hsh.inspect}" unless hsh.is_a?(Hash)
         self.related_objects[:scope][name.to_sym] = hsh
+        # we also need to define a class method for each scope
+        self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{name}(opts = {})
+            return ApiResource::Associations::ResourceScope.new(self, :#{name}, opts)
+          end
+        EOE
       end
       
       def scope?(name)
@@ -71,6 +78,7 @@ module ApiResource
       
       def association?(assoc)
         self.related_objects.any? do |key, value|
+          next if key.to_s == "scope"
           value.detect { |k,v| k.to_sym == assoc.to_sym }
         end
       end
@@ -81,6 +89,38 @@ module ApiResource
           ret = value.detect{|k,v| k.to_sym == assoc.to_sym }
           return ret[1] if ret
         end
+      end
+      
+      def clear_associations
+        self.related_objects.each do |_, val|
+          val.clear
+        end
+      end
+      
+      protected
+      def define_association_as_attribute(assoc_type, assoc_name)
+        define_attributes assoc_name
+        case assoc_type.to_sym
+          when :has_many
+            self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+              def #{assoc_name}
+                self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.class.to_s, nil)
+              end
+            EOE
+          else
+            self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+              def #{assoc_name}
+                self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.class.to_s, nil)
+              end
+            EOE
+        end
+        # Always define the setter the same
+        self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{assoc_name}=(val)
+            #{assoc_name}_will_change! unless self.#{assoc_name}.internal_object == val
+            self.#{assoc_name}.internal_object = val
+          end
+        EOE
       end
       
     end
@@ -121,162 +161,241 @@ module ApiResource
       end
       
     end
-    
-    class RelationScope
-      
-      include Enumerable
-      
-      attr_accessor :association_proxy, :current_scope
-      
-      attr_reader :scopes, :results
-      
-      def initialize(proxy, current_scope, opts)
-        # Give it something to point to
-        @association_proxy = proxy
-        # Set up the current scope
+
+    class Scope
+
+      attr_accessor :klass, :current_scope, :internal_object
+
+      attr_reader :scopes
+
+      def initialize(klass, current_scope, opts)
+        # Holds onto the association proxy this RelationScope is bound to
+        @klass = klass
         @current_scope = Array.wrap(current_scope.to_s)
-        
-        # define methods for all the scopes
-        proxy.scopes.each do |key,val|
+        # define methods for the scopes of the object
+
+        klass.scopes.each do |key, val|
           self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
+            # This class always has at least one scope, adding a new one should clone this object
             def #{key}(opts = {})
-              self.enhance_current_scope(:#{key}, opts)
-              return self
+              obj = self.clone
+              # Call reload to make it go back to the webserver the next time it loads
+              obj.reload
+              obj.enhance_current_scope(:#{key}, opts)
+              return obj
             end
           EOE
           self.scopes[key.to_s] = val
         end
-        # This class needs to know about all the scopes of the proxy for chaining
-        self.scopes[@current_scope] = self.scopes[current_scope].merge(opts)
+        # Use the method current scope because it gives a string
+        # This expression substitutes the options from opts into the default attributes of the scope, it will only copy keys that exist in the original
+        self.scopes[self.current_scope] = opts.inject(self.scopes[current_scope]){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum}
       end
 
-      # Force a load of the current scope and return the results
-      def all
-        @results = self.association_proxy.load_scope_with_options(@current_scope, self.scopes[@current_scope])
+      # Use this method to access the internal data, this guarantees that loading only occurs once per object
+      def internal_object
+        raise "Not Implemented: This method must be implemented in a subclass"
       end
-      
-      # Iterate over the collection
-      def each(&block)
-        self.association_proxy.load_scope_with_options(@current_scope, self.scopes[@current_scope]).each
-      end
-      
-      # Helper methods for the scopes
+
       def scopes
         @scopes ||= {}.with_indifferent_access
       end
-      
+
       def scope?(scp)
-        self.scopes.keys.include?(scp.to_s)
+        self.scopes.key?(scp.to_s)
       end
-      
+
       def current_scope
-        ActiveSupport::StringInquirer.new(@current_scope.join("_and_"))
+        ActiveSupport::StringInquirer.new(@current_scope.join("_and_").concat("_scope"))
       end
-      
-      # Current query string to append to the request
-      def query_string
-        self.scopes[@current_scope].to_query
+
+      def to_query
+        self.scopes[self.current_scope].to_query
       end
-      
+
       def method_missing(method, *args, &block)
-        # proxy calls to the results object whatever that may be, calling results forces it to load
-        self.association_proxy.load_scope_with_options(@current_scope, self.scopes[@current_scope]).send(method, *args, &block)
+        self.internal_object.send(method, *args, &block)
+      end
+
+      def reload
+        remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
+        self
+      end
+
+      def to_s
+        self.internal_object.to_s
       end
       
-      # Enhance the current scope of this class with a new scope
+      def inspect
+        self.internal_object.inspect
+      end
+
       protected
-      def enhance_current_scope(scp, opts)
-        scp = scp.to_s
-        raise "Unknown scope #{scp}" unless self.scope?(scp)
-        # We now create a new scope from the other names
-        # First we make them unique and sort them so that order doesn't matter
-        current_scope_hash = self.scopes[@current_scope]
-        @current_scope = @current_scope.concat([scp.to_s]).uniq.sort
-        self.scopes[@current_scope] = current_scope_hash.merge(self.scopes[scp].merge(opts.select{|item| self.scopes[scp.to_s].include?(item.to_s)}))
+        def enhance_current_scope(scp, opts)
+          scp = scp.to_s
+          raise ArgumentError, "Unknown scope #{scp}" unless self.scope?(scp)
+          # Hold onto the attributes related to the old scope that we're going to chain to
+          current_scope_hash = self.scopes[self.current_scope]
+          # This sets the new current scope making them unique and sorted to make it order independent
+          @current_scope = @current_scope.concat([scp.to_s]).uniq.sort
+          # This sets up the new options for the current scope, it merges the defaults for the new scope then substitutes from opts
+          self.scopes[self.current_scope] = opts.inject(current_scope_hash.merge(self.scopes[scp.to_s])){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum }
+        end
+    end
+
+    class RelationScope < Scope
+
+      def reload
+        remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
+        self.klass.reload(self.current_scope, self.scopes[self.current_scope])
+        self
+      end
+
+      # Use this method to access the internal data, this guarantees that loading only occurs once per object
+      def internal_object
+        @internal_object ||= self.klass.send(:load_scope_with_options, self.current_scope, self.scopes[self.current_scope])
+      end
+
+    end
+
+    class ResourceScope < Scope
+      
+      include Enumerable
+
+      def internal_object
+        @internal_object ||= self.klass.send(:find, :all, :params => self.scopes[self.current_scope])
       end
       
+      alias_method :all, :internal_object
+      
+      def each(*args, &block)
+        self.internal_object.each(*args, &block)
+      end
+
     end
-    
-    # A class for holding onto associated data
+
     class AssociationProxy
-      
-      cattr_accessor :remote_path_element
-      
-      self.remote_path_element ||= :service_uri
-      
-      class_inheritable_accessor :include_class_scopes
-      
-      self.include_class_scopes ||= true
-      
-      attr_accessor :loaded, :klass, :internal_object, :remote_path, :scopes
-      
+
+      cattr_accessor :remote_path_element; self.remote_path_element = :service_uri
+      cattr_accessor :include_class_scopes; self.include_class_scopes = true
+
+      attr_accessor :loaded, :klass, :internal_object, :remote_path, :scopes, :times_loaded
+
       def initialize(klass_name, contents)
         raise "Cannot create an association proxy to the unknown object #{klass_name}" unless defined?(klass_name.to_s.classify)
+        # A simple attr_accessor for testing purposes
+        self.times_loaded = 0
         self.klass = klass_name.to_s.classify.constantize
         self.load(contents)
-        self.loaded = {}
-        self.scopes[:all] = {}
-        @current_scope = [:all]
-        # When loading identify scopes defined by the class this is a proxy too
+        self.loaded = {}.with_indifferent_access
         if self.class.include_class_scopes
           self.scopes = self.scopes.reverse_merge(self.klass.scopes)
         end
+        # Now that we have set up all the scopes with the load method we need to create methods
+        self.scopes.each do |key, _|
+          self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{key}(opts = {})
+              ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
+            end
+          EOE
+        end
       end
-      
-      # Helper methods for the scopes
+
+      def serializable_hash(options = {})
+        raise "Not Implemented: This method must be implemented in a subclass"
+      end
+
       def scopes
         @scopes ||= {}.with_indifferent_access
       end
-      
+
       def scope?(scp)
         self.scopes.keys.include?(scp.to_s)
       end
+
+      def internal_object
+        @internal_object ||= self.load_scope_with_options(:all, {})
+      end
+
+      def method_missing(method, *args, &block)
+        self.internal_object.send(method, *args, &block)
+      end
+
+      def reload(scope =  nil, opts = {})
+        if scope.nil?
+          self.loaded.clear
+          self.times_loaded = 0
+          # Remove the loaded object to force it to reload
+          remove_instance_variable(:@internal_object)
+        else
+          # Delete this key from the loaded hash which will cause it to be reloaded
+          self.loaded.delete(self.loaded_hash_key(scope, opts))
+        end
+        self
+      end
       
+      def to_s
+        self.internal_object.to_s
+      end
+      
+      def inspect
+        self.internal_object.inspect
+      end
+
+      protected
+      # This method loads a particular scope with a set of options from the remote server
+      def load_scope_with_options(scope, options)
+        raise "Not Implemented: This method must be implemented in a subclass"
+      end
+      # This method is a helper to initialize for loading the data passed in to create this object
       def load(contents)
         raise "Not Implemented: This method must be implemented in a subclass"
       end
-      
-      def method_missing(method, *args, &block)
-        # calling load scope with options will only do the loading one time
-        self.load_scope_with_options([:all], {}).send(method, *args, &block)
+
+      # This method create the key for the loaded hash, it ensures that a unique set of scopes
+      # with a unique set of options is only loaded once
+      def loaded_hash_key(scope, options)
+        options.to_a.sort.inject(scope) {|accum,(k,v)| accum << "_#{k}_#{v}"}
       end
-      
-      def load_scope_with_options(scope, options)
-        raise "Not implemented: This method must be implemented in a subclass"
-      end
-      
-    end  
-  
+    end
+
     class SingleObjectProxy < AssociationProxy
-      
+
       def serializable_hash(options = {})
         self.internal_object.serializable_hash(options)
       end
-      
-      def load_scope_with_options(scope, options)
-        # If there is no service uri raise an error
-        raise "Cannot load scopes on an object without a remote path" if self.remote_path.blank?
-        unless self.loaded[scope]
-          self.loaded[scope] = self.klass.connection.get("#{self.remote_path}.#{self.klass.format.extension}#{options.to_query}")
-        end
-        @internal_object = self.klass.new(self.loaded[scope])
-      end
-       
+
       protected
+      def load_scope_with_options(scope, options)
+        scope = self.loaded_hash_key(scope.to_s, options)
+        # If the service uri is blank you can't load
+        return nil if self.remote_path.blank?
+        unless self.loaded[scope]
+          self.times_loaded += 1
+          self.loaded[scope] = self.klass.connection.get("#{self.remote_path}.#{self.klass.format.extension}?#{options.to_query}")
+        end
+        self.klass.new(self.loaded[scope])
+      end
+
       def load(contents)
+        # If we get something nil this should just behave like nil
+        return if contents.nil?
         raise "Expected an attributes hash got #{contents}" unless contents.is_a?(Hash)
-        # We need to think of a good way to tell if this is defining scopes or attributes
-        return self.internal_object = self.klass.new(contents) unless contents[self.class.remote_path_element]
-        # We have a remote path so take anything that is not a known attribute of this class and make that a scope
-        self.remote_path = contents.delete(self.class.remote_path_element)
-        
+        # If we don't have a 'service_uri' just assume that these are all attributes and make an object
+        return @internal_object = self.klass.new(contents) unless contents[self.class.remote_path_element]
+        # allow for symbols vs strings with these elements
+        self.remote_path = contents.delete(self.class.remote_path_element) || contents.delete(self.class.remote_path_element.to_s)
+        # There's only one hash here so it's hard to distinguish attributes from scopes, the key scopes_only says everything
+        # in this hash is a scope
         no_attrs = (contents.delete("scopes_only") || contents.delete(:scopes_only) || false)
         attrs = {}
-        contents.each do |key,val|
-          if self.klass.attribute_names.include?(key.to_sym) && !no_attrs
+        contents.each do |key, val|
+          # if this key is an attribute add it to attrs, warn if we've set scopes_only
+          if self.klass.attribute_names.include?(key) && !no_attrs
             attrs[key] = val
           else
-            raise "Expected the scope #{key} to point to a hash, got #{val}" unless val.is_a?(Hash)
+            warn("#{key} is an attribute of #{self.klass}, beware of name collisions") if no_attrs && self.klass.attribute_names.include?(key)
+            raise "Expected the scope #{key} to have a hash for a value, got #{val}" unless val.is_a?(Hash)
             self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
               def #{key}(opts = {})
                 ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
@@ -285,55 +404,57 @@ module ApiResource
             self.scopes[key.to_s] = val
           end
         end
-        
-        self.internal_object = self.klass.new(attrs)
+        @internal_object = attrs.present? ? self.klass.new(attrs) : nil
       end
-        
-    
     end
-  
+
     class MultiObjectProxy < AssociationProxy
-      
-      # Call all to load the objects
+
+      include Enumerable
+
       def all
-        return self.load_scope_with_options([:all], {})
+        self.internal_object
       end
-      
-      def each(&block)
-        self.load_scope_with_options([:all], {}).each
+
+      def each(*args, &block)
+        self.internal_object.each(*args, &block)
       end
-      
-      def serializable_hash(options = {})
+
+      def serializable_hash(options)
         self.internal_object.collect{|obj| obj.serializable_hash(options) }
       end
-      
-      # This should be a collection
-      def load_scope_with_options(scope, options)
-        # If there is no service uri raise an error
-        raise "Cannot load scopes on an object without a remote path" if self.remote_path.blank?
-        unless self.loaded[scope]
-          self.loaded[scope] = self.klass.connection.get("#{self.remote_path}.#{self.klass.format.extension}#{options.to_query}")
-        end
-        @internal_object = self.loaded[scope].collect{|item| self.klass.new(item)}
+
+      # force a load when calling this method
+      def internal_object
+        @internal_object ||= self.load_scope_with_options(:all, {})
       end
-      
+
       protected
+      def load_scope_with_options(scope, options)
+        scope = self.loaded_hash_key(scope.to_s, options)
+        return [] if self.remote_path.blank?
+        unless self.loaded[scope]
+          self.times_loaded += 1
+          self.loaded[scope] = self.klass.connection.get("#{self.remote_path}.#{self.klass.format.extension}?#{options.to_query}")
+        end
+        self.loaded[scope].collect{|item| self.klass.new(item)}
+      end
+
       def load(contents)
-        # we need to handle blank arrays too so account for them
-        self.internal_object = [] and return if contents.is_a?(Array) && contents.blank?
+        # If we have a blank array or it's just nil then we should just return after setting internal_object to a blank array
+        @internal_object = [] and return nil if (contents.is_a?(Array) && contents.blank?) || contents.nil?
         if contents.is_a?(Array) && contents.first.is_a?(Hash) && contents.first[self.class.remote_path_element]
           settings = contents.slice!(0).with_indifferent_access
         end
-        
+
         settings = contents if contents.is_a?(Hash)
-        settings ||= {}
-        
-        raise "Invalid response for multi object relationship: #{contents}" unless (contents.is_a?(Hash) && contents[self.class.remote_path_element].present?) || !settings.blank?
-        
+        settings ||= {}.with_indifferent_access
+
+        raise "Invalid response for multi object relationship: #{contents}" unless settings[self.class.remote_path_element] || contents.is_a?(Array)
         self.remote_path = settings.delete(self.class.remote_path_element)
 
         settings.each do |key, value|
-          raise "Expected the scope #{key} to point to a hash, got #{value}" unless value.is_a?(Hash)
+          raise "Expected the scope #{key} to point to a hash, to #{value}" unless value.is_a?(Hash)
           self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{key}(opts = {})
               ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
@@ -341,9 +462,9 @@ module ApiResource
           EOE
           self.scopes[key.to_s] = value
         end
-        
-        # Lastly create object for anything passed back from the server
-        self.internal_object = contents.is_a?(Array) ? contents.collect{|item| self.klass.new(item)} : []
+
+        # Create the internal object
+        @internal_object = contents.is_a?(Array) ? contents.collect{|item| self.klass.new(item)} : nil
       end
     end
   end

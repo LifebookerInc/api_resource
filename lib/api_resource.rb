@@ -15,6 +15,7 @@ module ApiResource
   autoload :Associations
   autoload :Attributes
   autoload :Base
+  autoload :Callbacks
   autoload :Connection
   autoload :CustomMethods
   autoload :Formats

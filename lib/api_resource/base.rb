@@ -6,9 +6,11 @@ module ApiResource
   
   class Base
     
-    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :ssl_options, :include_root_in_json
+    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :ssl_options
     
-    self.include_root_in_json = true
+    class_inheritable_accessor :include_root_in_json; self.include_root_in_json = true
+    class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
+    class_inheritable_accessor :include_all_attributes_on_update; self.include_blank_attributes_on_create = false
     
     attr_accessor_with_default :primary_key, 'id'
     
@@ -40,13 +42,18 @@ module ApiResource
       def set_class_attributes_upon_load
         begin
           class_data = self.connection.get(self.new_element_path)
-          # Define the scopes first
+          # Attributes go first
+          if class_data["attributes"]
+            define_attributes *(class_data["attributes"]["public"] || [])
+            define_protected_attributes *(class_data["attributes"]["protected"] || [])
+          end
+          # Then scopes
           if class_data["scopes"]
             class_data["scopes"].each do |hash|
               self.scope hash.first[0], hash.first[1]
             end
           end
-          
+          # Then associations
           if class_data["associations"]
             class_data["associations"].each do |(key,hash)|
               hash.each do |assoc_name, assoc_options|
@@ -54,11 +61,7 @@ module ApiResource
               end
             end
           end
-
-          if class_data["attributes"]
-            known_attributes *(class_data["attributes"]["public"] || [])
-            protected_attributes *(class_data["attributes"]["protected"] || [])
-          end
+        # Swallow up any loading errors because the site may be incorrect
         rescue Exception => e
           return nil
         end
@@ -66,15 +69,17 @@ module ApiResource
 
       def reload_class_attributes
         # clear the public_attribute_names, protected_attribute_names
-        self.public_attribute_names.clear
-        self.protected_attribute_names.clear
-        self.scopes.clear
-        self.attribute_names.clear
+        self.clear_attributes
+        self.clear_associations
         self.set_class_attributes_upon_load
       end
 
       def site=(site)
         @connection = nil
+        # reset class attributes and try to reload them if the site changed
+        unless site.to_s == self.site.to_s
+          self.reload_class_attributes
+        end
         if site.nil?
           write_inheritable_attribute(:site, nil)
         else
@@ -350,11 +355,11 @@ module ApiResource
     end
     
     def save!(*args)
-      save || raise(ApiResource::ResourceInvalid.new(self))
+      save(*args) || raise(ApiResource::ResourceInvalid.new(self))
     end
     
     def destroy
-      connection.delete(element_path, self.class.headers)
+      connection.delete(element_path(self.id), self.class.headers)
     end
     
     def encode(options = {})
@@ -366,11 +371,13 @@ module ApiResource
     end
     
     def load(attributes)
+      return if attributes.nil?
       raise ArgumentError, "expected an attributes Hash, got #{attributes.inspect}" unless attributes.is_a?(Hash)
       @prefix_options, attributes = split_options(attributes)
      
       attributes.symbolize_keys.each do |key, value|
-        self.temporary_attributes(key) unless self.attribute?(key)
+        # If this attribute doesn't exist define it as a protected attribute
+        self.class.define_protected_attributes(key) unless self.respond_to?(key)
         self.attributes[key] =
         case value
           when Array
@@ -404,6 +411,16 @@ module ApiResource
       return self
     end
     
+    # Override to_s and inspect so they only show attributes
+    # and not associations, this prevents force loading of associations
+    # when we call to_s or inspect on a descendent of base but allows it if we 
+    # try to evaluate an association directly
+    def to_s
+      return "#<#{self.class}:0x%08x @attributes=#{self.attributes.inject({}){|accum,(k,v)| self.association?(k) ? accum : accum.merge(k => v)}}" % (self.object_id * 2)
+    end
+    
+    alias_method :inspect, :to_s
+    
     # Methods for serialization as json or xml, relying on the serializable_hash method
     def to_xml(options = {})
       self.serializable_hash(options).to_xml(:root => self.class.element_name)
@@ -414,30 +431,21 @@ module ApiResource
     end
     
     def serializable_hash(options = {})
-      options[:include_root] ||= true
       options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : []
       options[:include_extras] = options[:include_extras] ? options[:include_extras].symbolize_array : []
       options[:except] ||= []
       ret = self.attributes.inject({}) do |accum, (key,val)|
-        # If this is an association and
-        if options[:except].include?(key.to_sym)
+        # If this is an association and it's in include_associations then include it
+        if self.association?(key) && options[:include_associations].include?(key.to_sym)
+          accum.merge(key => val.serializable_hash({}))
+        elsif options[:include_extras].include?(key.to_sym)
+          accum.merge(key => val)
+        elsif options[:except].include?(key.to_sym)
           accum
-        elsif self.association?(key) && !(options[:include_associations] && options[:include_associations].include?(key.to_sym)) && !options[:exclude_associations]
-          accum
-        elsif val.respond_to?(:serializable_hash)
-          accum.merge(key => val.serializable_hash(:include_root => false, :exclude_associations => true))
         else
-          # This is the case for extra attributes
-         # debugger
-          if self.class.attribute_names.include?(key.to_sym) || options[:include_extras].include?(key.to_sym)
-            accum.merge(key => val)
-          else
-            accum
-          end
+          self.association?(key) || !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
       end
-      
-      return ret
     end
     
     protected
@@ -463,12 +471,13 @@ module ApiResource
     
     def create(*args)
       opts = args.extract_options!
-      # When we create we should not include any blank attributes
-      except = self.attributes.select{|k,v| v.blank?}
+      # When we create we should not include any blank attributes unless they are associations
+      except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
       opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
       opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
       opts[:include_extras] ||= []
-      connection.post(collection_path, encode(opts), self.class.headers).tap do |response|
+      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+      connection.post(collection_path, body, self.class.headers).tap do |response|
         load_attributes_from_response(response)
       end
     end
@@ -477,11 +486,14 @@ module ApiResource
       opts = args.extract_options!
       # When we create we should not include any blank attributes
       except = self.class.attribute_names - self.changed.symbolize_array
-      opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
+      changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
+      opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
+      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
       opts[:include_extras] ||= []
-      
-      connection.put(element_path(prefix_options), encode(opts), self.class.headers).tap do |response|
+      opts[:except] = [:id] if self.class.include_all_attributes_on_update
+      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+      # We can just ignore the response
+      connection.put(element_path(self.id, prefix_options), body, self.class.headers).tap do |response|
         load_attributes_from_response(response)
       end
     end
@@ -494,10 +506,11 @@ module ApiResource
     
   end
   
-  
   class Base
     extend ActiveModel::Naming
-    include Associations, Attributes, ModelErrors
+    # Order is important here
+    # It should be Validations, Dirty Tracking, Callbacks so the include order is the opposite
+    include Associations, Callbacks, Attributes, ModelErrors
     
   end
   

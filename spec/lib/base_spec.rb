@@ -34,7 +34,7 @@ describe "Base" do
     end
     context "Attributes" do
       before(:all) do
-        TestResource.known_attributes :attr1, :attr2
+        TestResource.define_attributes :attr1, :attr2
       end
     
       it "should set attributes for the data loaded from a hash" do
@@ -45,13 +45,13 @@ describe "Base" do
         tst.attr1.should eql("test")
       end
     
-      it "should create attribute methods on this instance for unknown attributes trying to be loaded" do
+      it "should create protected attributes for unknown attributes trying to be loaded" do
         tst = TestResource.new({:attr1 => "attr1", :attr3 => "attr3"})
         tst.attr3?.should be_true
         tst.attr3.should eql("attr3")
-        tst.attr3 = "test"
-        tst.attr3.should eql("test")
-        tst.attribute?(:attr3).should be_false
+        lambda {
+          tst.attr3 = "test"
+        }.should raise_error
       end
     end
     
@@ -164,7 +164,7 @@ describe "Base" do
     
     before(:all) do
       TestResource.has_many :has_many_objects
-      TestResource.known_attributes :attr1, :attr2
+      TestResource.define_attributes :attr1, :attr2
       TestResource.include_root_in_json = true
     end
     
@@ -273,6 +273,10 @@ describe "Base" do
     end
     
     context "Creating new records" do
+      
+      before(:all) do
+        TestResource.has_many :has_many_objects
+      end
     
       it "should be able to post new data via the create method" do
         tr = TestResource.create({:name => "Ethan", :age => 20})
@@ -285,46 +289,165 @@ describe "Base" do
         tr.id.should_not be_blank
       end
       
-      it "should be able to post data with a file in it"
+      context("Override create to return the json") do
+        
+        before(:all) do
+          TestResource.send(:alias_method, :old_create, :create)
+          TestResource.send(:alias_method, :old_save, :save)
+          
+          TestResource.send(:define_method, :create) do |*args|
+            opts = args.extract_options!
+            # When we create we should not include any blank attributes unless they are associations
+            except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
+            opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
+            opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
+            opts[:include_extras] ||= []
+            encode(opts)
+          end
+          TestResource.send(:define_method, :save) do |*args|
+            new? ? create(*args) : update(*args)
+          end
+        end
+        
+        after(:all) do
+          TestResource.send(:alias_method, :create, :old_create)
+          TestResource.send(:alias_method, :save, :old_save)
+        end
       
-      it "should be able to include associations when saving if they are specified"
+        it "should be able to include associations when saving if they are specified" do
+          tr = TestResource.build(:name => "Ethan", :age => 20)
+          hash = JSON.parse(tr.save)
+          hash['test_resource']['has_many_objects'].should be_nil
+          hash = JSON.parse(tr.save(:include_associations => [:has_many_objects]))
+          hash['test_resource']['has_many_objects'].should eql([])
+        end
       
-      it "should not include nil attributes when creating by default"
+        it "should not include nil attributes when creating by default" do
+          tr = TestResource.build(:name => "Ethan")
+          hash = JSON.parse(tr.save)
+          hash['test_resource']['age'].should be_nil
+          hash['test_resource']['name'].should eql("Ethan")
+        end
       
-      it "should include nil attributes when creating if include_nil_attributes_on_create is true"
+        it "should include nil attributes if they are passed in through the include_extras" do
+          tr = TestResource.build(:name => "Ethan")
+          hash = JSON.parse(tr.save(:include_extras => [:age]))
+          hash['test_resource'].key?('age').should be_true
+        end
+      
+        it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
+          TestResource.include_blank_attributes_on_create = true
+          tr = TestResource.build(:name => "Ethan")
+          hash = JSON.parse(tr.save)
+          hash['test_resource'].key?('age').should be_true
+          TestResource.include_blank_attributes_on_create = false
+        end
+      end
     end
     
     context "Updating old records" do
+      before(:all) do
+        TestResource.send(:alias_method, :old_update, :update)
+        TestResource.send(:alias_method, :old_save, :save)
+        
+        TestResource.send(:define_method, :update) do |*args|
+          opts = args.extract_options!
+          # When we create we should not include any blank attributes
+          except = self.class.attribute_names - self.changed.symbolize_array
+          changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
+          opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
+          opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
+          opts[:include_extras] ||= []
+          opts[:except] = [:id] if self.class.include_all_attributes_on_update
+          encode(opts)
+        end
+        TestResource.send(:define_method, :save) do |*args|
+          new? ? create(*args) : update(*args)
+        end
+      end
+    
+      after(:all) do
+        TestResource.send(:alias_method, :update, :old_update)
+        TestResource.send(:alias_method, :save, :old_save)
+      end
       
-      it "should be able to put updated data via the update method"
+      it "should be able to put updated data via the update method" do
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr.should_not be_new
+        # Thus we know we are calling update
+        tr.age = 6
+        hash = JSON.parse(tr.update)
+        hash['test_resource']['age'].should eql(6)
+        
+        hash = JSON.parse(tr.save)
+        hash['test_resource']['age'].should eql(6)
+      end
       
-      it "should be able to put updated data via the save method"
+      it "should only include changed attributes when updating" do
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr.should_not be_new
+        # Thus we know we are calling update
+        tr.age = 6
+        hash = JSON.parse(tr.save)
+        hash['test_resource']['name'].should be_nil
+      end
       
-      it "should be able to put data with a file in it"
+      it "should include changed associations without specification" do
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr.has_many_objects = [TestResource.new]
+        hash = JSON.parse(tr.save)
+        hash['test_resource']['has_many_objects'].should_not be_blank
+      end
       
-      it "should only include changed attributes when updating"
+      it "should include unchanged associations if they are specified" do
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        hash = JSON.parse(tr.save(:has_many_objects))
+        hash['test_resource']['has_many_objects'].should eql([])
+      end
       
-      it "should include changed associations without specification"
-      
-      it "should include unchanged associations if they are specified"
+      it "should include all attributes if include_all_attributes_on_update is true" do
+        TestResource.include_all_attributes_on_update = true
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        hash = JSON.parse(tr.save)
+        hash['test_resource']['name'].should eql("Ethan")
+        hash['test_resource'].key?('age').should be_true
+        TestResource.include_all_attributes_on_update = false
+      end
       
     end
   
   end
   
   describe "Deleting data" do
-    it "should be able to delete an id from the class method"
+    it "should be able to delete an id from the class method" do
+      TestResource.delete(1).should be_true
+    end
     
-    it "should be able to destroy itself as an instance"
+    it "should be able to destroy itself as an instance" do
+      tr = TestResource.new(:id => 1, :name => "Ethan")
+      tr.destroy.should be_true
+    end
   end
   
   describe "Random methods" do
     
-    it "should be able to save with save! or raise an error if it fails"
+    it "should know if it is persisted" do
+      tr = TestResource.new(:id => 1, :name => "Ethan")
+      tr.persisted?.should be_true
+      tr = TestResource.new(:name => "Ethan")
+      tr.persisted?.should be_false
+    end
     
-    it "should be able to duplicate itself with dup"
+  end
+  
+  describe "Inheritable Accessors" do
     
-    it "should know if it is persisted"
+    it "should copy the default values down to any level of subclass" do
+      class Child < TestResource; end
+      
+      Child.site.should eql(TestResource.site)
+      Child.site.should_not be_blank
+    end
     
   end
   

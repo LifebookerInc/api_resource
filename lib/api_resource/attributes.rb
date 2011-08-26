@@ -1,8 +1,9 @@
 module ApiResource
-  
+
   module Attributes
-    
+  
     extend ActiveSupport::Concern
+    include ActiveModel::AttributeMethods
     include ActiveModel::Dirty
     
     included do
@@ -13,49 +14,45 @@ module ApiResource
       
       attr_accessor :attributes
       
-      # Override the getter to initialize to a blank hash
-      self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-        def attributes
-          return @attributes if @attributes
-          @attributes = HashWithIndifferentAccess.new
-          self.class.attribute_names.each do |attr|
-            @attributes[attr] = nil
-          end
-          return @attributes
-        end
-      EOE
-      
       self.attribute_names = []
       self.public_attribute_names = []
       self.protected_attribute_names = []
+      
+      define_method(:attributes) do
+        return @attributes if @attributes
+        # Otherwise make the attributes hash of all the attributes
+        @attributes = HashWithIndifferentAccess.new
+        self.class.attribute_names.each do |attr|
+          @attributes[attr] = self.send("#{attr}")
+        end
+        @attributes
+      end
       
     end
     
     module ClassMethods
       
-      # Make a list of known attributes about this record
-      # and define getters and setters for all of them
-      def known_attributes(*args)
-        # Define the methods for dirty tracking for these attributes
+      def define_attributes(*args)
+        # This is provided by ActiveModel::AttributeMethods, it should define the basic methods
+        # but we need to override all the setters so we do dirty tracking
         define_attribute_methods args
         args.each do |arg|
-          # Define the getters and setters for this attribute
           self.attribute_names << arg.to_sym
           self.public_attribute_names << arg.to_sym
-          # Eval with a string is slower to define but faster to call, since this will
-          # only be defined once but called many times class_eval is our friend
+          
+          # Override the setter for dirty tracking
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{arg}
+              self.attributes[:#{arg}]
+            end
+          
             def #{arg}=(val)
               #{arg}_will_change! unless self.#{arg} == val
               self.attributes[:#{arg}] = val
             end
             
-            def #{arg}
-              self.attributes[:#{arg}]
-            end
-            
             def #{arg}?
-              !self.attributes[:#{arg}].nil?
+              self.attributes[:#{arg}].present?
             end
           EOE
         end
@@ -63,23 +60,25 @@ module ApiResource
         self.public_attribute_names.uniq!
       end
       
-      def protected_attributes(*args)
-        # no point in using dirty tracking these cannot be modified
+      def define_protected_attributes(*args)
+        define_attribute_methods args
         args.each do |arg|
           self.attribute_names << arg.to_sym
           self.protected_attribute_names << arg.to_sym
           
+          # These attributes cannot be set, throw an error if you try
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+
             def #{arg}
               self.attributes[:#{arg}]
             end
-            
-            def #{arg}?
-              !self.attributes[:#{arg}].nil?
+          
+            def #{arg}=(val)
+              raise "#{arg} is a protected attribute and cannot be set"
             end
             
-            def #{arg}=
-              raise "#{arg} is a protected attribute and cannot be assigned"
+            def #{arg}?
+              self.attributes[:#{arg}].present?
             end
           EOE
         end
@@ -90,76 +89,64 @@ module ApiResource
       def attribute?(name)
         self.attribute_names.include?(name.to_sym)
       end
+      
+      def protected_attribute?(name)
+        self.protected_attribute_names.include?(name.to_sym)
+      end
+      
+      def clear_attributes
+        self.attribute_names.clear
+        self.public_attribute_names.clear
+        self.protected_attribute_names.clear
+      end
     end
     
     module InstanceMethods
       
-      # Define save to work with dirty tracking
       def save_with_dirty_tracking(*args)
-        if save_without_dirty_tracking
-          @previously_changed = changes
+        if save_without_dirty_tracking(*args)
+          @previously_changed = self.changes
           @changed_attributes.clear
           return true
-        end
-        
-        return false
-      end
-      
-      # Temporary attributes will never be serialized
-      def temporary_attributes(*attrs)
-        attrs.each do |attr|
-          self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
-            def #{attr}=(val)
-              self.attributes[:#{attr}] = val
-            end
-            
-            def #{attr}
-              self.attributes[:#{attr}]
-            end
-            
-            def #{attr}?
-              !self.attributes[:#{attr}].nil?
-            end
-          EOE
+        else
+          return false
         end
       end
       
-      # Use this method to set the current attributes as the defaults
-      # and set them all as unchanged
       def set_attributes_as_current(*attrs)
-        attrs = self.class.public_attribute_names if attrs.blank?
+        @changed_attributes.clear and return if attrs.blank?
         attrs.each do |attr|
           @changed_attributes.delete(attr.to_s)
         end
       end
       
-      # Use this method to revert all changes to this record
       def reset_attribute_changes(*attrs)
         attrs = self.class.public_attribute_names if attrs.blank?
         attrs.each do |attr|
-          # Reset the attribute and then clear it from changed attributes
-          self.send("#{attr}=", self.send("#{attr}_was"))
+          self.send("reset_#{attr}!")
         end
+        
         set_attributes_as_current(*attrs)
       end
       
-      # Returns true if name is a known attribute
       def attribute?(name)
         self.class.attribute?(name)
       end
       
+      def protected_attribute?(name)
+        self.class.protected_attribute?(name)
+      end
+      
       def respond_to?(sym)
-        # Check if this is an attribute
         if sym =~ /\?$/
-          return true if self.class.attribute_names.include?($`)
+          return true if self.attribute?($`)
         elsif sym =~ /=$/
           return true if self.class.public_attribute_names.include?($`)
         else
-          return true if self.class.attribute_names.include?(sym.to_sym)
+          return true if self.attribute?(sym.to_sym)
         end
         super
       end
-      
     end
     
   end

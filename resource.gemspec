@@ -5,12 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = %q{resource}
-  s.version = "0.0.1"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Ethan Langevin}]
   s.date = %q{2011-08-26}
-  s.description = %q{A replacement for Active Resource that tries to automate associations for a RESTful API}
+  s.description = %q{TODO: longer description of your gem}
   s.email = %q{ejl6266@gmail.com}
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/mocks.rb",
     "lib/api_resource/model_errors.rb",
     "lib/api_resource/observing.rb",
+    "resource.gemspec",
     "spec/lib/associations_spec.rb",
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",

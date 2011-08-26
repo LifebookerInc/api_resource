@@ -404,8 +404,6 @@ describe "Associations" do
         TestResource.active.each do |result|
           result.should be_a TestResource
         end
-        debugger
-        nil
       end
     end
     

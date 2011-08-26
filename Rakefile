@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "resource"
   gem.homepage = "http://github.com/ejlangev/resource"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
+  gem.description = %Q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
   gem.email = "ejl6266@gmail.com"
   gem.authors = ["Ethan Langevin"]
   # dependencies defined in Gemfile

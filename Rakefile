@@ -14,7 +14,7 @@ require 'rake'
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "resource"
+  gem.name = "api_resource"
   gem.homepage = "http://github.com/ejlangev/resource"
   gem.license = "MIT"
   gem.summary = %Q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}

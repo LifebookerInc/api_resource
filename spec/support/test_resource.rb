@@ -1,6 +1,13 @@
 class TestResource < ApiResource::Base
 end
 
+class ChildTestResource < TestResource
+end
+
+class AnotherTestResource < ApiResource::Base
+  
+end
+
 class HasManyObject < ApiResource::Base
 end
 

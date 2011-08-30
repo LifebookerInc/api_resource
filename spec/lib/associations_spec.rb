@@ -38,6 +38,24 @@ describe "Associations" do
       TestResource.belongs_to :strange_name, :class_name => :belongs_to_object
       TestResource.association_class_name(:strange_name).should eql("BelongsToObject")
     end
+    
+    it "should only define relationships for the given class - they should not cascade" do
+      TestResource.belongs_to :belongs_to_object
+      AnotherTestResource.association?(:belongs_to_object).should_not be true
+    end
+    
+    it "should have its relationship cascade when sub-classed" do
+      TestResource.belongs_to :belongs_to_object
+      ChildTestResource.association?(:belongs_to_object).should be true
+    end
+    
+    it "should have its relationship cascade when sub-classed after the relationship is defined" do
+      TestResource.belongs_to :belongs_to_object
+      Object.const_set("ChildTestResource2", Class.new(TestResource))
+      ChildTestResource2.association?(:belongs_to_object).should be true
+    end
+    
+    
   end
   
   context "creating and testing for scopes" do

@@ -4,6 +4,7 @@ require 'api_resource/associations/relation_scope'
 require 'api_resource/associations/resource_scope'
 require 'api_resource/associations/multi_object_proxy'
 require 'api_resource/associations/single_object_proxy'
+require 'api_resource/associations/related_object_hash'
 
 module ApiResource
   
@@ -11,21 +12,20 @@ module ApiResource
     extend ActiveSupport::Concern
     
     ASSOCIATION_TYPES = [:belongs_to, :has_one, :has_many]
+
+    included do 
     
-    included do
-      # Define a class inheritable accessor for keeping track of the associations
-      # when this module is included
       class_inheritable_accessor :related_objects
-    
+
       # Hash to hold onto the definitions of the related objects
-      self.related_objects = {
-        :belongs_to => {}.with_indifferent_access,
-        :has_one => {}.with_indifferent_access,
-        :has_many => {}.with_indifferent_access,
-        :scope => {}.with_indifferent_access
-      }.with_indifferent_access
-      
+      self.related_objects = RelatedObjectHash.new({
+        :belongs_to => RelatedObjectHash.new,
+        :has_one => RelatedObjectHash.new,
+        :has_many => RelatedObjectHash.new,
+        :scope => RelatedObjectHash.new
+      })
     end
+
 
     module ClassMethods
       
@@ -38,7 +38,11 @@ module ApiResource
             # Raise an error if we have multiple args and options
             raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
             args.each do |arg|
-              self.related_objects[:#{assoc}][arg.to_sym] = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
+              klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
+              # add this to any descendants - the other methods etc are handled by inheritance
+              ([self] + self.descendants).each do |klass|
+                klass.related_objects[:#{assoc}][arg.to_sym] = klass_name
+              end
               # We need to define reader and writer methods here
               define_association_as_attribute(:#{assoc}, arg)
             end

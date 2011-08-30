@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{api_resource}
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Ethan Langevin}]
-  s.date = %q{2011-08-26}
+  s.authors = ["Ethan Langevin"]
+  s.date = %q{2011-08-30}
   s.description = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
   s.email = %q{ejl6266@gmail.com}
   s.extra_rdoc_files = [
@@ -28,6 +28,13 @@ Gem::Specification.new do |s|
     "api_resource.gemspec",
     "lib/api_resource.rb",
     "lib/api_resource/associations.rb",
+    "lib/api_resource/associations/association_proxy.rb",
+    "lib/api_resource/associations/multi_object_proxy.rb",
+    "lib/api_resource/associations/related_object_hash.rb",
+    "lib/api_resource/associations/relation_scope.rb",
+    "lib/api_resource/associations/resource_scope.rb",
+    "lib/api_resource/associations/scope.rb",
+    "lib/api_resource/associations/single_object_proxy.rb",
     "lib/api_resource/attributes.rb",
     "lib/api_resource/base.rb",
     "lib/api_resource/callbacks.rb",
@@ -42,6 +49,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/mocks.rb",
     "lib/api_resource/model_errors.rb",
     "lib/api_resource/observing.rb",
+    "lib/api_resource/railtie.rb",
     "spec/lib/associations_spec.rb",
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",
@@ -57,9 +65,9 @@ Gem::Specification.new do |s|
     "spec/support/test_resource.rb"
   ]
   s.homepage = %q{http://github.com/ejlangev/resource}
-  s.licenses = [%q{MIT}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.8}
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = %q{1.7.2}
   s.summary = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
 
   if s.respond_to? :specification_version then
@@ -67,7 +75,6 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<rails>, ["= 3.0.9"])
-      s.add_runtime_dependency(%q<activeresource>, ["= 3.0.9"])
       s.add_runtime_dependency(%q<hash_dealer>, [">= 0"])
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
@@ -85,7 +92,6 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<rails>, ["= 3.0.9"])
-      s.add_dependency(%q<activeresource>, ["= 3.0.9"])
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
@@ -104,7 +110,6 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<rails>, ["= 3.0.9"])
-    s.add_dependency(%q<activeresource>, ["= 3.0.9"])
     s.add_dependency(%q<hash_dealer>, [">= 0"])
     s.add_dependency(%q<rest-client>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])

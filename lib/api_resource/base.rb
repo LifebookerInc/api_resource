@@ -12,7 +12,7 @@ module ApiResource
     class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
     class_inheritable_accessor :include_all_attributes_on_update; self.include_blank_attributes_on_create = false
     
-    attr_accessor_with_default :primary_key, 'id'
+    class_inheritable_accessor :primary_key; self.primary_key = "id"
     
     attr_accessor :prefix_options
     

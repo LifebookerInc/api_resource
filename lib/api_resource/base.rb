@@ -386,7 +386,7 @@ module ApiResource
             elsif self.association?(key)
               raise ArgumentError, "Expected a hash value or nil, got: #{value.inspect}"
             else
-              value
+              value.dup rescue value
             end
           when Hash
             if self.has_many?(key)
@@ -394,7 +394,7 @@ module ApiResource
             elsif self.association?(key)
               SingleObjectProxy.new(self.association_class_name(key), value)
             else
-              value
+              value.dup rescue value
             end
           when NilClass
             # If it's nil and an association then create a blank object

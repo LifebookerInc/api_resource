@@ -54,7 +54,7 @@ module ApiResource
           
           def #{assoc}_class_name(name)
             raise "No such" + :#{assoc}.to_s + " association on #{name}" unless self.#{assoc}?(name)
-            return self.related_objects[:#{assoc}][name.to_sym]
+            return self.find_namespaced_class_name(self.related_objects[:#{assoc}][name.to_sym])
           end            
 
         EOE
@@ -95,7 +95,7 @@ module ApiResource
         raise ArgumentError, "#{assoc} is not a valid association of #{self}" unless self.association?(assoc)
         result = self.related_objects.detect do |key,value|
           ret = value.detect{|k,v| k.to_sym == assoc.to_sym }
-          return ret[1] if ret
+          return self.find_namespaced_class_name(ret[1]) if ret
         end
       end
       
@@ -106,30 +106,47 @@ module ApiResource
       end
       
       protected
-      def define_association_as_attribute(assoc_type, assoc_name)
-        define_attributes assoc_name
-        case assoc_type.to_sym
-          when :has_many
-            self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-              def #{assoc_name}
-                self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.class.to_s, nil)
-              end
-            EOE
-          else
-            self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-              def #{assoc_name}
-                self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.class.to_s, nil)
-              end
-            EOE
-        end
-        # Always define the setter the same
-        self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-          def #{assoc_name}=(val)
-            #{assoc_name}_will_change! unless self.#{assoc_name}.internal_object == val
-            self.#{assoc_name}.internal_object = val
+        def define_association_as_attribute(assoc_type, assoc_name)
+          define_attributes assoc_name
+          case assoc_type.to_sym
+            when :has_many
+              self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+                def #{assoc_name}
+                  self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.class.to_s, nil)
+                end
+              EOE
+            else
+              self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+                def #{assoc_name}
+                  self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.class.to_s, nil)
+                end
+              EOE
           end
-        EOE
-      end
+          # Always define the setter the same
+          self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{assoc_name}=(val)
+              #{assoc_name}_will_change! unless self.#{assoc_name}.internal_object == val
+              self.#{assoc_name}.internal_object = val
+            end
+          EOE
+        end
+        
+        def find_namespaced_class_name(klass)
+          # return the name if it is itself namespaced
+          return klass if klass =~ /::/
+          ancestors = self.name.split("::")
+          if ancestors.size > 1
+            receiver = Object
+            namespaces = ancestors[0..-2].collect do |mod|
+              receiver = receiver.const_get(mod)
+            end
+            if namespace = namespaces.reverse.detect{|ns| ns.const_defined?(klass, false)}
+              return namespace.const_get(klass).name
+            end
+          end
+
+          return klass
+        end
       
     end
     

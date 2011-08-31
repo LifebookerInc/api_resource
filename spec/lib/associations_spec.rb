@@ -55,6 +55,40 @@ describe "Associations" do
       ChildTestResource2.association?(:belongs_to_object).should be true
     end
     
+    context "Determining associated classes with a namespace" do
+      
+      it "should be able to find classes for associations that exist in the same module without a namespace" do
+        TestMod::TestClass.belongs_to :test_association
+        TestMod::TestClass.association_class_name(:test_association).should eql("TestMod::TestAssociation")
+      end
+      
+      it "should be return a regular class name for a class defined at the root level" do
+        TestMod::TestClass.belongs_to :belongs_to_object
+        TestMod::TestClass.association_class_name(:belongs_to_object).should eql("BelongsToObject")
+      end
+      
+      it "should work for a class name specified with a namespace module" do
+        TestMod::TestClass.belongs_to :nonsense, :class_name => "TestMod::TestAssociation"
+        TestMod::TestClass.association_class_name(:nonsense).should eql("TestMod::TestAssociation")
+      end
+      
+      it "should work for nested module as well" do
+        TestMod::InnerMod::InnerClass.belongs_to :test_association
+        TestMod::InnerMod::InnerClass.association_class_name(:test_association).should eql("TestMod::TestAssociation")
+      end
+      
+      it "should prefer to find classes within similar modules to ones in the root namespace" do
+        TestMod::InnerMod::InnerClass.belongs_to :test_resource
+        TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("TestMod::TestResource")
+      end
+      
+      it "should be able to override into the root namespace by prefixing with ::" do
+        TestMod::InnerMod::InnerClass.belongs_to :test_resource, :class_name => "::TestResource"
+        TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("::TestResource")        
+      end
+      
+    end
+    
     
   end
   

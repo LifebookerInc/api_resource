@@ -413,6 +413,15 @@ describe "Base" do
         hash['test_resource'].key?('age').should be_true
         TestResource.include_all_attributes_on_update = false
       end
+    
+      it "should provide an update_attributes method to set attrs and save" do
+        
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        hash = JSON.parse(tr.update_attributes(:name => "Dan"))
+        hash['test_resource']['name'].should eql "Dan"
+        
+      end
+      
       
     end
   

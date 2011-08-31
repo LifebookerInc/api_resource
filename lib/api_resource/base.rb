@@ -350,6 +350,13 @@ module ApiResource
       end
     end
     
+    def update_attributes(attrs)
+      attrs.each_pair do |k,v|
+        self.send("#{k}=", v)
+      end
+      self.save
+    end
+    
     def save(*args)
       new? ? create(*args) : update(*args)
     end

@@ -35,6 +35,7 @@ describe "Base" do
     context "Attributes" do
       before(:all) do
         TestResource.define_attributes :attr1, :attr2
+        TestResource.define_protected_attributes :attr3
       end
     
       it "should set attributes for the data loaded from a hash" do

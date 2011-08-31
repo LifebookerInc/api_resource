@@ -32,6 +32,18 @@ describe "Attributes" do
       tst.attr1.should eql("test")
       tst.attr1?.should be_true
     end
+    
+    it "should be able to set multiple attributes at once" do
+      TestResource.define_attributes :attr1, :attr2, :attr3
+      tst = TestResource.new
+      tst.attr3 = "123"
+      
+      tst.attributes = {:attr1 => "abc", :attr2 => "test"}
+      tst.attr1.should eql "abc"
+      tst.attr2.should eql "test"
+      tst.attr3.should eql "123"
+    end
+    
   end
   
   context "Protected attributes" do
@@ -39,7 +51,7 @@ describe "Attributes" do
       TestResource.define_protected_attributes :pattr3
       lambda {
         tst = TestResource.new
-        tst.attr3 = "test"
+        tst.pattr3 = "test"
       }.should raise_error
     end
   end

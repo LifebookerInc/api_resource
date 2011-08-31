@@ -12,7 +12,7 @@ module ApiResource
       
       class_inheritable_accessor :attribute_names, :public_attribute_names, :protected_attribute_names
       
-      attr_accessor :attributes
+      attr_reader :attributes
       
       self.attribute_names = []
       self.public_attribute_names = []
@@ -102,6 +102,14 @@ module ApiResource
     end
     
     module InstanceMethods
+      
+      # set new attributes
+      def attributes=(new_attrs)
+        new_attrs.each_pair do |k,v|
+          self.send("#{k}=",v)
+        end
+        new_attrs
+      end
       
       def save_with_dirty_tracking(*args)
         if save_without_dirty_tracking(*args)

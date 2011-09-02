@@ -18,9 +18,8 @@ module ApiResource
     
     class << self
       
-      attr_accessor_with_default(:element_name) { model_name.element }
-      attr_accessor_with_default(:collection_name) { ActiveSupport::Inflector.pluralize(element_name) }     
-      
+      # writers - accessors with defaults were not working
+      attr_writer :element_name, :collection_name
       
       def inherited(klass)
         # Call the methods of the superclass to make sure inheritable accessors and the like have been inherited
@@ -35,6 +34,8 @@ module ApiResource
         # Now we can make a call to setup the inheriting klass with its attributes
         klass.set_class_attributes_upon_load unless klass.instance_variable_defined?(:@class_data)
         klass.instance_variable_set(:@class_data, true)
+        # we want to reset element_name and collection_name for the inherited class
+        true
       end
 
       
@@ -62,8 +63,13 @@ module ApiResource
             end
           end
         # Swallow up any loading errors because the site may be incorrect
-        rescue Exception => e
-          return nil
+        rescue ApiResource::ConnectionError => e
+          if ApiResource.raise_missing_definition_error
+            raise e 
+          end
+          ApiResource.logger.warn("#{self}: #{e.message}")
+          ApiResource.logger.debug(e.backtrace.pretty_inspect)
+          return e.respond_to?(:request) ? e.request : nil
         end
       end
 
@@ -75,16 +81,24 @@ module ApiResource
       end
 
       def site=(site)
+        # store so we can reload attributes if the site changed
+        old_site = self.site.to_s.clone
         @connection = nil
-        # reset class attributes and try to reload them if the site changed
-        unless site.to_s == self.site.to_s
-          self.reload_class_attributes
-        end
+        
         if site.nil?
           write_inheritable_attribute(:site, nil)
+          # no site, so we'll skip the reload
+          return site
         else
           write_inheritable_attribute(:site, create_site_uri_from(site))
         end
+        
+        # reset class attributes and try to reload them if the site changed
+        unless self.site.to_s == old_site
+          self.reload_class_attributes
+        end
+        
+        return site
       end
       
       
@@ -138,6 +152,15 @@ module ApiResource
       rescue Exception => e
         logger.error "Couldn't set prefix: #{e}\n #{code}" if logger
         raise
+      end
+      
+      # element_name with default
+      def element_name
+        @element_name ||= self.model_name.element
+      end
+      # collection_name with default
+      def collection_name
+        @collection_name ||= ActiveSupport::Inflector.pluralize(self.element_name)
       end
       
       # alias_method :set_prefix, :prefix=

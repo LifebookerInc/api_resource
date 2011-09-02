@@ -86,6 +86,10 @@ module ApiResource
       def request(method, path, *arguments)
         handle_response do
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
+            
+            # debug logging
+            ApiResource.logger.debug("#{method.to_s.upcase} #{path}")
+            
             payload[:method]      = method
             payload[:request_uri] = "#{site.scheme}://#{site.host}:#{site.port}#{path}"
             payload[:result]      = http(path).send(method, *arguments)
@@ -103,7 +107,7 @@ module ApiResource
           if error.respond_to?(:http_code)
             result = error.response
           else
-            raise "Unknown error #{error}"
+            raise ApiResource::ConnectionError.new(nil, "Unknown error #{error}")
           end
         end
         return propogate_response_or_error(result, result.code)

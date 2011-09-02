@@ -5,6 +5,8 @@ require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/inheritable_attributes'
 require 'api_resource/core_extensions'
 require 'active_model'
+require 'log4r'
+require 'log4r/outputter/consoleoutputters'
 
 require 'api_resource/exceptions'
 
@@ -25,6 +27,9 @@ module ApiResource
   autoload :Validations
   autoload :LogSubscriber
   
+  mattr_writer :logger
+  mattr_accessor :raise_missing_definition_error; self.raise_missing_definition_error = false
+  
   def self.load_mocks_and_factories
     require 'hash_dealer'
     Mocks.clear_endpoints
@@ -40,6 +45,14 @@ module ApiResource
   
   def self.format=(new_format)
     ApiResource::Base.format = new_format
+  end
+  # logger
+  def self.logger
+    return @logger if @logger
+    @logger = Log4r::Logger.new("api_resource")
+    @logger.outputters = [Log4r::StdoutOutputter.new('console')]
+    @logger.level = Log4r::INFO
+    @logger
   end
   
   # Use this method to enable logging in the future

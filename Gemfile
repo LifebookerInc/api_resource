@@ -5,6 +5,7 @@ source "http://rubygems.org"
 gem 'rails', '3.0.9'
 gem 'hash_dealer'
 gem 'rest-client'
+gem 'log4r'
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

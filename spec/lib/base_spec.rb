@@ -453,7 +453,9 @@ describe "Base" do
   describe "Inheritable Accessors" do
     
     it "should copy the default values down to any level of subclass" do
-      class Child < TestResource; end
+      
+      class Child < TestResource
+      end
       
       Child.site.should eql(TestResource.site)
       Child.site.should_not be_blank

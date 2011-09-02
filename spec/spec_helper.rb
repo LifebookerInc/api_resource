@@ -23,6 +23,8 @@ ApiResource.site = 'http://localhost:3000'
 ApiResource.format = :json
 ApiResource.load_mocks_and_factories
 
+ApiResource.logger.level = Log4r::INFO
+
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 
 

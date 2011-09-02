@@ -234,11 +234,12 @@ module ApiResource
               if response = Mocks.find_response(request)
                 response[:response].tap{|resp| resp.generate_response(response[:params])}
               else
-                raise Exception.new("
-                  Could not find a response recorded for \#{request.to_s}
-                  Valid Responses Are:
-                    \#{Mocks.endpoints.collect{|url, reqs| [url, reqs.collect(&:first)].to_s }.join("\n")}
-                ")
+                raise ApiResource::ResourceNotFound.new(
+                  MockResponse.new("", {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
+                  "Could not find a response recorded for \#{request.pretty_inspect}
+                   Valid Responses Are:
+                     \#{Mocks.endpoints.collect{|url, reqs| [url, reqs.collect(&:first).pretty_inspect] }.pretty_inspect}"
+                )
               end
             end
           EOE

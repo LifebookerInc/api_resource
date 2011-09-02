@@ -20,4 +20,24 @@ Mocks.define do
     put({}, :params => {:test_resource => HashDealer.roll(:test_resource).matcher})
   end
   
+  endpoint("/child_test_resources/new") do
+    get({})
+  end
+  
+  endpoint("/child_test_resource2s/new") do
+    get({})
+  end
+  
+  endpoint("/another_test_resources/new") do
+    get({})
+  end
+  
+  endpoint("/test_classes/new") do
+    get({})
+  end
+  
+  endpoint("/children/new") do
+    get({})
+  end
+  
 end

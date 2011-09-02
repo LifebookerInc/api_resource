@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{api_resource}
-  s.version = "0.1.3"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = %q{2011-08-31}
+  s.date = %q{2011-09-02}
   s.description = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
   s.email = %q{ejl6266@gmail.com}
   s.extra_rdoc_files = [
@@ -54,6 +54,7 @@ Gem::Specification.new do |s|
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",
     "spec/lib/callbacks_spec.rb",
+    "spec/lib/mocks_spec.rb",
     "spec/lib/model_errors_spec.rb",
     "spec/spec_helper.rb",
     "spec/support/mocks/association_mocks.rb",
@@ -77,6 +78,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rails>, ["= 3.0.9"])
       s.add_runtime_dependency(%q<hash_dealer>, [">= 0"])
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
+      s.add_runtime_dependency(%q<log4r>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_development_dependency(%q<growl>, [">= 0"])
@@ -94,6 +96,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rails>, ["= 3.0.9"])
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
+      s.add_dependency(%q<log4r>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_dependency(%q<growl>, [">= 0"])
@@ -112,6 +115,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rails>, ["= 3.0.9"])
     s.add_dependency(%q<hash_dealer>, [">= 0"])
     s.add_dependency(%q<rest-client>, [">= 0"])
+    s.add_dependency(%q<log4r>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<ruby-debug19>, [">= 0"])
     s.add_dependency(%q<growl>, [">= 0"])

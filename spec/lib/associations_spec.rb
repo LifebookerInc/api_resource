@@ -51,7 +51,7 @@ describe "Associations" do
     
     it "should have its relationship cascade when sub-classed after the relationship is defined" do
       TestResource.belongs_to :belongs_to_object
-      Object.const_set("ChildTestResource2", Class.new(TestResource))
+      class ChildTestResource2 < TestResource; end
       ChildTestResource2.association?(:belongs_to_object).should be true
     end
     

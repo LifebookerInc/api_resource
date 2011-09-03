@@ -106,7 +106,6 @@ module ApiResource
         rescue Exception => error
           if error.respond_to?(:http_code)
             result = error.response
-            result['Error-Message'] = error.message
           else
             raise ApiResource::ConnectionError.new(nil, "Unknown error #{error}")
           end
@@ -117,31 +116,31 @@ module ApiResource
       def propogate_response_or_error(response, code)
         case code.to_i
           when 301,302
-            raise ApiResource::Redirection.new(response, response['Error-Message'])
+            raise ApiResource::Redirection.new(response)
           when 200..400
             response.body
           when 400
-            raise ApiResource::BadRequest.new(response, response['Error-Message'])
+            raise ApiResource::BadRequest.new(response)
           when 401
-            raise ApiResource::UnauthorizedAccess.new(response, response['Error-Message'])
+            raise ApiResource::UnauthorizedAccess.new(response)
           when 403
-            raise ApiResource::ForbiddenAccess.new(response, response['Error-Message'])
+            raise ApiResource::ForbiddenAccess.new(response)
           when 404
-            raise ApiResource::ResourceNotFound.new(response, response['Error-Message'])
+            raise ApiResource::ResourceNotFound.new(response)
           when 405
-            raise ApiResource::MethodNotAllowed.new(response, response['Error-Message'])
+            raise ApiResource::MethodNotAllowed.new(response)
           when 406
-            raise ApiResource::NotAccepatable.new(response, response['Error-Message'])
+            raise ApiResource::NotAccepatable.new(response)
           when 409
-            raise ApiResource::ResourceNotFound.new(response, response['Error-Message'])
+            raise ApiResource::ResourceNotFound.new(response)
           when 410
-            raise ApiResource::ResourceGone.new(response, response['Error-Message'])
+            raise ApiResource::ResourceGone.new(response)
           when 422
-            raise ApiResource::UnprocessableEntity.new(response, response['Error-Message'])
+            raise ApiResource::UnprocessableEntity.new(response)
           when 401..500
-            raise ApiResource::ClientError.new(response, response['Error-Message'])
+            raise ApiResource::ClientError.new(response)
           when 500..600
-            raise ApiResource::ServerError.new(response, response['Error-Message'])
+            raise ApiResource::ServerError.new(response)
           else
             raise ApiResource::ConnectionError.new(response, "Unknown response code: #{code}")
         end

@@ -170,13 +170,13 @@ module ApiResource
 
         # if we have params, it is a MockRequest definition
         if opts[:params]
-          @params = sorted_params(URI.decode(opts[:params].to_query))
+          @params = JSON.parse(JSON.unparse(opts[:params]))
           # otherwise, we need to check either the query string or the body
           # depending on the http verb
         else
           case @method
             when :post, :put
-              @params = sorted_params(JSON.parse((opts[:body] || "")).to_query)
+              @params = JSON.parse(opts[:body] || "").sort
             when :get, :delete, :head
               @params = sorted_params(@query || "")
           end
@@ -191,7 +191,17 @@ module ApiResource
         ret = {}
         data.split("&").each do |val|
           val = val.split("=")
-          ret[val.first] = val.last
+          if val.last =~ /^\d+$/
+            ret[val.first] = val.last.to_i
+          elsif val.last =~ /^[\d\.]+$/
+            ret[val.first] = val.last.to_f
+          elsif val.last == "true"
+            ret[val.first] = true
+          elsif val.last == "false"
+            ret[val.first] = false  
+          else
+            ret[val.first] = val.last
+          end
         end
         ret.sort
       end
@@ -200,7 +210,7 @@ module ApiResource
       def match?(request)
         return false unless self.method == request.method
         return false unless self.format == request.format || request.format.nil? || self.format.nil?
-        return PathString.as_sorted_json(self.params) == PathString.as_sorted_json(request.params)
+        PathString.as_sorted_json(self.params) == PathString.as_sorted_json(request.params)
       end
       # string representation
       def to_s

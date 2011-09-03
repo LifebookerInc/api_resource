@@ -45,7 +45,7 @@ module ApiResource
         
         @remote_errors = nil
         if perform_validation && valid? || !perform_validation
-          save_without_validations
+          save_without_validations(*args)
           true
         else
           false

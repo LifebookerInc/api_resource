@@ -105,6 +105,7 @@ module ApiResource
           raise ApiResource::RequestTimeout.new("Request Time Out")
         rescue Exception => error
           if error.respond_to?(:http_code)
+            ApiResource.logger.error(error.message)
             result = error.response
           else
             raise ApiResource::ConnectionError.new(nil, "Unknown error #{error}")

@@ -465,7 +465,7 @@ module ApiResource
       ret = self.attributes.inject({}) do |accum, (key,val)|
         # If this is an association and it's in include_associations then include it
         if self.association?(key) && options[:include_associations].include?(key.to_sym)
-          accum.merge(key => val.serializable_hash({}))
+          accum.merge(key => val.serializable_hash({:include_id => true}))
         elsif options[:include_extras].include?(key.to_sym)
           accum.merge(key => val)
         elsif options[:except].include?(key.to_sym)
@@ -474,6 +474,9 @@ module ApiResource
           self.association?(key) || !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
       end
+      # include id - this is for nested updates
+      ret[:id] = self.id if options[:include_id] && !self.id.nil?
+      ret
     end
     
     protected

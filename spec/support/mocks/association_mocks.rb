@@ -20,7 +20,11 @@ Mocks.define do
   end
   
   endpoint("/has_many_objects/new") do
-    get({})
+    get({
+      "attributes" => {
+        "public" => ["name"]
+      }
+    })
   end
   
   endpoint("/belongs_to_objects/new") do

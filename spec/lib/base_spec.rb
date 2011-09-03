@@ -214,7 +214,26 @@ describe "Base" do
         hash = JSON.parse(tst.to_json(:except => [:attr1]))
         hash["attr1"].should be_nil
       end
-
+      
+      context "Nested Objects" do
+        before(:all) do
+          TestResource.has_many(:has_many_objects)
+        end
+        after(:all) do
+          TestResource.reload_class_attributes
+        end
+        
+        it "should include the id of nested objects in the serialization" do
+          tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => [{:name => "123", :id => "1"}]})
+          hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
+          hash["has_many_objects"].first["id"].should_not be nil
+        end
+        it "should include the id of nested objects in the serialization" do
+          tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => [{:name => "123"}]})
+          hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
+          hash["has_many_objects"].first.keys.should_not include "id"
+        end
+      end
     end
     
     context "XML" do

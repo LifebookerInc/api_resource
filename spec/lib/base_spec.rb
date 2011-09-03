@@ -164,6 +164,7 @@ describe "Base" do
   describe "Serialization" do
     
     before(:all) do
+      TestResource.reload_class_attributes
       TestResource.has_many :has_many_objects
       TestResource.define_attributes :attr1, :attr2
       TestResource.include_root_in_json = true
@@ -174,6 +175,7 @@ describe "Base" do
     end
     
     context "JSON" do
+      
       it "should be able to serialize itself without the root" do
         TestResource.include_root_in_json = false
         tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2"})
@@ -367,6 +369,9 @@ describe "Base" do
     
     context "Updating old records" do
       before(:all) do
+        TestResource.reload_class_attributes
+        TestResource.has_many :has_many_objects
+        
         TestResource.send(:alias_method, :old_update, :update)
         TestResource.send(:alias_method, :old_save, :save)
         
@@ -414,7 +419,7 @@ describe "Base" do
       
       it "should include changed associations without specification" do
         tr = TestResource.new(:id => 1, :name => "Ethan")
-        tr.has_many_objects = [TestResource.new]
+        tr.has_many_objects = [HasManyObject.new]
         hash = JSON.parse(tr.save)
         hash['test_resource']['has_many_objects'].should_not be_blank
       end

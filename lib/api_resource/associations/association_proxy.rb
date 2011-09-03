@@ -28,7 +28,7 @@ module ApiResource
           EOE
         end
       end
-
+      
       def serializable_hash(options = {})
         raise "Not Implemented: This method must be implemented in a subclass"
       end

@@ -24,6 +24,11 @@ module ApiResource
         def internal_object
           @internal_object ||= self.load_scope_with_options(:all, {})
         end
+        
+        def internal_object=(contents)
+          return @internal_object = contents if contents.all?{|o| o.is_a?(self.klass)}
+          return load(contents)
+        end
 
         protected
         def load_scope_with_options(scope, options)

@@ -459,6 +459,61 @@ describe "Associations" do
       end
     end
     
+    context "Assigning Data" do
+      context "Single Object Association" do
+        before(:all) do
+          TestResource.has_one(:has_one_object)
+          TestResource.belongs_to(:belongs_to_object)
+        end
+        after(:all) do
+          TestResource.reload_class_attributes
+        end
+        
+        it "should assign associations to the correct type on initialization" do
+          tr = TestResource.new(:has_one_object => {:name => "Dan"}, :belongs_to_object => {:name => "Dan"})
+          
+          tr.has_one_object.internal_object.should be_instance_of HasOneObject
+          tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
+          
+        end
+        
+        it "should assign associations to the correct type when setting attributes directly" do
+          tr = TestResource.new()
+          tr.has_one_object = {:name => "Dan"}
+          tr.belongs_to_object = {:name => "Dan"} 
+          
+          tr.has_one_object.internal_object.should be_instance_of HasOneObject
+          tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
+        end
+        
+        
+      end
+      
+      context "Single Object Association" do
+        before(:all) do
+          TestResource.has_many(:has_many_objects)
+        end
+        after(:all) do
+          TestResource.reload_class_attributes
+        end
+        
+        it "should assign associations to the correct type on initialization" do
+          tr = TestResource.new(:has_many_objects => [{:name => "Dan"}])
+          tr.has_many_objects.internal_object.first.should be_instance_of HasManyObject
+          
+        end
+        
+        it "should assign associations to the correct type when setting attributes directly" do
+          tr = TestResource.new()
+          tr.has_many_objects = [{:name => "Dan"}]
+          tr.has_many_objects.internal_object.first.should be_instance_of HasManyObject
+        end
+        
+        
+      end
+      
+    end
+    
   end
   
 end

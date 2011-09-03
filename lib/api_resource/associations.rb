@@ -112,13 +112,13 @@ module ApiResource
             when :has_many
               self.class_eval <<-EOE, __FILE__, __LINE__ + 1
                 def #{assoc_name}
-                  self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.class.to_s, nil)
+                  self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.association_class_name('#{assoc_name}'), nil)
                 end
               EOE
             else
               self.class_eval <<-EOE, __FILE__, __LINE__ + 1
                 def #{assoc_name}
-                  self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.class.to_s, nil)
+                  self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.association_class_name('#{assoc_name}'), nil)
                 end
               EOE
           end

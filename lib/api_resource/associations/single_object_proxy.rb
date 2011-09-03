@@ -9,6 +9,11 @@ module ApiResource
       def serializable_hash(options = {})
         self.internal_object.serializable_hash(options)
       end
+      
+      def internal_object=(contents)
+        return @internal_object = contents if contents.is_a?(self.klass)
+        return load(contents)
+      end
 
       protected
       def load_scope_with_options(scope, options)

@@ -487,4 +487,13 @@ describe "Base" do
     
   end
   
+  describe "Inflections" do
+    
+    it "should be able to singularize and pluralize words ending in ess" do
+      "address".singularize.should eql("address")
+      "address".pluralize.should eql("addresses")
+    end
+    
+  end
+  
 end

@@ -1,4 +1,5 @@
 require 'active_support'
+require 'active_support/inflector'
 require 'active_support/core_ext/hash'
 require 'active_support/core_ext/object'
 require 'active_support/core_ext/class/attribute_accessors'
@@ -29,6 +30,11 @@ module ApiResource
   
   mattr_writer :logger
   mattr_accessor :raise_missing_definition_error; self.raise_missing_definition_error = false
+  
+  # Load a fix for inflections for words ending in ess
+  ActiveSupport::Inflector.inflections do |inflect|
+    inflect.singular(/ess$/i, 'ess')
+  end
   
   def self.load_mocks_and_factories
     require 'hash_dealer'

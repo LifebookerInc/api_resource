@@ -63,7 +63,7 @@ module ApiResource
             end
           end
         # Swallow up any loading errors because the site may be incorrect
-        rescue ApiResource::ConnectionError => e
+        rescue Exception => e
           if ApiResource.raise_missing_definition_error
             raise e 
           end

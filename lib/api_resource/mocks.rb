@@ -170,7 +170,7 @@ module ApiResource
 
         # if we have params, it is a MockRequest definition
         if opts[:params]
-          @params = JSON.parse(JSON.unparse(opts[:params]))
+          @params = opts[:params]
           # otherwise, we need to check either the query string or the body
           # depending on the http verb
         else

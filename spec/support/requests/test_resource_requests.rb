@@ -9,8 +9,8 @@ HashDealer.define(:new_test_object) do
   ])
   associations({
     :has_many => {:has_many_objects => {}},
-    :belongs_to => {:belongs_to_object => {}},
-    :has_one => {:has_one_object => {}}
+    :belongs_to => {:belongs_to_object => {}, :custom_name => {:class_name => "BelongsToObject"}},
+    :has_one => {:has_one_object => {}},
   })
   # Think of a use case for this
   options({

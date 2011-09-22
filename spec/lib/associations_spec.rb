@@ -92,6 +92,25 @@ describe "Associations" do
     
   end
   
+  context "Remote Definitions" do
+    
+    before(:all) do
+      TestResource.reload_class_attributes
+    end
+    
+    it "should be able define an association remotely" do
+      TestResource.belongs_to?(:belongs_to_object).should be true
+      TestResource.new.belongs_to_object.klass.should eql BelongsToObject
+    end
+
+    it "should be able define an association remotely" do
+      TestResource.belongs_to?(:custom_name).should be true
+      TestResource.new.custom_name.klass.should eql BelongsToObject
+    end
+    
+  end
+  
+  
   context "creating and testing for scopes" do
     
     it "should be able to define scopes which require class names" do

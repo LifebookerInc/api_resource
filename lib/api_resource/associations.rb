@@ -35,6 +35,7 @@ module ApiResource
         self.module_eval <<-EOE, __FILE__, __LINE__ + 1
           def #{assoc}(*args)
             options = args.extract_options!
+            options = options.with_indifferent_access
             # Raise an error if we have multiple args and options
             raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
             args.each do |arg|

@@ -51,14 +51,14 @@ module ApiResource
           end
           # Then scopes
           if class_data["scopes"]
-            class_data["scopes"].each do |hash|
-              self.scope hash.first[0], hash.first[1]
+            class_data["scopes"].each_pair do |scope_name, opts|
+              self.scope(scope_name, opts)
             end
           end
           # Then associations
           if class_data["associations"]
-            class_data["associations"].each do |(key,hash)|
-              hash.each do |assoc_name, assoc_options|
+            class_data["associations"].each_pair do |key, hash|
+              hash.each_pair do |assoc_name, assoc_options|
                 self.send(key, assoc_name, assoc_options)
               end
             end

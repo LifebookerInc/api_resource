@@ -3,10 +3,10 @@ HashDealer.define(:new_test_object) do
     :protected => [:id],
     :public => [:name, :age],
   })
-  scopes([
-    {:active => {:active => true}},
-    {:paginate => {:paginate => true, :per_page => :per_page, :current_page => :current_page}}
-  ])
+  scopes({
+    :active => {:active => true},
+    :paginate => {:paginate => true, :per_page => :per_page, :current_page => :current_page}
+  })
   associations({
     :has_many => {:has_many_objects => {}},
     :belongs_to => {:belongs_to_object => {}, :custom_name => {:class_name => "BelongsToObject"}},

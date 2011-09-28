@@ -69,18 +69,28 @@ module ApiResource
     end
     # find a matching response
     def self.find_response(request)
-      path = request.path.split("?").first
-      path = path.split(/\./).first
       # these are stored as [[Request, Response], [Request, Response]]
-      responses_and_params = self.matching(path)
+      responses_and_params = self.responses_for_path(request.path)
       ret = (responses_and_params[:responses] || []).select{|pair| pair.first.match?(request)}
       raise Exception.new("More than one response matches #{request}") if ret.length > 1
       return ret.first ? {:response => ret.first[1], :params => responses_and_params[:params]} : nil
     end
 
+    def self.paths_match?(known_path, entered_path)
+      PathString.paths_match?(known_path, entered_path)
+    end
+
+    # This method assumes that the two are matching paths
+    # if they aren't the behavior is undefined
+    def self.extract_params(known_path, entered_path)
+      PathString.extract_params(known_path, entered_path)
+    end
+
     # returns a hash {:responses => [[Request, Response],[Request,Response]], :params => {...}}
     # if there is no match returns nil
-    def self.matching(path)
+    def self.responses_for_path(path)
+      path = path.split("?").first
+      path = path.split(/\./).first
       # The obvious case
       if @@endpoints[path]
         return {:responses => @@endpoints[path], :params => {}}
@@ -95,19 +105,9 @@ module ApiResource
 
       return {:responses => nil, :params => nil}
     end
-
-    def self.paths_match?(known_path, entered_path)
-      PathString.paths_match?(known_path, entered_path)
-    end
-
-    # This method assumes that the two are matching paths
-    # if they aren't the behavior is undefined
-    def self.extract_params(known_path, entered_path)
-      PathString.extract_params(known_path, entered_path)
-    end
+    
 
     private
-
     def self.with_path_and_format(path, format, &block)
       @@path, @@format = path, format
       ret = yield
@@ -246,9 +246,9 @@ module ApiResource
               else
                 raise ApiResource::ResourceNotFound.new(
                   MockResponse.new("", {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
-                  "Could not find a response recorded for \#{request.pretty_inspect}
-                   Valid Responses Are:
-                     \#{Mocks.endpoints.collect{|url, reqs| [url, reqs.collect(&:first).pretty_inspect] }.pretty_inspect}"
+                  "\nCould not find a response recorded for \#{request.pretty_inspect}\n" +
+                  "Potential Responses Are:\n" +
+                  "\#{Array.wrap(Mocks.responses_for_path(request.path)[:responses]).collect(&:first).pretty_inspect}"
                 )
               end
             end

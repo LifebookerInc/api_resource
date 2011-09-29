@@ -5,11 +5,15 @@ require 'active_support/core_ext/object'
 require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/inheritable_attributes'
 require 'api_resource/core_extensions'
+
 require 'active_model'
+
 require 'log4r'
 require 'log4r/outputter/consoleoutputters'
 
 require 'api_resource/exceptions'
+
+require 'differ'
 
 module ApiResource
   

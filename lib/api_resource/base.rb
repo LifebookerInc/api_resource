@@ -32,16 +32,13 @@ module ApiResource
             super
           end
         EOE
-        # Now we can make a call to setup the inheriting klass with its attributes
-        klass.set_class_attributes_upon_load unless klass.instance_variable_defined?(:@class_data)
-        klass.instance_variable_set(:@class_data, true)
-        # we want to reset element_name and collection_name for the inherited class
         true
       end
 
       
       # This makes a request to new_element_path
       def set_class_attributes_upon_load
+        return true if self == ApiResource::Base
         begin
           class_data = self.connection.get(self.new_element_path)
           # Attributes go first
@@ -334,6 +331,11 @@ module ApiResource
     
     def initialize(attributes = {})
       @prefix_options = {}
+      # Now we can make a call to setup the inheriting klass with its attributes
+      unless self.class.instance_variable_defined?(:@class_data)
+        self.class.set_class_attributes_upon_load
+        self.class.instance_variable_set(:@class_data, true)
+      end
       load(attributes)
     end
     

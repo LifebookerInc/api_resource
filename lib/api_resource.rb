@@ -26,11 +26,13 @@ module ApiResource
   autoload :Connection
   autoload :CustomMethods
   autoload :Formats
-  autoload :Observing
+  autoload :Local
+  autoload :LogSubscriber
   autoload :Mocks
   autoload :ModelErrors
+  autoload :Observing
   autoload :Validations
-  autoload :LogSubscriber
+  
   
   mattr_writer :logger
   mattr_accessor :raise_missing_definition_error; self.raise_missing_definition_error = false

@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{api_resource}
-  s.version = "0.1.6"
+  s.name = "api_resource"
+  s.version = "0.1.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Ethan Langevin}]
-  s.date = %q{2011-09-22}
-  s.description = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
-  s.email = %q{ejl6266@gmail.com}
+  s.authors = ["Ethan Langevin"]
+  s.date = "2011-10-03"
+  s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
+  s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -65,11 +65,11 @@ Gem::Specification.new do |s|
     "spec/support/requests/test_resource_requests.rb",
     "spec/support/test_resource.rb"
   ]
-  s.homepage = %q{http://github.com/ejlangev/resource}
-  s.licenses = [%q{MIT}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.6}
-  s.summary = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
+  s.homepage = "http://github.com/ejlangev/resource"
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.10"
+  s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -79,6 +79,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<hash_dealer>, [">= 0"])
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
       s.add_runtime_dependency(%q<log4r>, [">= 0"])
+      s.add_runtime_dependency(%q<differ>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_development_dependency(%q<growl>, [">= 0"])
@@ -96,6 +97,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
       s.add_dependency(%q<log4r>, [">= 0"])
+      s.add_dependency(%q<differ>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_dependency(%q<growl>, [">= 0"])
@@ -114,6 +116,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<hash_dealer>, [">= 0"])
     s.add_dependency(%q<rest-client>, [">= 0"])
     s.add_dependency(%q<log4r>, [">= 0"])
+    s.add_dependency(%q<differ>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<ruby-debug19>, [">= 0"])
     s.add_dependency(%q<growl>, [">= 0"])

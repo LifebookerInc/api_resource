@@ -68,7 +68,7 @@ module ApiResource
           if ApiResource.raise_missing_definition_error
             raise e 
           end
-          ApiResource.logger.warn("#{self}: #{e.message}")
+          ApiResource.logger.warn("#{self}: #{e.message[0..60].gsub(/[\n\r]/, '')} ...\n")
           ApiResource.logger.debug(e.backtrace.pretty_inspect)
           return e.respond_to?(:request) ? e.request : nil
         end

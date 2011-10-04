@@ -14,6 +14,7 @@ require 'log4r/outputter/consoleoutputters'
 require 'api_resource/exceptions'
 
 require 'differ'
+require 'colorize'
 
 module ApiResource
   

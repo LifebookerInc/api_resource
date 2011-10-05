@@ -176,7 +176,7 @@ module ApiResource
         else
           case @method
             when :post, :put
-              @params = JSON.parse(opts[:body] || "").sort
+              @params = JSON.parse(opts[:body] || "")
             when :get, :delete, :head
               @params = sorted_params(@query || "")
           end
@@ -203,14 +203,14 @@ module ApiResource
             ret[val.first] = val.last
           end
         end
-        ret.sort
+        ret
       end
 
       # because of the context these come from, we can assume that the path already matches
       def match?(request)
         return false unless self.method == request.method
         return false unless self.format == request.format || request.format.nil? || self.format.nil?
-        PathString.as_sorted_json(self.params) == PathString.as_sorted_json(request.params)
+        Comparator.diff(self.params, request.params) == {}
       end
       # string representation
       def to_s

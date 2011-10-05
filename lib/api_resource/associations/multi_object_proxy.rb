@@ -42,13 +42,12 @@ module ApiResource
         end
 
         def load(contents)
-          # If we have a blank array or it's just nil then we should just return after setting internal_object to a blank array
-          @internal_object = [] and return nil if (contents.is_a?(Array) && contents.blank?) || contents.nil?
+          @internal_object = [] and return nil if contents.blank?
           if contents.is_a?(Array) && contents.first.is_a?(Hash) && contents.first[self.class.remote_path_element]
             settings = contents.slice!(0).with_indifferent_access
           end
 
-          settings = contents if contents.is_a?(Hash)
+          settings = contents.with_indifferent_access if contents.is_a?(Hash)
           settings ||= {}.with_indifferent_access
 
           raise "Invalid response for multi object relationship: #{contents}" unless settings[self.class.remote_path_element] || contents.is_a?(Array)

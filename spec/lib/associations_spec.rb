@@ -220,10 +220,9 @@ describe "Associations" do
       end
 
       context "Loading hash contents" do
-
         it "should not be able to load a hash without a 'service_uri'" do
           lambda {
-            Associations::MultiObjectProxy.new("TestResource", {})
+            Associations::MultiObjectProxy.new("TestResource", {:hi => 3})
           }.should raise_error
         end
 

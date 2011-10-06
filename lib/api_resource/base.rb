@@ -34,8 +34,6 @@ module ApiResource
         EOE
         true
       end
-
-      
       # This makes a request to new_element_path
       def set_class_attributes_upon_load
         return true if self == ApiResource::Base
@@ -73,6 +71,7 @@ module ApiResource
 
       def reload_class_attributes
         # clear the public_attribute_names, protected_attribute_names
+        remove_instance_variable(:@class_data) if instance_variable_defined?(:@class_data)
         self.clear_attributes
         self.clear_associations
         self.set_class_attributes_upon_load
@@ -240,6 +239,17 @@ module ApiResource
         connection.delete(element_path(id, options))
       end
       
+      protected
+        def method_missing(meth, *args, &block)
+          # make one attempt to load remote attrs
+          unless self.instance_variable_defined?(:@class_data)
+            self.set_class_attributes_upon_load
+            self.instance_variable_set(:@class_data, true)
+            return self.send(meth, *args, &block)
+          end
+          super
+        end
+      
       private
         # Find every resource
         def find_every(options)
@@ -331,11 +341,12 @@ module ApiResource
     
     def initialize(attributes = {})
       @prefix_options = {}
-      # Now we can make a call to setup the inheriting klass with its attributes
+      # if we initialize this class, load the attributes
       unless self.class.instance_variable_defined?(:@class_data)
         self.class.set_class_attributes_upon_load
         self.class.instance_variable_set(:@class_data, true)
       end
+      # Now we can make a call to setup the inheriting klass with its attributes
       load(attributes)
     end
     

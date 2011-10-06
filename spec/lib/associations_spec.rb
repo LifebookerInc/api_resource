@@ -156,6 +156,12 @@ describe "Associations" do
       TestResource.reload_class_attributes
     end
     
+    it "should return nil if its internal object is nil" do
+      ap = Associations::SingleObjectProxy.new("TestResource", {})
+      ap.instance_variable_set(:@internal_object, nil)
+      ap.blank?.should be_true
+    end
+    
     it "should be able to create a SingleObjectProxy around a blank hash" do
       ap = Associations::SingleObjectProxy.new("TestResource", {})
       ap.remote_path.should be_blank

@@ -44,6 +44,11 @@ module ApiResource
       def internal_object
         @internal_object ||= self.load_scope_with_options(:all, {})
       end
+      
+      def blank?
+        self.internal_object.blank?
+      end
+      alias_method :empty?, :blank?
 
       def method_missing(method, *args, &block)
         self.internal_object.send(method, *args, &block)

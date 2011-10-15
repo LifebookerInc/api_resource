@@ -562,32 +562,53 @@ describe "Associations" do
             ActiveRecord::Base.singleton_methods.should include assoc
           end
         end
-        it "should attempt to load a single remote object for a belongs_to relationship" do
-          TestAR.class_eval do
-            belongs_to_remote :test_resource
+        context "Belongs To" do
+
+          before(:all) do
+            TestAR.class_eval do
+              belongs_to_remote :test_resource
+            end
+          end
+
+          it "should attempt to load a single remote object for a belongs_to relationship" do
+            tar = TestAR.new
+            tar.stubs(:test_resource_id).returns(1)
+            TestResource.connection.expects(:get).with("/test_resources/1.json").once.returns({"name" => "testing"})
+            # load the test resource
+            tar.test_resource.name.should eql "testing"
           end
           
-          tar = TestAR.new
-          tar.stubs(:test_resource_id).returns(1)
-          TestResource.connection.expects(:get).with("/test_resources/1.json").once
-          # load the test resource
-          tar.test_resource.internal_object
         end
-        it "should attempt to load a single remote object" do
-          TestAR.class_eval do
-            has_one_remote :test_resource
+        context "Has One" do
+          before(:all) do
+            TestAR.class_eval do
+              has_one_remote :test_resource
+            end
+          end
+          it "should attempt to load a single remote object for a has_one relationship" do
+            tar = TestAR.new
+            tar.stubs(:id).returns(1)
+            TestResource.connection.expects(:get).with("/test_resources.json?test_ar_id=1").once.returns([{"name" => "testing"}])
+            # load the test resource
+            tar.test_resource.name.should eql "testing"
+          end
+        end
+        context "Has Many" do
+          before(:all) do
+            TestAR.class_eval do
+              has_many_remote :has_many_objects
+            end
+          end
+          it "should attempt to load a collection of remote objects for a has_many relationship" do
+            tar = TestAR.new
+            tar.stubs(:id).returns(1)
+            HasManyObject.connection.expects(:get).with("/has_many_objects.json?test_ar_id=1").once.returns([{"name" => "testing"}])
+            # load the test resource
+            tar.has_many_objects.first.name.should eql "testing"
           end
           
-          tar = TestAR.new
-          tar.stubs(:id).returns(1)
-          TestResource.connection.expects(:get).with("/test_resources.json?test_ar_id=1").once
-          # load the test resource
-          tar.test_resource.internal_object
         end
       end
-      
     end
-    
   end
-  
 end

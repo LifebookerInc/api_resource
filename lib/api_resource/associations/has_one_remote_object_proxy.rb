@@ -11,6 +11,14 @@ module ApiResource
         end
         true
       end
+      protected
+      # load data from the remote server
+      # In a has_one, we can get back an Array, so we use the first element
+      def load_from_remote(options)
+        data = super(options)
+        data = data.first if data.is_a?(Array)
+        data
+      end
     end
   end
 end

@@ -36,7 +36,7 @@ module ApiResource
           return [] if self.remote_path.blank?
           unless self.loaded[scope]
             self.times_loaded += 1
-            self.loaded[scope] = self.klass.connection.get("#{self.remote_path}.#{self.klass.format.extension}?#{options.to_query}")
+            self.loaded[scope] = self.load_from_remote(options)
           end
           self.loaded[scope].collect{|item| self.klass.new(item)}
         end

@@ -86,7 +86,23 @@ module ApiResource
       def load(contents)
         raise "Not Implemented: This method must be implemented in a subclass"
       end
+      
+      # get the remote URI based on our config and options
+      def build_load_path(options)
+        path = self.remote_path
+        # add a format if it doesn't exist and there is no query string yet
+        path += ".#{self.klass.format.extension}" unless path =~ /\./ || path =~/\?/
+        # add the query string, allowing for other user-provided options in the remote_path if we have options
+        unless options.blank?
+          path += (path =~ /\?/ ? "&" : "?") + options.to_query 
+        end
+        path
+      end
 
+      # get data from the remote server
+      def load_from_remote(options)
+        self.klass.connection.get(self.build_load_path(options))
+      end
       # This method create the key for the loaded hash, it ensures that a unique set of scopes
       # with a unique set of options is only loaded once
       def loaded_hash_key(scope, options)

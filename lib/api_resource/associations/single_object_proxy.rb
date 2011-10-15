@@ -22,14 +22,7 @@ module ApiResource
         return nil if self.remote_path.blank?
         unless self.loaded[scope]
           self.times_loaded += 1
-          path = self.remote_path
-          # add a format if it doesn't exist and there is no query string yet
-          path += ".#{self.klass.format.extension}" unless path =~ /\./ || path =~/\?/
-          # add the query string, allowing for other user-provided options in the remote_path if we have options
-          unless options.blank?
-            path += (path =~ /\?/ ? "&" : "?") + options.to_query 
-          end
-          self.loaded[scope] = self.klass.connection.get(path)
+          self.loaded[scope] = self.load_from_remote(options)
         end
         self.klass.new(self.loaded[scope])
       end

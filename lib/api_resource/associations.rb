@@ -1,64 +1,87 @@
 require 'active_support'
 require 'active_support/string_inquirer'
+require 'api_resource/association_activation'
 require 'api_resource/associations/relation_scope'
 require 'api_resource/associations/resource_scope'
 require 'api_resource/associations/multi_object_proxy'
 require 'api_resource/associations/single_object_proxy'
+require 'api_resource/associations/attr_single_object_proxy'
 require 'api_resource/associations/related_object_hash'
 
 module ApiResource
   
   module Associations
     extend ActiveSupport::Concern
-    
-    ASSOCIATION_TYPES = [:belongs_to, :has_one, :has_many]
 
-    included do 
-    
+    included do
+      
+      raise "Cannot include Associations without first including AssociationActivation" unless self.ancestors.include?(ApiResource::AssociationActivation)
       class_inheritable_accessor :related_objects
-
+      
       # Hash to hold onto the definitions of the related objects
-      self.related_objects = RelatedObjectHash.new({
-        :belongs_to => RelatedObjectHash.new,
-        :has_one => RelatedObjectHash.new,
-        :has_many => RelatedObjectHash.new,
-        :scope => RelatedObjectHash.new
-      })
+      self.related_objects = RelatedObjectHash.new
+      self.association_types.keys.each do |type|
+        self.related_objects[type] = RelatedObjectHash.new({})
+      end
+      self.related_objects[:scope] = RelatedObjectHash.new({})
+      
+      self.define_association_methods
+      
     end
 
+    # module methods to include the proper associations in various libraries - this is usually loaded in Railties
+    def self.activate_active_record
+      ActiveRecord::Base.class_eval do
+        include ApiResource::AssociationActivation
+        self.activate_associations(:has_many_remote => :attr_multi, :belongs_to_remote => :attr_single, :has_one_remote => :attr_single)
+      end
+    end
 
     module ClassMethods
       
       # Define the methods for creating and testing for associations, unfortunately
       # scopes are different enough to require different methods :(
-      ApiResource::Associations::ASSOCIATION_TYPES.each do |assoc|
-        self.module_eval <<-EOE, __FILE__, __LINE__ + 1
-          def #{assoc}(*args)
-            options = args.extract_options!
-            options = options.with_indifferent_access
-            # Raise an error if we have multiple args and options
-            raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
-            args.each do |arg|
-              klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
-              # add this to any descendants - the other methods etc are handled by inheritance
-              ([self] + self.descendants).each do |klass|
-                klass.related_objects[:#{assoc}][arg.to_sym] = klass_name
+      def define_association_methods
+        self.association_types.each_key do |assoc|
+          self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{assoc}(*args)
+              options = args.extract_options!
+              options = options.with_indifferent_access
+              # Raise an error if we have multiple args and options
+              raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
+              args.each do |arg|
+                klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
+                # add this to any descendants - the other methods etc are handled by inheritance
+                ([self] + self.descendants).each do |klass|
+                  klass.related_objects[:#{assoc}][arg.to_sym] = klass_name
+                end
+                # We need to define reader and writer methods here
+                define_association_as_attribute(:#{assoc}, arg)
               end
-              # We need to define reader and writer methods here
-              define_association_as_attribute(:#{assoc}, arg)
             end
-          end
           
-          def #{assoc}?(name)
-            return self.related_objects[:#{assoc}][name.to_s.pluralize.to_sym].present? || self.related_objects[:#{assoc}][name.to_s.singularize.to_sym].present?
-          end
+            def #{assoc}?(name)
+              return self.related_objects[:#{assoc}][name.to_s.pluralize.to_sym].present? || self.related_objects[:#{assoc}][name.to_s.singularize.to_sym].present?
+            end
           
-          def #{assoc}_class_name(name)
-            raise "No such" + :#{assoc}.to_s + " association on #{name}" unless self.#{assoc}?(name)
-            return self.find_namespaced_class_name(self.related_objects[:#{assoc}][name.to_sym])
-          end            
+            def #{assoc}_class_name(name)
+              raise "No such" + :#{assoc}.to_s + " association on #{name}" unless self.#{assoc}?(name)
+              return self.find_namespaced_class_name(self.related_objects[:#{assoc}][name.to_sym])
+            end            
 
-        EOE
+          EOE
+          # For convenience we will define the methods for testing for the existence of an association
+          # and getting the class for an association as instance methods too to avoid tons of self.class calls
+          self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{assoc}?(name)
+              return self.class.#{assoc}?(name)
+            end
+
+            def #{assoc}_class_name(name)
+              return self.class.#{assoc}_class_name(name)
+            end
+          EOE
+        end
       end
       
       def scopes
@@ -92,6 +115,11 @@ module ApiResource
         end
       end
       
+      def association_names
+        # structure is {:has_many => {"myname" => "ClassName"}}
+        self.related_objects.clone.delete_if{|k,v| k.to_s == "scope"}.collect{|k,v| v.keys.first.to_sym}
+      end
+      
       def association_class_name(assoc)
         raise ArgumentError, "#{assoc} is not a valid association of #{self}" unless self.association?(assoc)
         result = self.related_objects.detect do |key,value|
@@ -108,26 +136,16 @@ module ApiResource
       
       protected
         def define_association_as_attribute(assoc_type, assoc_name)
-          define_attributes assoc_name
-          case assoc_type.to_sym
-            when :has_many
-              self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-                def #{assoc_name}
-                  self.attributes[:#{assoc_name}] ||= MultiObjectProxy.new(self.association_class_name('#{assoc_name}'), nil)
-                end
-              EOE
-            else
-              self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-                def #{assoc_name}
-                  self.attributes[:#{assoc_name}] ||= SingleObjectProxy.new(self.association_class_name('#{assoc_name}'), nil)
-                end
-              EOE
-          end
-          # Always define the setter the same
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+            def #{assoc_name}
+              self.attributes[:#{assoc_name}] ||= #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy.new(self.association_class_name('#{assoc_name}'), nil, self)
+            end
             def #{assoc_name}=(val)
               #{assoc_name}_will_change! unless self.#{assoc_name}.internal_object == val
               self.#{assoc_name}.internal_object = val
+            end
+            def #{assoc_name}?
+              self.#{assoc_name}.internal_object.present?
             end
           EOE
         end
@@ -152,20 +170,6 @@ module ApiResource
     end
     
     module InstanceMethods
-      # For convenience we will define the methods for testing for the existence of an association
-      # and getting the class for an association as instance methods too to avoid tons of self.class calls
-      ApiResource::Associations::ASSOCIATION_TYPES.each do |assoc|
-        module_eval <<-EOE, __FILE__, __LINE__ + 1
-          def #{assoc}?(name)
-            return self.class.#{assoc}?(name)
-          end
-          
-          def #{assoc}_class_name(name)
-            return self.class.#{assoc}_class_name(name)
-          end
-        EOE
-      end
-      
       def association?(assoc)
         self.class.association?(assoc)
       end
@@ -186,6 +190,10 @@ module ApiResource
         return self.class.scope_attributes(name)
       end
       
+      # list of all association names
+      def association_names
+        self.class.association_names
+      end
     end
 
   end

@@ -7,12 +7,14 @@ module ApiResource
       cattr_accessor :remote_path_element; self.remote_path_element = :service_uri
       cattr_accessor :include_class_scopes; self.include_class_scopes = true
 
-      attr_accessor :loaded, :klass, :internal_object, :remote_path, :scopes, :times_loaded
+      attr_accessor :owner, :loaded, :klass, :internal_object, :remote_path, :scopes, :times_loaded
 
-      def initialize(klass_name, contents)
+      # TODO: added owner - moved it to the end because the tests don't use it - it's useful here though
+      def initialize(klass_name, contents, owner = nil)
         raise "Cannot create an association proxy to the unknown object #{klass_name}" unless defined?(klass_name.to_s.classify)
         # A simple attr_accessor for testing purposes
         self.times_loaded = 0
+        self.owner = owner
         self.klass = klass_name.to_s.classify.constantize
         self.load(contents)
         self.loaded = {}.with_indifferent_access

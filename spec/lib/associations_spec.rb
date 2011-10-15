@@ -10,6 +10,17 @@ describe "Associations" do
   
   context "creating and testing for associations of various types" do
     
+    it "should be able to give a list of all associations" do
+      AllAssociations = Class.new(ApiResource::Base)
+      AllAssociations.class_eval do
+        has_many :has_many_objects
+        belongs_to :belongs_to_object
+        has_one :has_one_object
+      end
+      AllAssociations.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
+      AllAssociations.new.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
+    end
+    
     it "should be be able to define an asociation using a method named after that association type" do
       TestResource.has_many :has_many_objects
       TestResource.has_many?(:has_many_objects).should be_true
@@ -534,6 +545,34 @@ describe "Associations" do
         end
         
         
+      end
+      
+      context "ActiveModel" do
+        before(:all) do
+          require 'active_record'
+          ActiveRecord::Base.establish_connection({"adapter" => "sqlite3", "database" => "/tmp/api_resource_test_db.sqlite"})
+          ActiveRecord::Base.connection.create_table(:test_ars, :force => true) do |t|
+            t.integer(:test_resource_id)
+          end
+          ApiResource::Associations.activate_active_record
+          TestAR = Class.new(ActiveRecord::Base)
+        end
+        it "should define remote association types for AR" do
+          [:has_many_remote, :belongs_to_remote, :has_one_remote].each do |assoc|
+            ActiveRecord::Base.singleton_methods.should include assoc
+          end
+        end
+        it "should attempt to load a single remote object" do
+          TestAR.class_eval do
+            belongs_to_remote :test_resource
+          end
+          
+          tar = TestAR.new
+          tar.stubs(:test_resource_id).returns(1)
+          TestResource.connection.expects(:get).with("/test_resources/1.json").once
+          # load the test resource
+          tar.test_resource.internal_object
+        end
       end
       
     end

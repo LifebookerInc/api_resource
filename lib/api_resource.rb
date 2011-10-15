@@ -21,6 +21,7 @@ module ApiResource
   extend ActiveSupport::Autoload
   
   autoload :Associations
+  autoload :AssociationActivation
   autoload :Attributes
   autoload :Base
   autoload :Callbacks

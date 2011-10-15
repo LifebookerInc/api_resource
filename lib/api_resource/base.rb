@@ -478,15 +478,16 @@ module ApiResource
       options[:except] ||= []
       ret = self.attributes.inject({}) do |accum, (key,val)|
         # If this is an association and it's in include_associations then include it
-        if self.association?(key) && options[:include_associations].include?(key.to_sym)
-          accum.merge(key => val.serializable_hash({:include_id => true}))
-        elsif options[:include_extras].include?(key.to_sym)
+        if options[:include_extras].include?(key.to_sym)
           accum.merge(key => val)
         elsif options[:except].include?(key.to_sym)
           accum
         else
-          self.association?(key) || !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
+          !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
+      end
+      options[:include_associations].each do |assoc|
+        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true}) if self.association?(assoc)
       end
       # include id - this is for nested updates
       ret[:id] = self.id if options[:include_id] && !self.id.nil?
@@ -555,7 +556,10 @@ module ApiResource
     extend ActiveModel::Naming
     # Order is important here
     # It should be Validations, Dirty Tracking, Callbacks so the include order is the opposite
-    include Associations, Callbacks, Attributes, ModelErrors
+    include AssociationActivation
+    self.activate_associations
+    
+    include Callbacks, Attributes, ModelErrors
     
   end
   

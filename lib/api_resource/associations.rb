@@ -5,7 +5,8 @@ require 'api_resource/associations/relation_scope'
 require 'api_resource/associations/resource_scope'
 require 'api_resource/associations/multi_object_proxy'
 require 'api_resource/associations/single_object_proxy'
-require 'api_resource/associations/attr_single_object_proxy'
+require 'api_resource/associations/belongs_to_remote_object_proxy'
+require 'api_resource/associations/has_one_remote_object_proxy'
 require 'api_resource/associations/related_object_hash'
 
 module ApiResource
@@ -33,7 +34,7 @@ module ApiResource
     def self.activate_active_record
       ActiveRecord::Base.class_eval do
         include ApiResource::AssociationActivation
-        self.activate_associations(:has_many_remote => :attr_multi, :belongs_to_remote => :attr_single, :has_one_remote => :attr_single)
+        self.activate_associations(:has_many_remote => :has_many_remote, :belongs_to_remote => :belongs_to_remote, :has_one_remote => :has_one_remote)
       end
     end
 

@@ -37,6 +37,9 @@ module ApiResource
       def load(contents)
         # If we get something nil this should just behave like nil
         return if contents.nil?
+        # if we get an array with a length of one, make it a hash
+        contents = contents.first if contents.is_a?(Array) && contents.length == 1
+        
         raise "Expected an attributes hash got #{contents}" unless contents.is_a?(Hash)
         contents = contents.with_indifferent_access
         # If we don't have a 'service_uri' just assume that these are all attributes and make an object

@@ -556,11 +556,17 @@ describe "Associations" do
           end
           ApiResource::Associations.activate_active_record
           TestAR = Class.new(ActiveRecord::Base)
+          TestAR.class_eval do 
+            belongs_to_remote :my_favorite_thing, :class_name => "TestClassYay"
+          end
         end
         it "should define remote association types for AR" do
           [:has_many_remote, :belongs_to_remote, :has_one_remote].each do |assoc|
             ActiveRecord::Base.singleton_methods.should include assoc
           end
+        end
+        it "should add remote associations to related objects" do
+          TestAR.related_objects.should eql({"has_many_remote"=>{}, "belongs_to_remote"=>{"my_favorite_thing"=>"TestClassYay"}, "has_one_remote"=>{}, "scope"=>{}})
         end
         context "Not Overriding Scopes" do
           it "should not override scopes, which would raise an error with lambda-style scopes" do

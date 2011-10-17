@@ -559,7 +559,7 @@ module ApiResource
     include AssociationActivation
     self.activate_associations
     
-    include Callbacks, Attributes, ModelErrors
+    include Scopes, Callbacks, Attributes, ModelErrors
     
   end
   

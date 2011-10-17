@@ -13,6 +13,10 @@ module ApiResource
       end
     end
     
+    initializer do
+      ApiResource::Associations.activate_active_record if defined?(ActiveRecord)
+    end
+    
   end
   
 end

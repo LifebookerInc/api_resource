@@ -562,6 +562,17 @@ describe "Associations" do
             ActiveRecord::Base.singleton_methods.should include assoc
           end
         end
+        context "Not Overriding Scopes" do
+          it "should not override scopes, which would raise an error with lambda-style scopes" do
+            lambda {
+              TestAR.class_eval do
+                scope :my_favorite_scope, lambda {
+                  joins(:my_test)
+                }
+              end
+            }.should_not raise_error
+          end
+        end
         context "Belongs To" do
 
           before(:all) do

@@ -20,7 +20,7 @@ module ApiResource
       end
 
       def present?
-	return @internal_object.present?
+	      return @internal_object.present?
       end
 
       protected

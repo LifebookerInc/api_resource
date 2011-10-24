@@ -15,6 +15,14 @@ module ApiResource
         return load(contents)
       end
 
+      def blank?
+        return @internal_object.blank?
+      end
+
+      def present?
+	return @internal_object.present?
+      end
+
       protected
       def load_scope_with_options(scope, options)
         scope = self.loaded_hash_key(scope.to_s, options)

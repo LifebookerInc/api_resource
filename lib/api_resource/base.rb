@@ -29,6 +29,16 @@ module ApiResource
         # it calls super which will allow the chaining effect we need
         klass.instance_eval <<-EOE, __FILE__, __LINE__ + 1
           def inherited(klass)
+            define_singleton_method(:collection_name) do
+              if (direct_descendent = self) != ApiResource::Base
+                while direct_descendent.ancestors[1] != ApiResource::Base
+                  direct_descendent = direct_descendent.ancestors[1]
+                end
+                @collection_name ||= ActiveSupport::Inflector.pluralize(direct_descendent.element_name)
+              else
+                super
+              end
+            end            
             super
           end
         EOE

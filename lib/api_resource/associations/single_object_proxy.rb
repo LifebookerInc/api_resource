@@ -12,6 +12,7 @@ module ApiResource
       
       def internal_object=(contents)
         return @internal_object = contents if contents.is_a?(self.klass)
+        return @internal_object = contents if contents.internal_object.is_a?(self.klass)
         return load(contents)
       end
 
@@ -39,8 +40,11 @@ module ApiResource
         # If we get something nil this should just behave like nil
         return if contents.nil?
         # if we get an array with a length of one, make it a hash
-        contents = contents.first if contents.is_a?(Array) && contents.length == 1
-        
+        if contents.is_a?(self.class)
+          contents = contents.internal_object.serializable_hash
+        elsif contents.is_a?(Array) && contents.length == 1
+          contents = contents.first
+        end
         raise "Expected an attributes hash got #{contents}" unless contents.is_a?(Hash)
         contents = contents.with_indifferent_access
         # If we don't have a 'service_uri' just assume that these are all attributes and make an object

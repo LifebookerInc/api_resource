@@ -214,7 +214,7 @@ module ApiResource
           when :first then find_every(options).first
           when :last  then find_every(options).last
           when :one   then find_one(options)
-          else             find_single(scope, options)
+          else             (scope, options)
         end
       end
 
@@ -306,7 +306,6 @@ module ApiResource
         def find_single(scope, options)
           prefix_options, query_options = split_options(options[:params])
           path = element_path(scope, prefix_options, query_options)
-          debugger
           instantiate_record(connection.get(path, headers), prefix_options)
         end
 

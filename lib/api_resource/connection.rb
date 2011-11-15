@@ -11,7 +11,8 @@ module ApiResource
   # services.
   class Connection
 
-    HTTP_FORMAT_HEADER_NAMES = {  :get => 'Accept',
+    HTTP_FORMAT_HEADER_NAMES = {  
+      :get => 'Accept',
       :put => 'Content-Type',
       :post => 'Content-Type',
       :delete => 'Accept',
@@ -161,7 +162,9 @@ module ApiResource
       end
       
       def http_format_header(verb)
-        {HTTP_FORMAT_HEADER_NAMES[verb] => format.mime_type}
+        {}.tap do |ret|
+          ret[HTTP_FORMAT_HEADER_NAMES[verb]] = format.mime_type
+        end
       end
   end
 end

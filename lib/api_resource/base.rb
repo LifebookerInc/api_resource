@@ -7,7 +7,7 @@ module ApiResource
   
   class Base
     
-    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :ssl_options
+    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :ssl_options, :token
     
     class_inheritable_accessor :include_root_in_json; self.include_root_in_json = true
     class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
@@ -31,7 +31,7 @@ module ApiResource
           def inherited(klass)
             define_singleton_method(:collection_name) do
               if (direct_descendent = self) != ApiResource::Base
-                while direct_descendent.ancestors[1] != ApiResource::Base
+                while direct_descendent.ancestors[1] && direct_descendent.ancestors[1] != ApiResource::Base
                   direct_descendent = direct_descendent.ancestors[1]
                 end
                 @collection_name ||= ActiveSupport::Inflector.pluralize(direct_descendent.element_name)
@@ -86,6 +86,13 @@ module ApiResource
         self.clear_associations
         self.set_class_attributes_upon_load
       end
+      
+      def token=(new_token)
+        self.write_inheritable_attribute(:token, new_token)
+        self.descendants.each do |child|
+          child.send(:token=, new_token)
+        end
+      end
 
       def site=(site)
         # store so we can reload attributes if the site changed
@@ -132,7 +139,9 @@ module ApiResource
       end
       
       def headers
-        @headers || {}
+        {}.tap do |ret|
+          ret['Lifebooker-Token'] = self.token if self.token.present?
+        end
       end
       
       def prefix(options = {})
@@ -297,6 +306,7 @@ module ApiResource
         def find_single(scope, options)
           prefix_options, query_options = split_options(options[:params])
           path = element_path(scope, prefix_options, query_options)
+          debugger
           instantiate_record(connection.get(path, headers), prefix_options)
         end
 

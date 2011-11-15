@@ -12,7 +12,7 @@ module ApiResource
       
       def internal_object=(contents)
         return @internal_object = contents if contents.is_a?(self.klass)
-        return @internal_object = contents if contents.internal_object.is_a?(self.klass)
+        return @internal_object = contents if contents.respond_to?(:internal_object) && contents.internal_object.is_a?(self.klass)
         return load(contents)
       end
 

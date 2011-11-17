@@ -214,7 +214,7 @@ module ApiResource
           when :first then find_every(options).first
           when :last  then find_every(options).last
           when :one   then find_one(options)
-          else             (scope, options)
+          else             find_single(scope, options)
         end
       end
 

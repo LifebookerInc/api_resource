@@ -109,7 +109,7 @@ module ApiResource
             ApiResource.logger.error(error.message)
             result = error.response
           else
-            raise ApiResource::ConnectionError.new(nil, "Unknown error #{error}")
+            raise ApiResource::ConnectionError.new(nil, :message => "Unknown error #{error}")
           end
         end
         return propogate_response_or_error(result, result.code)
@@ -144,7 +144,7 @@ module ApiResource
           when 500..600
             raise ApiResource::ServerError.new(response)
           else
-            raise ApiResource::ConnectionError.new(response, "Unknown response code: #{code}")
+            raise ApiResource::ConnectionError.new(response, :message => "Unknown response code: #{code}")
         end
       end
       

@@ -5,9 +5,10 @@ module ApiResource
     
     attr_reader :response
 
-    def initialize(response, message = nil)
+    def initialize(response, options = {})
       @response = response
-      @message  = message
+      @message  = options[:message]
+      @path     = options[:path]
     end
 
     def to_s
@@ -15,6 +16,7 @@ module ApiResource
       message << "  Response code = #{response.code}." if response.respond_to?(:code)
       message << "  Response message = #{response.message}." if response.respond_to?(:message)
       message << "\n#{@message}"
+      message << "\n#{@path}"
     end
     
     def http_code

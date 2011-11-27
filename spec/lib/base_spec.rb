@@ -130,6 +130,11 @@ describe "Base" do
       TestResource.collection_name.should eql("test_resources")
     end
     
+    it "should inherit element name and collection name from its parent class if using SCI" do
+      ChildTestResource.ancestors.should include TestResource
+      ChildTestResource.collection_name.should eql "test_resources"
+    end
+    
     it "should be able to set the element and collection names to anything" do
       TestResource.element_name = "element"
       TestResource.collection_name = "elements"

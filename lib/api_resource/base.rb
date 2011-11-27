@@ -468,7 +468,7 @@ module ApiResource
     # when we call to_s or inspect on a descendent of base but allows it if we 
     # try to evaluate an association directly
     def to_s
-      return "#<#{self.class}:0x%08x @attributes=#{self.attributes.inject({}){|accum,(k,v)| self.association?(k) ? accum : accum.merge(k => v)}}" % (self.object_id * 2)
+      return "#<#{self.class}:#{(self.object_id * 2).to_s(16)} @attributes=#{self.attributes.inject({}){|accum,(k,v)| self.association?(k) ? accum : accum.merge(k => v)}}"
     end
     
     alias_method :inspect, :to_s

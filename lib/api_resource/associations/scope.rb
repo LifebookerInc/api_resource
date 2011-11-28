@@ -8,21 +8,22 @@ module ApiResource
 
       attr_reader :scopes
 
-      def initialize(klass, current_scope, opts)
+      def initialize(klass, current_scope, opts = {})
         # Holds onto the association proxy this RelationScope is bound to
         @klass = klass
-        @current_scope = Array.wrap(current_scope.to_s)
+        @parent = opts.delete(:parent)
+        # splits on _and_ and sorts to get a consistent scope key order
+        @current_scope = (self.parent_scope + Array.wrap(current_scope.to_s)).sort
         # define methods for the scopes of the object
 
         klass.scopes.each do |key, val|
           self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
             # This class always has at least one scope, adding a new one should clone this object
-            def #{key}(opts = {})
+            def #{key}(*args)
               obj = self.clone
               # Call reload to make it go back to the webserver the next time it loads
               obj.reload
-              obj.enhance_current_scope(:#{key}, opts)
-              return obj
+              return obj.enhance_current_scope(:#{key}, *args)
             end
           EOE
           self.scopes[key.to_s] = val
@@ -49,8 +50,13 @@ module ApiResource
         ActiveSupport::StringInquirer.new(@current_scope.join("_and_").concat("_scope"))
       end
 
+      def to_hash
+        self.parent_hash.merge(self.scopes[self.current_scope])
+      end
+      
+      # gets the current hash and calls to_query on it
       def to_query
-        self.scopes[self.current_scope].to_query
+        self.to_hash.to_query
       end
 
       def method_missing(method, *args, &block)
@@ -71,15 +77,23 @@ module ApiResource
       end
 
       protected
-        def enhance_current_scope(scp, opts)
-          scp = scp.to_s
-          raise ArgumentError, "Unknown scope #{scp}" unless self.scope?(scp)
-          # Hold onto the attributes related to the old scope that we're going to chain to
-          current_scope_hash = self.scopes[self.current_scope]
-          # This sets the new current scope making them unique and sorted to make it order independent
-          @current_scope = @current_scope.concat([scp.to_s]).uniq.sort
-          # This sets up the new options for the current scope, it merges the defaults for the new scope then substitutes from opts
-          self.scopes[self.current_scope] = opts.inject(current_scope_hash.merge(self.scopes[scp.to_s])){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum }
+        # scope from the parent
+        def parent_scope
+          ret = @parent ? Array.wrap(@parent.current_scope).collect{|el| el.gsub(/_scope$/,'')} : []
+          ret.collect{|el| el.split(/_and_/)}.flatten
+        end
+        # querystring hash from parent
+        def parent_hash
+          @parent ? @parent.to_hash : {}
+        end
+        def enhance_current_scope(scp, *args)
+          opts = args.extract_options!
+          check_scope(scp)         
+          self.class.class_factory(self.scopes[scp]).new(self.klass, scp, *args, opts.merge(:parent => self))
+        end
+        # make sure we have a valid scope
+        def check_scope(scp)
+          raise ArgumentError, "Unknown scope #{scp}" unless self.scope?(scp.to_s)
         end
     end
     

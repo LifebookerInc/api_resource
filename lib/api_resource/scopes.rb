@@ -13,8 +13,8 @@ module ApiResource
         self.related_objects[:scope][name.to_sym] = hsh
         # we also need to define a class method for each scope
         self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
-          def #{name}(opts = {})
-            return ApiResource::Associations::ResourceScope.new(self, :#{name}, opts)
+          def #{name}(*args)
+            return #{ApiResource::Associations::ResourceScope.class_factory(hsh)}.new(self, :#{name}, *args)
           end
         EOE
       end

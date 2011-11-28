@@ -31,6 +31,10 @@ class ErrorResource < ApiResource::Base
   
 end
 
+class ScopeResource < ApiResource::Base
+  
+end
+
 class ErrorFullMessageResource < ApiResource::Base
   
 end

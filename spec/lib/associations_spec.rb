@@ -278,6 +278,25 @@ describe "Associations" do
     end
 
     describe "Selecting scopes" do
+      
+      before(:all) do
+        ScopeResource.class_eval do
+          scope :one, :one => true
+          scope :two, :two => "test"
+          scope :three, :three => ["id"]
+        end
+      end
+      
+      
+      it "should be able to query scopes on the current model" do
+        
+        ScopeResource.one.to_query.should eql "one=true"
+        ScopeResource.two("test").to_query.should eql "two=test"
+        ScopeResource.three(1,2,3).to_query.should eql "three[]=1&three[]=2&three[]=3"
+        
+        ScopeResource.one.two("testing").three([2]).to_query.should eql "one=true&three[]=2&two=testing"
+      end
+      
 
       it "should be able to change scopes" do
         ap = Associations::MultiObjectProxy.new("TestResource", [{:service_uri => "/route", :scope1 => {"scope1" => true}, :scope2 => {"scope2" => true}}])

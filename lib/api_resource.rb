@@ -61,6 +61,25 @@ module ApiResource
   def self.format=(new_format)
     ApiResource::Base.format = new_format
   end
+  # set token
+  def self.token=(new_token)
+    ApiResource::Base.token = new_token
+  end
+  # get token
+  def self.token
+    ApiResource::Base.token
+  end
+  # Run a block with a given token - useful for AroundFilters
+  def self.with_token(new_token, &block)
+    old_token = self.token
+    begin
+      self.token = new_token
+      yield
+    ensure
+      self.token = old_token
+    end
+  end
+  
   # logger
   def self.logger
     return @logger if @logger

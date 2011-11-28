@@ -53,7 +53,7 @@ module ApiResource
         self.remote_path = contents.delete(self.class.remote_path_element)
         # There's only one hash here so it's hard to distinguish attributes from scopes, the key scopes_only says everything
         # in this hash is a scope
-        no_attrs = (contents.delete("scopes_only") || false)
+        no_attrs = (contents.delete(:scopes_only) || false)
         attrs = {}
         contents.each do |key, val|
           # if this key is an attribute add it to attrs, warn if we've set scopes_only

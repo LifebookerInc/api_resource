@@ -129,6 +129,10 @@ module ApiResource
         @connection
       end
       
+      def reset_connection
+        remove_instance_variable(:@connection) if @connection.present?
+      end
+      
       def headers
         {}.tap do |ret|
           ret['Lifebooker-Token'] = self.token if self.token.present?

@@ -39,6 +39,8 @@ module ApiResource
   
   mattr_writer :logger
   mattr_accessor :raise_missing_definition_error; self.raise_missing_definition_error = false
+
+  DEFAULT_TIMEOUT = 10 # seconds
   
   # Load a fix for inflections for words ending in ess
   ActiveSupport::Inflector.inflections do |inflect|
@@ -78,6 +80,35 @@ module ApiResource
     ensure
       self.token = old_token
     end
+  end
+  
+  # delegated to Base
+  def self.reset_connection
+    ApiResource::Base.reset_connection
+  end
+
+  # set the timeout val and reset the connection
+  def self.timeout=(val)
+    @timeout = val
+    self.reset_connection
+    val
+  end
+  
+  # Getter for timeout
+  def self.timeout
+    @timeout ||= DEFAULT_TIMEOUT
+  end
+
+  # set the timeout val and reset the connection
+  def self.open_timeout=(val)
+    @open_timeout = val
+    self.reset_connection
+    val
+  end
+  
+  # Getter for timeout
+  def self.open_timeout
+    @open_timeout ||= DEFAULT_TIMEOUT
   end
   
   # logger

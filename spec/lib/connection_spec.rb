@@ -28,4 +28,49 @@ describe Connection do
     ApiResource::Base.token.should eql "123456"
   end
   
+  it "should provider a method to regenerate its connection" do
+    conn = ApiResource::Base.connection
+    conn.should be ApiResource::Base.connection
+    ApiResource.reset_connection
+    conn.should_not be ApiResource::Base.connection
+  end
+  
+  context "No Mocks" do
+    before(:all) do
+      ApiResource::Mocks.remove
+    end
+    after(:all) do
+      ApiResource::Mocks.init
+      ApiResource.timeout = 10
+      ApiResource.open_timeout = 10
+    end
+    it "should be able to set a timeout for its connection" do
+      ApiResource.timeout = 1
+      ApiResource.timeout.should eql 1
+      ApiResource.open_timeout = 1
+      ApiResource.open_timeout.should eql 1
+
+      ApiResource::Base.connection.send(:http, "/test").options[:timeout].should eql 1
+      ApiResource::Base.connection.send(:http, "/test").options[:open_timeout].should eql 1
+      
+      ApiResource.timeout = 100
+      ApiResource::Base.connection.send(:http, "/test").options[:timeout].should eql 100
+
+    end
+    
+    it "should time out if RestClient takes too long" do
+      
+      # hopefully google won't actually respond this fast :)
+      ApiResource.timeout = 0.001
+      ApiResource::Base.site = "http://www.google.com"
+      lambda{
+        ApiResource::Base.connection.get("/")
+      }.should raise_error(ApiResource::RequestTimeout)
+      
+    end
+    
+  end
+  
+
+  
 end

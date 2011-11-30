@@ -36,9 +36,18 @@ module ApiResource
     def self.init
       ::ApiResource::Connection.class_eval do
         private
+        alias_method :http_without_mock, :http
         def http(path)
           Interface.new(path)
         end
+      end
+    end
+    
+    # set ApiResource's http 
+    def self.remove
+      ::ApiResource::Connection.class_eval do
+        private
+        alias_method :http, :http_without_mock
       end
     end
 

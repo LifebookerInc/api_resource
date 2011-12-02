@@ -85,7 +85,7 @@ module ApiResource
     private
       # Makes a request to the remote service.
       def request(method, path, *arguments)
-        handle_response do
+        handle_response(path) do
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
             
             # debug logging
@@ -99,13 +99,14 @@ module ApiResource
       end
 
       # Handles response and error codes from the remote service.
-      def handle_response(&block)
+      def handle_response(path, &block)
         begin
           result = yield
         rescue RestClient::RequestTimeout
-          raise ApiResource::RequestTimeout.new("Request Time Out")
+          raise ApiResource::RequestTimeout.new("Request Time Out - Accessing #{path}}")
         rescue Exception => error
           if error.respond_to?(:http_code)
+            ApiResource.logger.error("#{self} accessing #{path}")
             ApiResource.logger.error(error.message)
             result = error.response
           else

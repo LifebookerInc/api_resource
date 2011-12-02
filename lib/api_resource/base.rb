@@ -39,7 +39,7 @@ module ApiResource
       def set_class_attributes_upon_load
         return true if self == ApiResource::Base
         begin
-          class_data = self.connection.get(self.new_element_path)
+          class_data = self.connection.get(self.new_element_path, self.headers)
           # Attributes go first
           if class_data["attributes"]
             define_attributes *(class_data["attributes"]["public"] || [])

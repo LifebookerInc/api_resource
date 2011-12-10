@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2011-10-03"
+  s.date = "2011-12-10"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
     ".document",
     ".rspec",
     "Gemfile",
+    "Gemfile.lock",
     "Guardfile",
     "LICENSE.txt",
     "README.rdoc",
@@ -27,8 +28,14 @@ Gem::Specification.new do |s|
     "VERSION",
     "api_resource.gemspec",
     "lib/api_resource.rb",
+    "lib/api_resource/association_activation.rb",
     "lib/api_resource/associations.rb",
     "lib/api_resource/associations/association_proxy.rb",
+    "lib/api_resource/associations/belongs_to_remote_object_proxy.rb",
+    "lib/api_resource/associations/dynamic_resource_scope.rb",
+    "lib/api_resource/associations/has_many_remote_object_proxy.rb",
+    "lib/api_resource/associations/has_one_remote_object_proxy.rb",
+    "lib/api_resource/associations/multi_argument_resource_scope.rb",
     "lib/api_resource/associations/multi_object_proxy.rb",
     "lib/api_resource/associations/related_object_hash.rb",
     "lib/api_resource/associations/relation_scope.rb",
@@ -45,15 +52,19 @@ Gem::Specification.new do |s|
     "lib/api_resource/formats.rb",
     "lib/api_resource/formats/json_format.rb",
     "lib/api_resource/formats/xml_format.rb",
+    "lib/api_resource/local.rb",
     "lib/api_resource/log_subscriber.rb",
     "lib/api_resource/mocks.rb",
     "lib/api_resource/model_errors.rb",
     "lib/api_resource/observing.rb",
     "lib/api_resource/railtie.rb",
+    "lib/api_resource/scopes.rb",
     "spec/lib/associations_spec.rb",
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",
     "spec/lib/callbacks_spec.rb",
+    "spec/lib/connection_spec.rb",
+    "spec/lib/local_spec.rb",
     "spec/lib/mocks_spec.rb",
     "spec/lib/model_errors_spec.rb",
     "spec/spec_helper.rb",
@@ -68,7 +79,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.11"
   s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then
@@ -80,6 +91,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
       s.add_runtime_dependency(%q<log4r>, [">= 0"])
       s.add_runtime_dependency(%q<differ>, [">= 0"])
+      s.add_runtime_dependency(%q<colorize>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_development_dependency(%q<growl>, [">= 0"])
@@ -92,12 +104,15 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<mocha>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_development_dependency(%q<activerecord>, ["= 3.0.9"])
+      s.add_development_dependency(%q<sqlite3>, [">= 0"])
     else
       s.add_dependency(%q<rails>, ["= 3.0.9"])
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
       s.add_dependency(%q<log4r>, [">= 0"])
       s.add_dependency(%q<differ>, [">= 0"])
+      s.add_dependency(%q<colorize>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_dependency(%q<growl>, [">= 0"])
@@ -110,6 +125,8 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<mocha>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_dependency(%q<activerecord>, ["= 3.0.9"])
+      s.add_dependency(%q<sqlite3>, [">= 0"])
     end
   else
     s.add_dependency(%q<rails>, ["= 3.0.9"])
@@ -117,6 +134,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rest-client>, [">= 0"])
     s.add_dependency(%q<log4r>, [">= 0"])
     s.add_dependency(%q<differ>, [">= 0"])
+    s.add_dependency(%q<colorize>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<ruby-debug19>, [">= 0"])
     s.add_dependency(%q<growl>, [">= 0"])
@@ -129,6 +147,8 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mocha>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+    s.add_dependency(%q<activerecord>, ["= 3.0.9"])
+    s.add_dependency(%q<sqlite3>, [">= 0"])
   end
 end
 

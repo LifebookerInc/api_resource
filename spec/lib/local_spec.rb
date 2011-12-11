@@ -8,8 +8,13 @@ describe "Local" do
   it "should not go to the server to fetch a resource definition" do
     ApiResource::Connection.any_instance.expects(:get).never
     class MyTestResource < ApiResource::Local
-      
+      scope :test, {:test => true}
     end
+    mtr = MyTestResource.new
+    # should still have scopes
+    MyTestResource.reload_class_attributes
+    mtr.scopes.should_not be_blank
+    
   end
   
 end

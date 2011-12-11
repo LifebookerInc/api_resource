@@ -366,7 +366,7 @@ module ApiResource
     end
     
     def new?
-      id.nil?
+      id.blank?
     end
     alias :new_record? :new?
     
@@ -505,7 +505,7 @@ module ApiResource
         ret[assoc] = self.send(assoc).serializable_hash({:include_id => true}) if self.association?(assoc)
       end
       # include id - this is for nested updates
-      ret[:id] = self.id if options[:include_id] && !self.id.nil?
+      ret[:id] = self.id if options[:include_id] && !self.new?
       ret
     end
     

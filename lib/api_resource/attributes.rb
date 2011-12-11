@@ -106,7 +106,7 @@ module ApiResource
       # set new attributes
       def attributes=(new_attrs)
         new_attrs.each_pair do |k,v|
-          self.send("#{k}=",v)
+          self.send("#{k}=",v) unless k.to_sym == :id
         end
         new_attrs
       end

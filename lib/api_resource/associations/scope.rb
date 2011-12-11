@@ -75,6 +75,11 @@ module ApiResource
       def inspect
         self.internal_object.inspect
       end
+      
+      def blank?
+        self.internal_object.blank?
+      end
+      alias_method :empty?, :blank?
 
       protected
         # scope from the parent

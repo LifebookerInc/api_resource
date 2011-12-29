@@ -7,6 +7,7 @@ module ApiResource
     class SingleObjectProxy < AssociationProxy
 
       def serializable_hash(options = {})
+        return if self.internal_object.nil?
         self.internal_object.serializable_hash(options)
       end
       

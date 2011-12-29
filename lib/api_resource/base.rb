@@ -427,6 +427,12 @@ module ApiResource
       self.load(self.class.find(to_param, :params => @prefix_options).attributes)
     end
     
+    def to_param
+      # Stolen from active_record.
+      # We can't use alias_method here, because method 'id' optimizes itself on the fly.
+      id && id.to_s # Be sure to stringify the id for routes
+    end
+    
     def load(attributes)
       return if attributes.nil?
       raise ArgumentError, "expected an attributes Hash, got #{attributes.inspect}" unless attributes.is_a?(Hash)

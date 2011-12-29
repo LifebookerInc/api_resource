@@ -173,6 +173,12 @@ describe "Associations" do
       ap.blank?.should be_true
     end
     
+    it "should not throw an error on serializable hash if its internal object is nil" do
+      ap = Associations::SingleObjectProxy.new("TestResource", {})
+      ap.instance_variable_set(:@internal_object, nil)
+      lambda {ap.serializable_hash}.should_not raise_error
+    end
+    
     it "should be able to create a SingleObjectProxy around a blank hash" do
       ap = Associations::SingleObjectProxy.new("TestResource", {})
       ap.remote_path.should be_blank

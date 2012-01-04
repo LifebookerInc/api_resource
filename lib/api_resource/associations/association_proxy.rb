@@ -61,7 +61,7 @@ module ApiResource
           self.loaded.clear
           self.times_loaded = 0
           # Remove the loaded object to force it to reload
-          remove_instance_variable(:@internal_object)
+          remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
         else
           # Delete this key from the loaded hash which will cause it to be reloaded
           self.loaded.delete(self.loaded_hash_key(scope, opts))

@@ -7,7 +7,7 @@ module ApiResource
   
   class Base
     
-    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :ssl_options, :token
+    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :open_timeout, :ssl_options, :token
     
     class_inheritable_accessor :include_root_in_json; self.include_root_in_json = true
     class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
@@ -122,6 +122,11 @@ module ApiResource
       def timeout=(timeout)
         @connection = nil
         write_inheritable_attribute(:timeout, timeout)
+      end
+      
+      def open_timeout=(timeout)
+        @connection = nil
+        write_inheritable_attribute(:open_timeout, timeout)
       end
       
       def connection(refresh = false)

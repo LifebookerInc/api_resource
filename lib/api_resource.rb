@@ -56,21 +56,14 @@ module ApiResource
     Dir["#{File.dirname(__FILE__)}/../spec/support/**/*.rb"].each {|f| require f}
   end
   
-  def self.site=(new_site)
-    ApiResource::Base.site = new_site
+  class << self
+    [:site, :site=, :format, :format=, :token, :token=, :timeout, :open_timeout, :reset_connection].each do |m|
+      define_method(m) do |*args|
+        ApiResource::Base.send(m, *args)
+      end
+    end
   end
   
-  def self.format=(new_format)
-    ApiResource::Base.format = new_format
-  end
-  # set token
-  def self.token=(new_token)
-    ApiResource::Base.token = new_token
-  end
-  # get token
-  def self.token
-    ApiResource::Base.token
-  end
   # Run a block with a given token - useful for AroundFilters
   def self.with_token(new_token, &block)
     old_token = self.token
@@ -82,34 +75,22 @@ module ApiResource
     end
   end
   
-  # delegated to Base
-  def self.reset_connection
-    ApiResource::Base.reset_connection
-  end
 
   # set the timeout val and reset the connection
   def self.timeout=(val)
-    @timeout = val
+    ApiResource::Base.timeout = val
     self.reset_connection
     val
-  end
-  
-  # Getter for timeout
-  def self.timeout
-    @timeout ||= DEFAULT_TIMEOUT
   end
 
   # set the timeout val and reset the connection
   def self.open_timeout=(val)
-    @open_timeout = val
+    ApiResource::Base.open_timeout = val
     self.reset_connection
     val
   end
   
-  # Getter for timeout
-  def self.open_timeout
-    @open_timeout ||= DEFAULT_TIMEOUT
-  end
+  self.timeout = self.open_timeout = DEFAULT_TIMEOUT
   
   # logger
   def self.logger

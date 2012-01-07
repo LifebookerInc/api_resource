@@ -155,7 +155,7 @@ module ApiResource
         unless path =~ /\./
           path += ".#{self.format.extension}"
         end
-        RestClient::Resource.new("#{site.scheme}://#{site.host}:#{site.port}#{path}", {:timeout => ApiResource.timeout, :open_timeout => ApiResource.open_timeout})
+        RestClient::Resource.new("#{site.scheme}://#{site.host}:#{site.port}#{path}", {:timeout => ApiResource::Base.timeout, :open_timeout => ApiResource::Base.open_timeout})
       end
       
       def build_request_headers(headers, verb, uri)

@@ -30,11 +30,10 @@ module ApiResource
         scope = self.loaded_hash_key(scope.to_s, options)
         # If the service uri is blank you can't load
         return nil if self.remote_path.blank?
-        unless self.loaded[scope]
+        self.loaded[scope] ||= begin
           self.times_loaded += 1
-          self.loaded[scope] = self.load_from_remote(options)
+          self.klass.new(self.load_from_remote(options))
         end
-        self.klass.new(self.loaded[scope])
       end
 
       def load(contents)
@@ -65,7 +64,7 @@ module ApiResource
             raise "Expected the scope #{key} to have a hash for a value, got #{val}" unless val.is_a?(Hash)
             self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
               def #{key}(opts = {})
-                ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
+                @#{key} ||= ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
               end
             EOE
             self.scopes[key.to_s] = val

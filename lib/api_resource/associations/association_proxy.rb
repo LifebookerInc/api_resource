@@ -3,7 +3,8 @@ module ApiResource
   module Associations
    
     class AssociationProxy
-
+      
+      
       cattr_accessor :remote_path_element; self.remote_path_element = :service_uri
       cattr_accessor :include_class_scopes; self.include_class_scopes = true
 
@@ -23,9 +24,10 @@ module ApiResource
         end
         # Now that we have set up all the scopes with the load method we need to create methods
         self.scopes.each do |key, _|
+          next if self.respond_to?(key)
           self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{key}(opts = {})
-              ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
+              @#{key} ||= ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
             end
           EOE
         end
@@ -56,16 +58,8 @@ module ApiResource
         self.internal_object.send(method, *args, &block)
       end
 
-      def reload(scope =  nil, opts = {})
-        if scope.nil?
-          self.loaded.clear
-          self.times_loaded = 0
-          # Remove the loaded object to force it to reload
-          remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
-        else
-          # Delete this key from the loaded hash which will cause it to be reloaded
-          self.loaded.delete(self.loaded_hash_key(scope, opts))
-        end
+      def reload
+        remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
         self
       end
       

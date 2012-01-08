@@ -34,11 +34,12 @@ module ApiResource
         def load_scope_with_options(scope, options)
           scope = self.loaded_hash_key(scope.to_s, options)
           return [] if self.remote_path.blank?
-          unless self.loaded[scope]
+
+          self.loaded[scope] ||= begin
             self.times_loaded += 1
-            self.loaded[scope] = self.load_from_remote(options)
+            self.load_from_remote(options).collect{|item| self.klass.new(item)}
           end
-          self.loaded[scope].collect{|item| self.klass.new(item)}
+          
         end
 
         def load(contents)
@@ -57,7 +58,7 @@ module ApiResource
             raise "Expected the scope #{key} to point to a hash, to #{value}" unless value.is_a?(Hash)
             self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
               def #{key}(opts = {})
-                ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
+                @#{key} ||= ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
               end
             EOE
             self.scopes[key.to_s] = value

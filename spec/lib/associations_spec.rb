@@ -374,18 +374,6 @@ describe "Associations" do
         ap.active.with_birthday.birthday.should_not be_blank
       end
       
-      it "should be able to load a chain of scopes with substitution" do
-        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
-        item = ap.active(:active => true).internal_object
-        item.active.should be_true
-        ap.times_loaded.should eql(1)
-        # This error and incrementing times_loaded means it tried to load again
-        lambda {
-          ap.active.internal_object
-        }.should raise_error
-        ap.times_loaded.should eql(2)
-      end
-      
       it "should proxy unknown methods to the object loading if it hasn't already" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ap.times_loaded.should eql(0)

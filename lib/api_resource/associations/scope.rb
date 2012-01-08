@@ -93,8 +93,10 @@ module ApiResource
         end
         def enhance_current_scope(scp, *args)
           opts = args.extract_options!
-          check_scope(scp)         
-          self.class.class_factory(self.scopes[scp]).new(self.klass, scp, *args, opts.merge(:parent => self))
+          check_scope(scp)
+          cache_key = "a#{Digest::MD5.hexdigest((args.sort + [scp]).to_s)}"
+          return instance_variable_get("@#{cache_key}") if instance_variable_defined?("@#{cache_key}")
+          return instance_variable_set("@#{cache_key}", self.class.class_factory(self.scopes[scp]).new(self.klass, scp, *args, opts.merge(:parent => self)))
         end
         # make sure we have a valid scope
         def check_scope(scp)

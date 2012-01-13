@@ -1,5 +1,5 @@
 require 'active_support/json'
-
+require 'json'
 module ApiResource
   module Formats
     module JsonFormat
@@ -14,11 +14,11 @@ module ApiResource
       end
 
       def encode(hash, options = nil)
-        ActiveSupport::JSON.encode(hash, options)
+        JSON.dump(hash, options)
       end
 
       def decode(json)
-        ActiveSupport::JSON.decode(json)
+        JSON.parse(json)
       end
     end
   end

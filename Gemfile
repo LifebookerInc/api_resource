@@ -8,6 +8,7 @@ gem 'rest-client'
 gem 'log4r'
 gem 'differ'
 gem 'colorize'
+gem 'json', :require => 'json/ext'
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

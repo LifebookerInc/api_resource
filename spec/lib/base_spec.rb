@@ -19,6 +19,11 @@ describe "Base" do
         tst.attribute?(:age).should be_true
       end
       
+      it "should typecast data if a format is specified" do
+        tst = TestResource.new(:bday => Date.today.to_s)
+        tst.bday.should be_a Date
+      end
+      
       it "should determine it's associations when the class loads" do
         tst = TestResource.new
         tst.association?(:has_many_objects).should be_true

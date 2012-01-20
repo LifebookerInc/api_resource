@@ -10,13 +10,16 @@ module ApiResource
       
       alias_method_chain :save, :dirty_tracking
       
-      class_inheritable_accessor :attribute_names, :public_attribute_names, :protected_attribute_names
+      class_inheritable_accessor :attribute_names, :public_attribute_names, :protected_attribute_names, :attribute_types
+      
+      cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string]
       
       attr_reader :attributes
       
       self.attribute_names = []
       self.public_attribute_names = []
       self.protected_attribute_names = []
+      self.attribute_types = {}.with_indifferent_access
       
       define_method(:attributes) do
         return @attributes if @attributes
@@ -37,6 +40,11 @@ module ApiResource
         # but we need to override all the setters so we do dirty tracking
         define_attribute_methods args
         args.each do |arg|
+          if arg.is_a?(Array)
+            self.define_attribute_type(arg.first, arg.second)
+            arg = arg.first
+          end
+          
           self.attribute_names << arg.to_sym
           self.public_attribute_names << arg.to_sym
           
@@ -47,8 +55,9 @@ module ApiResource
             end
           
             def #{arg}=(val)
-              #{arg}_will_change! unless self.#{arg} == val
-              self.attributes[:#{arg}] = val
+              real_val = typecast_attribute(:#{arg}, val)
+              #{arg}_will_change! unless self.#{arg} == real_val
+              self.attributes[:#{arg}] = real_val
             end
             
             def #{arg}?
@@ -85,6 +94,12 @@ module ApiResource
         self.attribute_names.uniq!
         self.protected_attribute_names.uniq!
       end
+      
+      def define_attribute_type(field, type)
+        raise "#{type} is not a valid type" unless self.valid_typecasts.include?(type.to_sym)
+        self.attribute_types[field] = type.to_sym
+      end
+      
       
       def attribute?(name)
         self.attribute_names.include?(name.to_sym)
@@ -154,6 +169,26 @@ module ApiResource
           return true if self.attribute?(sym.to_sym)
         end
         super
+      end
+      
+      protected
+      def typecast_attribute(field, val)
+        return val unless self.class.attribute_types.include?(field)
+        case self.class.attribute_types[field.to_sym]
+          when :date
+            return val.class == Date ? val.dup : Date.parse(val)
+          when :time
+            return val.class == Time ? val.dup : Time.parse(val)
+          when :integer, :int, :fixnum
+            return val.class == Fixnum ? val.dup : val.to_i rescue val
+          when :float
+            return val.class == Float ? val.dup : val.to_f rescue val
+          when :string
+            return val.class == String ? val.dup : val.to_s rescue val
+          else
+            # catches the nil case and just leaves it alone
+            return val.dup rescue val
+        end
       end
     end
     

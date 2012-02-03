@@ -23,7 +23,7 @@ group :development do
   gem 'guard'
   gem 'guard-rspec'
   gem 'mocha'
-  gem "bundler", "~> 1.0.0"
+  gem "bundler"
   gem "jeweler", "~> 1.6.4"
   gem 'activerecord', '3.0.9'
   gem "sqlite3"

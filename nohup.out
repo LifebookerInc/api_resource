@@ -1,0 +1,63 @@
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/choice-0.1.4/lib/choice/parser.rb:108: warning: Hash#index is deprecated; use Hash#key
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid 18804 exit 2> (RuntimeError)
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:96:in `project_path='
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:86:in `start'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/bin/cijoe:50:in `<top (required)>'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `load'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `<main>'
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/choice-0.1.4/lib/choice/parser.rb:108: warning: Hash#index is deprecated; use Hash#key
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid 19377 exit 2> (RuntimeError)
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:96:in `project_path='
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:86:in `start'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/bin/cijoe:50:in `<top (required)>'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `load'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `<main>'
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/choice-0.1.4/lib/choice/parser.rb:108: warning: Hash#index is deprecated; use Hash#key
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid 19463 exit 2> (RuntimeError)
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:96:in `project_path='
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:86:in `start'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/bin/cijoe:50:in `<top (required)>'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `load'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `<main>'
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/choice-0.1.4/lib/choice/parser.rb:108: warning: Hash#index is deprecated; use Hash#key
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid 19730 exit 2> (RuntimeError)
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:96:in `project_path='
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:86:in `start'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/bin/cijoe:50:in `<top (required)>'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `load'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `<main>'
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/choice-0.1.4/lib/choice/parser.rb:108: warning: Hash#index is deprecated; use Hash#key
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid 19738 exit 2> (RuntimeError)
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:96:in `project_path='
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/lib/cijoe/server.rb:86:in `start'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/gems/cijoe-0.9.2/bin/cijoe:50:in `<top (required)>'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `load'
+	from /home/bb/.rvm/gems/ruby-1.9.2-p290/bin/cijoe:19:in `<main>'
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid=19748,exited(2)> (RuntimeError)
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/server.rb:96:in `project_path='
+	from /usr/lib/ruby/gems/1.8/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `__send__'
+	from /usr/lib/ruby/gems/1.8/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/server.rb:86:in `start'
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/cijoe:50
+	from /usr/bin/cijoe:19:in `load'
+	from /usr/bin/cijoe:19
+cd: 1: can't cd to /vol/www/releases/api_resource/api_resource
+/usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/config.rb:25:in `to_s': Error calling git config, is a recent version of git installed? Command: "cd /vol/www/releases/api_resource/api_resource && git config cijoe.user", Error: "", Status: #<Process::Status: pid=19909,exited(2)> (RuntimeError)
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/server.rb:96:in `project_path='
+	from /usr/lib/ruby/gems/1.8/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `__send__'
+	from /usr/lib/ruby/gems/1.8/gems/sinatra-1.2.7/lib/sinatra/base.rb:964:in `set'
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/../lib/cijoe/server.rb:86:in `start'
+	from /usr/lib/ruby/gems/1.8/gems/cijoe-0.9.2/bin/cijoe:50
+	from /usr/bin/cijoe:19:in `load'
+	from /usr/bin/cijoe:19

@@ -136,7 +136,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (= 3.0.9)
-  bundler (~> 1.0.0)
+  bundler
   colorize
   differ
   factory_girl

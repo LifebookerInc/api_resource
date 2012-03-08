@@ -8,7 +8,7 @@ describe Mocks do
   # we set up the mocks in spec helper, so we can just assert this
   it "should hijack the connection" do
     ApiResource::Mocks::Interface.any_instance.expects(:get).once.returns(
-      ApiResource::Mocks::MockResponse.new("", {:headers => {"Content-type" => "application/json"}, :status_code => 200})
+      ApiResource::Mocks::MockResponse.new({}, {:headers => {"Content-type" => "application/json"}, :status_code => 200})
     )
     TestResource.reload_class_attributes
   end

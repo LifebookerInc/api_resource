@@ -15,6 +15,16 @@ module ApiResource
         def each(*args, &block)
           self.internal_object.each(*args, &block)
         end
+        
+        def ==(other)
+          return false if self.class != other.class
+          if self.internal_object.is_a?(Array)
+            self.internal_object.sort.each_with_index do |elem, i|
+              return false if other.internal_object.sort[i].attributes != elem.attributes
+            end
+          end
+          return true
+        end
 
         def serializable_hash(options)
           self.internal_object.collect{|obj| obj.serializable_hash(options) }

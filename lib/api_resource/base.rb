@@ -39,11 +39,19 @@ module ApiResource
       def set_class_attributes_upon_load
         return true if self == ApiResource::Base
         begin
-          class_data = self.connection.get(self.new_element_path, self.headers)
+          class_data = self.connection.get(
+            self.new_element_path, self.headers
+          )
           # Attributes go first
           if class_data["attributes"]
-            define_attributes *(class_data["attributes"]["public"] || [])
-            define_protected_attributes *(class_data["attributes"]["protected"] || [])
+            
+            define_attributes(
+              *(class_data["attributes"]["public"] || [])
+            )
+            define_protected_attributes(
+              *(class_data["attributes"]["protected"] || [])
+            ) 
+            
           end
           # Then scopes
           if class_data["scopes"]
@@ -59,13 +67,32 @@ module ApiResource
               end
             end
           end
+          
+          # This is provided by ActiveModel::AttributeMethods, it should
+          # define the basic methods but we need to override all the setters 
+          # so we do dirty tracking
+          attrs = []
+          if class_data["attributes"] && class_data["attributes"]["public"]
+            attrs += class_data["attributes"]["public"].collect{|v| 
+              v.is_a?(Array) ? v.first : v
+            }.flatten
+          end
+          if class_data["associations"]
+            attrs += class_data["associations"].values.collect(&:keys).flatten
+          end
+          define_attribute_methods(attrs)
+          
         # Swallow up any loading errors because the site may be incorrect
         rescue Exception => e
           if ApiResource.raise_missing_definition_error
             raise e 
           end
-          ApiResource.logger.warn("#{self} accessing #{self.new_element_path}")
-          ApiResource.logger.warn("#{self}: #{e.message[0..60].gsub(/[\n\r]/, '')} ...\n")
+          ApiResource.logger.warn(
+            "#{self} accessing #{self.new_element_path}"
+          )
+          ApiResource.logger.warn(
+            "#{self}: #{e.message[0..60].gsub(/[\n\r]/, '')} ...\n"
+          )
           ApiResource.logger.debug(e.backtrace.pretty_inspect)
           return e.respond_to?(:request) ? e.request : nil
         end
@@ -446,6 +473,7 @@ module ApiResource
       attributes.symbolize_keys.each do |key, value|
         # If this attribute doesn't exist define it as a protected attribute
         self.class.define_protected_attributes(key) unless self.respond_to?(key)
+        #self.send("#{key}_will_change!") if self.respond_to?("#{key}_will_change!")
         self.attributes[key] =
         case value
           when Array
@@ -499,7 +527,7 @@ module ApiResource
     end
     
     def serializable_hash(options = {})
-      options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : []
+      options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : self.changes.keys.symbolize_array.select{|k| self.association?(k)}
       options[:include_extras] = options[:include_extras] ? options[:include_extras].symbolize_array : []
       options[:except] ||= []
       ret = self.attributes.inject({}) do |accum, (key,val)|

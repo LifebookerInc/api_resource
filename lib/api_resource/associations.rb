@@ -97,7 +97,7 @@ module ApiResource
       
       def association_names
         # structure is {:has_many => {"myname" => "ClassName"}}
-        self.related_objects.clone.delete_if{|k,v| k.to_s == "scope"}.collect{|k,v| v.keys.first.to_sym}
+        self.related_objects.clone.delete_if{|k,v| k.to_s == "scope"}.collect{|k,v| v.keys.collect(&:to_sym)}.flatten
       end
       
       def association_class_name(assoc)
@@ -116,13 +116,18 @@ module ApiResource
       
       protected
         def define_association_as_attribute(assoc_type, assoc_name)
+          # set up dirty tracking for associations
+          
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{assoc_name}
               self.attributes[:#{assoc_name}] ||= #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy.new(self.association_class_name('#{assoc_name}'), nil, self)
             end
             def #{assoc_name}=(val)
-              #{assoc_name}_will_change! unless self.#{assoc_name}.internal_object == val
+              # get old internal object
+              old_internal_object = self.#{assoc_name}.internal_object
               self.#{assoc_name}.internal_object = val
+              #{assoc_name}_will_change! unless self.#{assoc_name} == old_internal_object
+              self.#{assoc_name}.internal_object
             end
             def #{assoc_name}?
               self.#{assoc_name}.internal_object.present?

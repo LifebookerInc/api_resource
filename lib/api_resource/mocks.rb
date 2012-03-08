@@ -254,7 +254,7 @@ module ApiResource
                 response[:response].tap{|resp| resp.generate_response(response[:params])}
               else
                 raise ApiResource::ResourceNotFound.new(
-                  MockResponse.new("", {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
+                  MockResponse.new({}, {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
                   :message => "\nCould not find a response recorded for \#{request.pretty_inspect}\n" +
                   "Potential Responses Are:\n" +
                   "\#{Array.wrap(Mocks.responses_for_path(request.path)[:responses]).collect(&:first).pretty_inspect}"

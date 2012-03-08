@@ -36,15 +36,12 @@ module ApiResource
     module ClassMethods
       
       def define_attributes(*args)
-        # This is provided by ActiveModel::AttributeMethods, it should define the basic methods
-        # but we need to override all the setters so we do dirty tracking
-        define_attribute_methods args
         args.each do |arg|
           if arg.is_a?(Array)
             self.define_attribute_type(arg.first, arg.second)
             arg = arg.first
           end
-          
+
           self.attribute_names << arg.to_sym
           self.public_attribute_names << arg.to_sym
           
@@ -70,8 +67,13 @@ module ApiResource
       end
       
       def define_protected_attributes(*args)
-        define_attribute_methods args
         args.each do |arg|
+          
+          if arg.is_a?(Array)
+            self.define_attribute_type(arg.first, arg.second)
+            arg = arg.first
+          end
+
           self.attribute_names << arg.to_sym
           self.protected_attribute_names << arg.to_sym
           

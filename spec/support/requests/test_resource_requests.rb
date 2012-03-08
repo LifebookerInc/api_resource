@@ -12,10 +12,6 @@ HashDealer.define(:new_test_object) do
     :belongs_to => {:belongs_to_object => {}, :custom_name => {:class_name => "BelongsToObject"}},
     :has_one => {:has_one_object => {}},
   })
-  # Think of a use case for this
-  options({
-    
-  })
 end
 
 HashDealer.define(:test_resource) do

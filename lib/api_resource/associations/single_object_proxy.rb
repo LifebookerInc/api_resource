@@ -24,6 +24,12 @@ module ApiResource
       def present?
 	      return @internal_object.present?
       end
+      
+      def ==(other)
+        return false if self.class != other.class
+        return false if other.internal_object.attributes != self.internal_object.attributes
+        return true
+      end
 
       protected
       def load_scope_with_options(scope, options)

@@ -70,7 +70,11 @@ module ApiResource
       def inspect
         self.internal_object.inspect
       end
-
+      
+      def ==(other)
+         raise "Not Implemented: This method must be implemented in a subclass"
+      end
+      
       protected
       # This method loads a particular scope with a set of options from the remote server
       def load_scope_with_options(scope, options)

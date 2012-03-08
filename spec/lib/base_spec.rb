@@ -201,7 +201,7 @@ describe "Base" do
         hash["test_resource"].should_not be_nil
       end
       
-      it "should not include associations by default" do
+      it "should not include associations by default if they have not changed" do
         tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
         hash = JSON.parse(tst.to_json)
         hash["has_many_objects"].should be_nil
@@ -210,6 +210,13 @@ describe "Base" do
       it "should include associations passed given in the include_associations array" do
         tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
         hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
+        hash["has_many_objects"].should_not be_nil
+      end
+      
+      it "should include associations by default if they have changed" do
+        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
+        tst.has_many_objects = [{:name => "test"}]
+        hash = JSON.parse(tst.to_json)
         hash["has_many_objects"].should_not be_nil
       end
       

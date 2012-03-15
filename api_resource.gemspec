@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{api_resource}
-  s.version = "0.2.5"
+  s.name = "api_resource"
+  s.version = "0.2.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Ethan Langevin}]
-  s.date = %q{2012-01-20}
-  s.description = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
-  s.email = %q{ejl6266@gmail.com}
+  s.authors = ["Ethan Langevin"]
+  s.date = "2012-03-15"
+  s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
+  s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -59,6 +59,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/observing.rb",
     "lib/api_resource/railtie.rb",
     "lib/api_resource/scopes.rb",
+    "nohup.out",
     "spec/lib/associations_spec.rb",
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",
@@ -76,11 +77,11 @@ Gem::Specification.new do |s|
     "spec/support/requests/test_resource_requests.rb",
     "spec/support/test_resource.rb"
   ]
-  s.homepage = %q{http://github.com/ejlangev/resource}
-  s.licenses = [%q{MIT}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.8}
-  s.summary = %q{A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources}
+  s.homepage = "http://github.com/ejlangev/resource"
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.17"
+  s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -103,7 +104,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<guard>, [">= 0"])
       s.add_development_dependency(%q<guard-rspec>, [">= 0"])
       s.add_development_dependency(%q<mocha>, [">= 0"])
-      s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
+      s.add_development_dependency(%q<bundler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<activerecord>, ["= 3.0.9"])
       s.add_development_dependency(%q<sqlite3>, [">= 0"])
@@ -125,7 +126,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<guard>, [">= 0"])
       s.add_dependency(%q<guard-rspec>, [">= 0"])
       s.add_dependency(%q<mocha>, [">= 0"])
-      s.add_dependency(%q<bundler>, ["~> 1.0.0"])
+      s.add_dependency(%q<bundler>, [">= 0"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<activerecord>, ["= 3.0.9"])
       s.add_dependency(%q<sqlite3>, [">= 0"])
@@ -148,7 +149,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<guard>, [">= 0"])
     s.add_dependency(%q<guard-rspec>, [">= 0"])
     s.add_dependency(%q<mocha>, [">= 0"])
-    s.add_dependency(%q<bundler>, ["~> 1.0.0"])
+    s.add_dependency(%q<bundler>, [">= 0"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<activerecord>, ["= 3.0.9"])
     s.add_dependency(%q<sqlite3>, [">= 0"])

@@ -10,10 +10,10 @@ module ApiResource
       
       alias_method_chain :save, :dirty_tracking
       
-      class_inheritable_accessor :attribute_names, :public_attribute_names, :protected_attribute_names, :attribute_types
+      class_attribute :attribute_names, :public_attribute_names, :protected_attribute_names, :attribute_types
       
       cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string]
-      
+
       attr_reader :attributes
       
       self.attribute_names = []
@@ -41,24 +41,23 @@ module ApiResource
             self.define_attribute_type(arg.first, arg.second)
             arg = arg.first
           end
-
-          self.attribute_names << arg.to_sym
-          self.public_attribute_names << arg.to_sym
+          self.attribute_names += [arg.to_sym]
+          self.public_attribute_names += [arg.to_sym]
           
           # Override the setter for dirty tracking
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{arg}
-              self.attributes[:#{arg}]
+              attributes[:#{arg}]
             end
           
             def #{arg}=(val)
               real_val = typecast_attribute(:#{arg}, val)
               #{arg}_will_change! unless self.#{arg} == real_val
-              self.attributes[:#{arg}] = real_val
+              attributes[:#{arg}] = real_val
             end
             
             def #{arg}?
-              self.attributes[:#{arg}].present?
+              attributes[:#{arg}].present?
             end
           EOE
         end
@@ -74,8 +73,8 @@ module ApiResource
             arg = arg.first
           end
 
-          self.attribute_names << arg.to_sym
-          self.protected_attribute_names << arg.to_sym
+          self.attribute_names += [arg.to_sym]
+          self.protected_attribute_names += [arg.to_sym]
           
           # These attributes cannot be set, throw an error if you try
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
@@ -162,7 +161,7 @@ module ApiResource
         self.class.protected_attribute?(name)
       end
       
-      def respond_to?(sym)
+      def respond_to?(sym, include_private_methods = false)
         if sym =~ /\?$/
           return true if self.attribute?($`)
         elsif sym =~ /=$/

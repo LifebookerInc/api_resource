@@ -52,7 +52,7 @@ describe "Associations" do
     
     it "should only define relationships for the given class - they should not cascade" do
       TestResource.belongs_to :belongs_to_object
-      AnotherTestResource.association?(:belongs_to_object).should_not be true
+      AnotherTestResource.association?(:belongs_to_object).should_not be_true
     end
     
     it "should have its relationship cascade when sub-classed" do
@@ -295,7 +295,6 @@ describe "Associations" do
       
       
       it "should be able to query scopes on the current model" do
-        
         ScopeResource.one.to_query.should eql "one=true"
         ScopeResource.two("test").to_query.should eql "two=test"
         ScopeResource.three(1,2,3).to_query.should eql "three[]=1&three[]=2&three[]=3"
@@ -518,6 +517,7 @@ describe "Associations" do
         end
         
         it "should assign associations to the correct type on initialization" do
+          #binding.pry
           tr = TestResource.new(:has_one_object => {:name => "Dan"}, :belongs_to_object => {:name => "Dan"})
           
           tr.has_one_object.internal_object.should be_instance_of HasOneObject
@@ -563,7 +563,8 @@ describe "Associations" do
       context "ActiveModel" do
         before(:all) do
           require 'active_record'
-          ActiveRecord::Base.establish_connection({"adapter" => "sqlite3", "database" => "/tmp/api_resource_test_db.sqlite"})
+          db_path = File.expand_path(File.dirname(__FILE__) + "/../tmp/api_resource_test_db.sqlite")
+          ActiveRecord::Base.establish_connection({"adapter" => "sqlite3", "database" => db_path})
           ActiveRecord::Base.connection.create_table(:test_ars, :force => true) do |t|
             t.integer(:test_resource_id)
           end

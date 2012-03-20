@@ -162,6 +162,10 @@ describe "Base" do
       TestResource.format.extension.to_sym.should eql(:xml)
       TestResource.format = :json
     end
+
+    it "should only allow proper formats to be set" do
+      expect {TestResource.format = :blah}.should raise_error(::ApiResource::Formats::BadFormat)
+    end 
     
     it "should be able to set an http timeout" do
       TestResource.timeout = 5

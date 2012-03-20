@@ -20,8 +20,8 @@ module ApiResource
     included do
       
       raise "Cannot include Associations without first including AssociationActivation" unless self.ancestors.include?(ApiResource::AssociationActivation)
-      class_inheritable_accessor :related_objects
-      
+      class_attribute :related_objects
+            
       # Hash to hold onto the definitions of the related objects
       self.related_objects = RelatedObjectHash.new
       self.association_types.keys.each do |type|
@@ -57,7 +57,8 @@ module ApiResource
                 klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
                 # add this to any descendants - the other methods etc are handled by inheritance
                 ([self] + self.descendants).each do |klass|
-                  klass.related_objects[:#{assoc}][arg.to_sym] = klass_name
+                  #We need to merge upon itself to generate a new object since the children all share their related objects with each other
+                  klass.related_objects = klass.related_objects.merge(:#{assoc} => klass.related_objects[:#{assoc}].merge(arg.to_sym => klass_name))
                 end
                 # We need to define reader and writer methods here
                 define_association_as_attribute(:#{assoc}, arg)

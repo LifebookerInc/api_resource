@@ -7,13 +7,24 @@ module ApiResource
   
   class Base
     
-    class_inheritable_accessor :site, :proxy, :user, :password, :auth_type, :format, :timeout, :open_timeout, :ssl_options, :token
+
+    class_attribute :site, :proxy, :user, :password, :auth_type, :format, :timeout, :open_timeout, :ssl_options, :token
     
-    class_inheritable_accessor :include_root_in_json; self.include_root_in_json = true
-    class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
-    class_inheritable_accessor :include_all_attributes_on_update; self.include_all_attributes_on_update = false
+
+    class_attribute :include_root_in_json
+    self.include_root_in_json = true
     
-    class_inheritable_accessor :primary_key; self.primary_key = "id"
+    class_attribute :include_blank_attributes_on_create
+    self.include_blank_attributes_on_create = false
+    
+    class_attribute :include_all_attributes_on_update
+    self.include_blank_attributes_on_create = false
+
+    class_attribute :format
+    self.format = ApiResource::Formats::JsonFormat
+    
+    class_attribute :primary_key
+    self.primary_key = "id"
     
     attr_accessor :prefix_options
     
@@ -97,7 +108,11 @@ module ApiResource
           return e.respond_to?(:request) ? e.request : nil
         end
       end
-
+      
+      def reset_connection
+        remove_instance_variable(:@connection) if @connection.present?
+      end
+      
       def reload_class_attributes
         # clear the public_attribute_names, protected_attribute_names
         remove_instance_variable(:@class_data) if instance_variable_defined?(:@class_data)
@@ -106,24 +121,26 @@ module ApiResource
         self.set_class_attributes_upon_load
       end
       
-      def token=(new_token)
-        self.write_inheritable_attribute(:token, new_token)
+      def token_with_new_token_set=(new_token)
+        self.token_without_new_token_set = new_token
         self.descendants.each do |child|
           child.send(:token=, new_token)
         end
       end
+      
+      alias_method_chain :token=, :new_token_set
 
-      def site=(site)
+      def site_with_connection_reset=(site)
         # store so we can reload attributes if the site changed
         old_site = self.site.to_s.clone
         @connection = nil
         
         if site.nil?
-          write_inheritable_attribute(:site, nil)
+          self.site_without_connection_reset = nil
           # no site, so we'll skip the reload
           return site
         else
-          write_inheritable_attribute(:site, create_site_uri_from(site))
+          self.site_without_connection_reset = create_site_uri_from(site)
         end
         
         # reset class attributes and try to reload them if the site changed
@@ -134,38 +151,37 @@ module ApiResource
         return site
       end
       
+      alias_method_chain :site=, :connection_reset
       
-      def format=(mime_type_or_format)
+      
+      def format_with_mimetype_or_format_set=(mime_type_or_format)
         format = mime_type_or_format.is_a?(Symbol) ? ApiResource::Formats[mime_type_or_format] : mime_type_or_format
-        write_inheritable_attribute(:format, format)
+        self.format_without_mimetype_or_format_set = format
         self.connection.format = format if self.site
       end
       
-      # Default format is json
-      def format
-        read_inheritable_attribute(:format) || ApiResource::Formats::JsonFormat
+      alias_method_chain :format=, :mimetype_or_format_set
+      
+      def timeout_with_connection_reset=(timeout)
+        @connection = nil
+        self.timeout_without_connection_reset = timeout
       end
       
-      def timeout=(timeout)
+      alias_method_chain :timeout=, :connection_reset
+      
+      def open_timeout_with_connection_reset=(timeout)
         @connection = nil
-        write_inheritable_attribute(:timeout, timeout)
+        self.open_timeout_without_connection_reset = timeout
       end
       
-      def open_timeout=(timeout)
-        @connection = nil
-        write_inheritable_attribute(:open_timeout, timeout)
-      end
+      alias_method_chain :open_timeout=, :connection_reset
       
       def connection(refresh = false)
         @connection = Connection.new(self.site, self.format) if refresh || @connection.nil?
         @connection.timeout = self.timeout
         @connection
       end
-      
-      def reset_connection
-        remove_instance_variable(:@connection) if @connection.present?
-      end
-      
+            
       def headers
         {}.tap do |ret|
           ret['Lifebooker-Token'] = self.token if self.token.present?
@@ -469,40 +485,40 @@ module ApiResource
       return if attributes.nil?
       raise ArgumentError, "expected an attributes Hash, got #{attributes.inspect}" unless attributes.is_a?(Hash)
       @prefix_options, attributes = split_options(attributes)
-     
       attributes.symbolize_keys.each do |key, value|
         # If this attribute doesn't exist define it as a protected attribute
         self.class.define_protected_attributes(key) unless self.respond_to?(key)
         #self.send("#{key}_will_change!") if self.respond_to?("#{key}_will_change!")
         self.attributes[key] =
-        case value
-          when Array
-            if self.has_many?(key)
-              MultiObjectProxy.new(self.has_many_class_name(key), value)
-            elsif self.association?(key)
-              raise ArgumentError, "Expected a hash value or nil, got: #{value.inspect}"
+          case value
+            when Array
+              if self.has_many?(key)
+                MultiObjectProxy.new(self.has_many_class_name(key), value)
+              elsif self.association?(key)
+                raise ArgumentError, "Expected a hash value or nil, got: #{value.inspect}"
+              else
+                typecast_attribute(key, value)
+              end
+            when Hash
+              if self.has_many?(key)
+                MultiObjectProxy.new(self.has_many_class_name(key), value)
+              elsif self.association?(key)
+                #binding.pry
+                SingleObjectProxy.new(self.association_class_name(key), value)
+              else
+                typecast_attribute(key, value)
+              end
+            when NilClass
+              # If it's nil and an association then create a blank object
+              if self.has_many?(key)
+                return MultiObjectProxy.new(self.has_many_class_name(key), [])
+              elsif self.association?(key)
+                SingleObjectProxy.new(self.association_class_name(key), value)
+              end
             else
+              raise ArgumentError, "expected an array or a hash for the association #{key}, got: #{value.inspect}" if self.association?(key)
               typecast_attribute(key, value)
-            end
-          when Hash
-            if self.has_many?(key)
-              MultiObjectProxy.new(self.has_many_class_name(key), value)
-            elsif self.association?(key)
-              SingleObjectProxy.new(self.association_class_name(key), value)
-            else
-              typecast_attribute(key, value)
-            end
-          when NilClass
-            # If it's nil and an association then create a blank object
-            if self.has_many?(key)
-              return MultiObjectProxy.new(self.has_many_class_name(key), [])
-            elsif self.association?(key)
-              SingleObjectProxy.new(self.association_class_name(key), value)
-            end
-          else
-            raise ArgumentError, "expected an array or a hash for the association #{key}, got: #{value.inspect}" if self.association?(key)
-            typecast_attribute(key, value)
-        end
+          end
       end
       return self
     end

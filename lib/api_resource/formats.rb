@@ -8,7 +8,15 @@ module ApiResource
     #   ActiveResource::Formats[:xml]  # => ActiveResource::Formats::XmlFormat
     #   ActiveResource::Formats[:json] # => ActiveResource::Formats::JsonFormat
     def self.[](mime_type_reference)
-      ApiResource::Formats.const_get(ActiveSupport::Inflector.camelize(mime_type_reference.to_s) + "Format")
+      format_name = ActiveSupport::Inflector.camelize(mime_type_reference.to_s) + "Format"
+      begin
+        ApiResource::Formats.const_get(format_name)
+      rescue NameError => e
+        raise BadFormat.new("#{mime_type_reference} is not a valid format")
+      end
+    end
+
+    class BadFormat < StandardError
     end
   end
 end

@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2012-06-21"
+  s.date = "2012-06-23"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
@@ -80,20 +80,23 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.17"
+  s.rubygems_version = "1.8.11"
   s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<rails>, ["= 3.0.9"])
+      s.add_runtime_dependency(%q<rails>, [">= 3.2.2"])
       s.add_runtime_dependency(%q<hash_dealer>, [">= 0"])
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
       s.add_runtime_dependency(%q<log4r>, [">= 0"])
       s.add_runtime_dependency(%q<differ>, [">= 0"])
       s.add_runtime_dependency(%q<colorize>, [">= 0"])
       s.add_runtime_dependency(%q<json>, [">= 0"])
+      s.add_development_dependency(%q<pry>, [">= 0"])
+      s.add_development_dependency(%q<pry-doc>, [">= 0"])
+      s.add_development_dependency(%q<pry-nav>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_development_dependency(%q<growl>, [">= 0"])
@@ -106,16 +109,19 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<mocha>, [">= 0"])
       s.add_development_dependency(%q<bundler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_development_dependency(%q<activerecord>, ["= 3.0.9"])
+      s.add_development_dependency(%q<activerecord>, [">= 3.2.2"])
       s.add_development_dependency(%q<sqlite3>, [">= 0"])
     else
-      s.add_dependency(%q<rails>, ["= 3.0.9"])
+      s.add_dependency(%q<rails>, [">= 3.2.2"])
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
       s.add_dependency(%q<log4r>, [">= 0"])
       s.add_dependency(%q<differ>, [">= 0"])
       s.add_dependency(%q<colorize>, [">= 0"])
       s.add_dependency(%q<json>, [">= 0"])
+      s.add_dependency(%q<pry>, [">= 0"])
+      s.add_dependency(%q<pry-doc>, [">= 0"])
+      s.add_dependency(%q<pry-nav>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<ruby-debug19>, [">= 0"])
       s.add_dependency(%q<growl>, [">= 0"])
@@ -128,17 +134,20 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<mocha>, [">= 0"])
       s.add_dependency(%q<bundler>, [">= 0"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_dependency(%q<activerecord>, ["= 3.0.9"])
+      s.add_dependency(%q<activerecord>, [">= 3.2.2"])
       s.add_dependency(%q<sqlite3>, [">= 0"])
     end
   else
-    s.add_dependency(%q<rails>, ["= 3.0.9"])
+    s.add_dependency(%q<rails>, [">= 3.2.2"])
     s.add_dependency(%q<hash_dealer>, [">= 0"])
     s.add_dependency(%q<rest-client>, [">= 0"])
     s.add_dependency(%q<log4r>, [">= 0"])
     s.add_dependency(%q<differ>, [">= 0"])
     s.add_dependency(%q<colorize>, [">= 0"])
     s.add_dependency(%q<json>, [">= 0"])
+    s.add_dependency(%q<pry>, [">= 0"])
+    s.add_dependency(%q<pry-doc>, [">= 0"])
+    s.add_dependency(%q<pry-nav>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<ruby-debug19>, [">= 0"])
     s.add_dependency(%q<growl>, [">= 0"])
@@ -151,7 +160,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mocha>, [">= 0"])
     s.add_dependency(%q<bundler>, [">= 0"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-    s.add_dependency(%q<activerecord>, ["= 3.0.9"])
+    s.add_dependency(%q<activerecord>, [">= 3.2.2"])
     s.add_dependency(%q<sqlite3>, [">= 0"])
   end
 end

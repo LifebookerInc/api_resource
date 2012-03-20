@@ -56,7 +56,8 @@ module ApiResource
       
       # gets the current hash and calls to_query on it
       def to_query
-        self.to_hash.to_query
+        #We need to add the unescape because to_query breaks on nested arrays
+        CGI.unescape(self.to_hash.to_query)
       end
 
       def method_missing(method, *args, &block)

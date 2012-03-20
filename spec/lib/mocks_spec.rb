@@ -24,5 +24,13 @@ describe Mocks do
     
     ApiResource.raise_missing_definition_error = old_err_status
   end
+
+  it "should merge params for a request" do
+    resp = ApiResource::Base.connection.get(
+      "/mock_with_block/1?#{{:test => "abc"}.to_query}"
+    )
+    resp["id"].should eql "1"
+    resp["test"].should eql "abc"
+  end
   
 end

@@ -241,7 +241,9 @@ module ApiResource
           #   if response = LifebookerClient::Mocks.find_response(request)
           #     response
           #   else
-          #     raise InvalidRequestError.new("Could not find a response recorded for #{request.to_s} - Responses recorded are: - #{inspect_responses}")
+          #     raise InvalidRequestError.new("Could not find a response 
+          #     recorded for #{request.to_s} - Responses recorded are: -
+          #       #{inspect_responses}")
           #   end
           # end
           instance_eval <<-EOE, __FILE__, __LINE__ + 1
@@ -251,7 +253,13 @@ module ApiResource
               request = MockRequest.new(:#{method}, path, opts)
               self.requests << request
               if response = Mocks.find_response(request)
-                response[:response].tap{|resp| resp.generate_response(response[:params])}
+                response[:response].tap{|resp| 
+                  resp.generate_response(
+                    request.params
+                      .with_indifferent_access
+                      .merge(response[:params].with_indifferent_access)
+                  )
+                }
               else
                 raise ApiResource::ResourceNotFound.new(
                   MockResponse.new({}, {:headers => {"Content-type" => "application/json"}, :status_code => 404}),

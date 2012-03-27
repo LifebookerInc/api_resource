@@ -13,8 +13,15 @@ module ApiResource
 
     def to_s
       message = "Failed."
-      message << "  Response code = #{response.code}." if response.respond_to?(:code)
-      message << "  Response message = #{response.message}." if response.respond_to?(:message)
+
+      if response.respond_to?(:code)
+        message << "  Response code = #{response.code}." 
+      end
+      
+      if response.respond_to?(:body)
+        message << "\nResponse message = #{JSON.parse(response.body).pretty_inspect}."
+      end
+      
       message << "\n#{@message}"
       message << "\n#{@path}"
     end

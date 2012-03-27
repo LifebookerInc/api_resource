@@ -140,7 +140,7 @@ module ApiResource
             raise ApiResource::ResourceGone.new(response)
           when 422
             raise ApiResource::UnprocessableEntity.new(response)
-          when 401..500
+          when 401..499
             raise ApiResource::ClientError.new(response)
           when 500..600
             raise ApiResource::ServerError.new(response)

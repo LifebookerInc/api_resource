@@ -24,7 +24,11 @@ Mocks.define do
   end
 
   endpoint("/has_one_objects/new") do
-    get({})
+    get({
+      "attributes" => {
+        "public" => ["size", "color"]
+      }
+    })
   end
   
   endpoint("/has_many_objects/new") do

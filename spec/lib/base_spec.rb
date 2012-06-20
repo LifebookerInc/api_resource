@@ -331,54 +331,94 @@ describe "Base" do
       context("Override create to return the json") do
         
         before(:all) do
-          TestResource.send(:alias_method, :old_create, :create)
-          TestResource.send(:alias_method, :old_save, :save)
+          # TestResource.send(:alias_method, :old_create, :create)
+          # TestResource.send(:alias_method, :old_save, :save)
           
-          TestResource.send(:define_method, :create) do |*args|
-            opts = args.extract_options!
-            # When we create we should not include any blank attributes unless they are associations
-            except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
-            opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-            opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
-            opts[:include_extras] ||= []
-            encode(opts)
-          end
-          TestResource.send(:define_method, :save) do |*args|
-            new? ? create(*args) : update(*args)
-          end
+          # TestResource.send(:define_method, :create) do |*args|
+          #   opts = args.extract_options!
+          #   # When we create we should not include any blank attributes unless they are associations
+          #   except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
+          #   opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
+          #   opts[:include_blank_attributes] = self.class.include_blank_attributes_on_create
+          #   opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
+          #   opts[:include_extras] ||= []
+          #   opts[:action] = "create"
+          #   encode(opts)
+          # end
+
+          # TestResource.send(:define_method, :save) do |*args|
+          #   new? ? create(*args) : update(*args)
+          # end
+          RestClient::Payload.stubs(:has_file? => false)
         end
         
         after(:all) do
-          TestResource.send(:alias_method, :create, :old_create)
-          TestResource.send(:alias_method, :save, :old_save)
+          # TestResource.send(:alias_method, :create, :old_create)
+          # TestResource.send(:alias_method, :save, :old_save)
         end
       
+
         it "should be able to include associations when saving if they are specified" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":20}}", 
+            {}
+          )
+
           tr = TestResource.build(:name => "Ethan", :age => 20)
-          hash = JSON.parse(tr.save)
-          hash['test_resource']['has_many_objects'].should be_nil
-          hash = JSON.parse(tr.save(:include_associations => [:has_many_objects]))
-          hash['test_resource']['has_many_objects'].should eql([])
+          tr.save
         end
       
+
         it "should not include nil attributes when creating by default" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\"}}", 
+            {}
+          )
+
           tr = TestResource.build(:name => "Ethan")
-          hash = JSON.parse(tr.save)
-          hash['test_resource']['age'].should be_nil
-          hash['test_resource']['name'].should eql("Ethan")
+          tr.save
+        end
+
+
+        it "should not include nil attributes for associated objects when creating by default" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"has_one_object\":{\"size\":\"large\"}}}", 
+            {}
+          )
+
+          tr = TestResource.build(:name => "Ethan")
+          tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
+          tr.save(:include_associations => [:has_one_object])
         end
       
+
         it "should include nil attributes if they are passed in through the include_extras" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null}}", 
+            {}
+          )
+
           tr = TestResource.build(:name => "Ethan")
-          hash = JSON.parse(tr.save(:include_extras => [:age]))
-          hash['test_resource'].key?('age').should be_true
+          tr.save(:include_extras => [:age])
         end
       
+
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
+            {}
+          )
+
           TestResource.include_blank_attributes_on_create = true
           tr = TestResource.build(:name => "Ethan")
-          hash = JSON.parse(tr.save)
-          hash['test_resource'].key?('age').should be_true
+          tr.save
+
+          #hash['test_resource'].key?('age').should be_true
           TestResource.include_blank_attributes_on_create = false
         end
       end
@@ -389,79 +429,157 @@ describe "Base" do
         TestResource.reload_class_attributes
         TestResource.has_many :has_many_objects
         
-        TestResource.send(:alias_method, :old_update, :update)
-        TestResource.send(:alias_method, :old_save, :save)
+#         TestResource.send(:alias_method, :old_update, :update)
+#         TestResource.send(:alias_method, :old_save, :save)
         
-        TestResource.send(:define_method, :update) do |*args|
-          opts = args.extract_options!
-          # When we create we should not include any blank attributes
-          except = self.class.attribute_names - self.changed.symbolize_array
-          changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
-          opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
-          opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
-          opts[:include_extras] ||= []
-          opts[:except] = [:id] if self.class.include_all_attributes_on_update
-          encode(opts)
-        end
-        TestResource.send(:define_method, :save) do |*args|
-          new? ? create(*args) : update(*args)
-        end
+#         TestResource.send(:define_method, :update) do |*args|
+# debugger
+            # opts = args.extract_options!
+            # # When we create we should not include any blank attributes
+            # except = self.class.attribute_names - self.changed.symbolize_array
+            # changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
+            # opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
+            # opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
+            # opts[:include_extras] ||= []
+            # opts[:action] = "update"
+            # opts[:except] = [:id] if self.class.include_all_attributes_on_update
+            # encode(opts)
+#         end
+
+#         TestResource.send(:define_method, :save) do |*args|
+#           new? ? create(*args) : update(*args)
+#         end
+        RestClient::Payload.stubs(:has_file? => false)
       end
     
       after(:all) do
-        TestResource.send(:alias_method, :update, :old_update)
-        TestResource.send(:alias_method, :save, :old_save)
+        # TestResource.send(:alias_method, :update, :old_update)
+        # TestResource.send(:alias_method, :save, :old_save)
       end
       
-      it "should be able to put updated data via the update method" do
+
+      it "should be able to put updated data via the update method and
+        should only include changed attributes when updating" do
+
+        # Note that age is a non-nil attribute and is present in the
+        # put request, but name is not present since it has not changed.
+
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"age\":6}}", 
+          {}
+        )
+
         tr = TestResource.new(:id => 1, :name => "Ethan")
         tr.should_not be_new
-        # Thus we know we are calling update
-        tr.age = 6
-        hash = JSON.parse(tr.update)
-        hash['test_resource']['age'].should eql(6)
         
-        hash = JSON.parse(tr.save)
-        hash['test_resource']['age'].should eql(6)
-      end
-      
-      it "should only include changed attributes when updating" do
-        tr = TestResource.new(:id => 1, :name => "Ethan")
-        tr.should_not be_new
         # Thus we know we are calling update
         tr.age = 6
-        hash = JSON.parse(tr.save)
-        hash['test_resource']['name'].should be_nil
+        tr.save
       end
       
+
       it "should include changed associations without specification" do
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_many_objects\":[{}]}}", 
+          {}
+        )
+
         tr = TestResource.new(:id => 1, :name => "Ethan")
         tr.has_many_objects = [HasManyObject.new]
-        hash = JSON.parse(tr.save)
-        hash['test_resource']['has_many_objects'].should_not be_blank
+        tr.save
       end
       
+
       it "should include unchanged associations if they are specified" do
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_many_objects\":[]}}", 
+          {}
+        )
+
         tr = TestResource.new(:id => 1, :name => "Ethan")
-        hash = JSON.parse(tr.save(:has_many_objects))
-        hash['test_resource']['has_many_objects'].should eql([])
+        tr.save(:has_many_objects)
       end
       
-      it "should include all attributes if include_all_attributes_on_update is true" do
+
+      it "should not include nil attributes of associated objects when updating,
+        unless the attributes have changed to nil" do
+
+        correct_order = sequence("ordering")
+
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
+          {}
+        ).in_sequence(correct_order)
+
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
+        tr.save(:include_associations => [:has_one_object])
+
+
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_one_object\":{}}}", 
+          {}
+        ).in_sequence(correct_order)
+
+        tr.has_one_object.size = nil
+        tr.save(:include_associations => [:has_one_object])
+      end
+
+
+      it "should not include nil values for association objects when updating,
+        unless the association has changed to nil" do
+
+        correct_order = sequence("ordering")
+
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
+          {}
+        ).in_sequence(correct_order)
+
+        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
+        tr.save(:include_associations => [:has_one_object])
+
+
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"has_one_object\":null}}", 
+          {}
+        ).in_sequence(correct_order)
+
+        tr.has_one_object = nil
+        tr.save(:include_associations => [:has_one_object])
+      end
+
+
+      it "should include all attributes if include_all_attributes_on_update is true" do  
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
+          {}
+        )
+
         TestResource.include_all_attributes_on_update = true
         tr = TestResource.new(:id => 1, :name => "Ethan")
-        hash = JSON.parse(tr.save)
-        hash['test_resource']['name'].should eql("Ethan")
-        hash['test_resource'].key?('age').should be_true
+        tr.save
         TestResource.include_all_attributes_on_update = false
       end
     
       it "should provide an update_attributes method to set attrs and save" do
-        
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"name\":\"Dan\"}}", 
+          {}
+        )
+
         tr = TestResource.new(:id => 1, :name => "Ethan")
-        hash = JSON.parse(tr.update_attributes(:name => "Dan"))
-        hash['test_resource']['name'].should eql "Dan"
-        
+        tr.update_attributes(:name => "Dan")
       end
       
       

@@ -11,7 +11,7 @@ module ApiResource
     
     class_inheritable_accessor :include_root_in_json; self.include_root_in_json = true
     class_inheritable_accessor :include_blank_attributes_on_create; self.include_blank_attributes_on_create = false
-    class_inheritable_accessor :include_all_attributes_on_update; self.include_blank_attributes_on_create = false
+    class_inheritable_accessor :include_all_attributes_on_update; self.include_all_attributes_on_update = false
     
     class_inheritable_accessor :primary_key; self.primary_key = "id"
     
@@ -527,6 +527,8 @@ module ApiResource
     end
     
     def serializable_hash(options = {})
+      action = options[:action]
+      include_blank_attributes = options[:include_blank_attributes]
       options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : self.changes.keys.symbolize_array.select{|k| self.association?(k)}
       options[:include_extras] = options[:include_extras] ? options[:include_extras].symbolize_array : []
       options[:except] ||= []
@@ -534,14 +536,14 @@ module ApiResource
         # If this is an association and it's in include_associations then include it
         if options[:include_extras].include?(key.to_sym)
           accum.merge(key => val)
-        elsif options[:except].include?(key.to_sym)
+        elsif options[:except].include?(key.to_sym) || (!include_blank_attributes && val.blank?)
           accum
         else
           !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
       end
       options[:include_associations].each do |assoc|
-        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true}) if self.association?(assoc)
+        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true, :include_blank_attributes => include_blank_attributes, :action => action}) if self.association?(assoc)
       end
       # include id - this is for nested updates
       ret[:id] = self.id if options[:include_id] && !self.new?
@@ -570,32 +572,45 @@ module ApiResource
     end
     
     def create(*args)
-      opts = args.extract_options!
-      # When we create we should not include any blank attributes unless they are associations
-      except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
-      opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
-      opts[:include_extras] ||= []
-      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+      body = setup_create_call(*args)
       connection.post(collection_path, body, self.class.headers).tap do |response|
         load_attributes_from_response(response)
       end
     end
+
+    def setup_create_call(*args)
+      opts = args.extract_options!
+      # When we create we should not include any blank attributes unless they are associations
+      except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
+      opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
+      opts[:include_blank_attributes] = self.class.include_blank_attributes_on_create
+      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
+      opts[:include_extras] ||= []
+      opts[:action] = "create"
+      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+    end
+
     
     def update(*args)
+      body = setup_update_call(*args)
+      # We can just ignore the response
+      connection.put(element_path(self.id, prefix_options), body, self.class.headers).tap do |response|
+        load_attributes_from_response(response)
+      end
+    end
+
+    def setup_update_call(*args)
       opts = args.extract_options!
       # When we create we should not include any blank attributes
       except = self.class.attribute_names - self.changed.symbolize_array
       changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
       opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
+      opts[:include_blank_attributes] = self.include_all_attributes_on_update
       opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
       opts[:include_extras] ||= []
+      opts[:action] = "update"
       opts[:except] = [:id] if self.class.include_all_attributes_on_update
       body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
-      # We can just ignore the response
-      connection.put(element_path(self.id, prefix_options), body, self.class.headers).tap do |response|
-        load_attributes_from_response(response)
-      end
     end
     
     private

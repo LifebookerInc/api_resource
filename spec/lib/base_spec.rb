@@ -338,7 +338,7 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
             "{\"test_resource\":{\"name\":\"Ethan\",\"age\":20}}", 
-            {}
+            TestResource.headers
           )
 
           tr = TestResource.build(:name => "Ethan", :age => 20)
@@ -350,7 +350,7 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
             "{\"test_resource\":{\"name\":\"Ethan\"}}", 
-            {}
+            TestResource.headers
           )
 
           tr = TestResource.build(:name => "Ethan")
@@ -362,7 +362,7 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
             "{\"test_resource\":{\"name\":\"Ethan\",\"has_one_object\":{\"size\":\"large\"}}}", 
-            {}
+            TestResource.headers
           )
 
           tr = TestResource.build(:name => "Ethan")
@@ -375,7 +375,7 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
             "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null}}", 
-            {}
+            TestResource.headers
           )
 
           tr = TestResource.build(:name => "Ethan")
@@ -387,7 +387,7 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
             "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
-            {}
+            TestResource.headers
           )
 
           TestResource.include_blank_attributes_on_create = true
@@ -416,7 +416,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"age\":6}}", 
-          {}
+          TestResource.headers
         )
 
         tr = TestResource.new(:id => 1, :name => "Ethan")
@@ -432,7 +432,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_many_objects\":[{}]}}", 
-          {}
+          TestResource.headers
         )
 
         tr = TestResource.new(:id => 1, :name => "Ethan")
@@ -445,7 +445,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_many_objects\":[]}}", 
-          {}
+          TestResource.headers
         )
 
         tr = TestResource.new(:id => 1, :name => "Ethan")
@@ -461,7 +461,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
-          {}
+          TestResource.headers
         ).in_sequence(correct_order)
 
         tr = TestResource.new(:id => 1, :name => "Ethan")
@@ -472,7 +472,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_one_object\":{}}}", 
-          {}
+          TestResource.headers
         ).in_sequence(correct_order)
 
         tr.has_one_object.size = nil
@@ -488,7 +488,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
-          {}
+          TestResource.headers
         ).in_sequence(correct_order)
 
         tr = TestResource.new(:id => 1, :name => "Ethan")
@@ -499,7 +499,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"has_one_object\":null}}", 
-          {}
+          TestResource.headers
         ).in_sequence(correct_order)
 
         tr.has_one_object = nil
@@ -511,7 +511,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
-          {}
+          TestResource.headers
         )
 
         TestResource.include_all_attributes_on_update = true
@@ -524,7 +524,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"name\":\"Dan\"}}", 
-          {}
+          TestResource.headers
         )
 
         tr = TestResource.new(:id => 1, :name => "Ethan")

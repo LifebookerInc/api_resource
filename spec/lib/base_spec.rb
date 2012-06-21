@@ -331,32 +331,8 @@ describe "Base" do
       context("Override create to return the json") do
         
         before(:all) do
-          # TestResource.send(:alias_method, :old_create, :create)
-          # TestResource.send(:alias_method, :old_save, :save)
-          
-          # TestResource.send(:define_method, :create) do |*args|
-          #   opts = args.extract_options!
-          #   # When we create we should not include any blank attributes unless they are associations
-          #   except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
-          #   opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-          #   opts[:include_blank_attributes] = self.class.include_blank_attributes_on_create
-          #   opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
-          #   opts[:include_extras] ||= []
-          #   opts[:action] = "create"
-          #   encode(opts)
-          # end
-
-          # TestResource.send(:define_method, :save) do |*args|
-          #   new? ? create(*args) : update(*args)
-          # end
           RestClient::Payload.stubs(:has_file? => false)
         end
-        
-        after(:all) do
-          # TestResource.send(:alias_method, :create, :old_create)
-          # TestResource.send(:alias_method, :save, :old_save)
-        end
-      
 
         it "should be able to include associations when saving if they are specified" do
           ApiResource::Connection.any_instance.expects(:post).with(
@@ -428,35 +404,8 @@ describe "Base" do
       before(:all) do
         TestResource.reload_class_attributes
         TestResource.has_many :has_many_objects
-        
-#         TestResource.send(:alias_method, :old_update, :update)
-#         TestResource.send(:alias_method, :old_save, :save)
-        
-#         TestResource.send(:define_method, :update) do |*args|
-# debugger
-            # opts = args.extract_options!
-            # # When we create we should not include any blank attributes
-            # except = self.class.attribute_names - self.changed.symbolize_array
-            # changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
-            # opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
-            # opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
-            # opts[:include_extras] ||= []
-            # opts[:action] = "update"
-            # opts[:except] = [:id] if self.class.include_all_attributes_on_update
-            # encode(opts)
-#         end
-
-#         TestResource.send(:define_method, :save) do |*args|
-#           new? ? create(*args) : update(*args)
-#         end
         RestClient::Payload.stubs(:has_file? => false)
       end
-    
-      after(:all) do
-        # TestResource.send(:alias_method, :update, :old_update)
-        # TestResource.send(:alias_method, :save, :old_save)
-      end
-      
 
       it "should be able to put updated data via the update method and
         should only include changed attributes when updating" do

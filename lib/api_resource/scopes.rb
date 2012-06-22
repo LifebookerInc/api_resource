@@ -28,18 +28,18 @@ module ApiResource
         self.related_objects[:scope][name.to_sym]
       end
     end
-    module InstanceMethods
-      def scopes
-        return self.class.scopes
-      end
-      
-      def scope?(name)
-        return self.class.scope?(name)
-      end
-      
-      def scope_attributes(name)
-        return self.class.scope_attributes(name)
-      end
+    
+    def scopes
+      return self.class.scopes
     end
+    
+    def scope?(name)
+      return self.class.scope?(name)
+    end
+    
+    def scope_attributes(name)
+      return self.class.scope_attributes(name)
+    end
+    
   end
 end

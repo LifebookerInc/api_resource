@@ -117,79 +117,76 @@ module ApiResource
       end
     end
     
-    module InstanceMethods
-      
-      # set new attributes
-      def attributes=(new_attrs)
-        new_attrs.each_pair do |k,v|
-          self.send("#{k}=",v) unless k.to_sym == :id
-        end
-        new_attrs
+    # set new attributes
+    def attributes=(new_attrs)
+      new_attrs.each_pair do |k,v|
+        self.send("#{k}=",v) unless k.to_sym == :id
+      end
+      new_attrs
+    end
+    
+    def save_with_dirty_tracking(*args)
+      if save_without_dirty_tracking(*args)
+        @previously_changed = self.changes
+        @changed_attributes.clear
+        return true
+      else
+        return false
+      end
+    end
+    
+    def set_attributes_as_current(*attrs)
+      @changed_attributes.clear and return if attrs.blank?
+      attrs.each do |attr|
+        @changed_attributes.delete(attr.to_s)
+      end
+    end
+    
+    def reset_attribute_changes(*attrs)
+      attrs = self.class.public_attribute_names if attrs.blank?
+      attrs.each do |attr|
+        self.send("reset_#{attr}!")
       end
       
-      def save_with_dirty_tracking(*args)
-        if save_without_dirty_tracking(*args)
-          @previously_changed = self.changes
-          @changed_attributes.clear
-          return true
+      set_attributes_as_current(*attrs)
+    end
+    
+    def attribute?(name)
+      self.class.attribute?(name)
+    end
+    
+    def protected_attribute?(name)
+      self.class.protected_attribute?(name)
+    end
+    
+    def respond_to?(sym, include_private_methods = false)
+      if sym =~ /\?$/
+        return true if self.attribute?($`)
+      elsif sym =~ /=$/
+        return true if self.class.public_attribute_names.include?($`)
+      else
+        return true if self.attribute?(sym.to_sym)
+      end
+      super
+    end
+    
+    protected
+    def typecast_attribute(field, val)
+      return val unless self.class.attribute_types.include?(field)
+      case self.class.attribute_types[field.to_sym]
+        when :date
+          return val.class == Date ? val.dup : Date.parse(val)
+        when :time
+          return val.class == Time ? val.dup : Time.parse(val)
+        when :integer, :int, :fixnum
+          return val.class == Fixnum ? val.dup : val.to_i rescue val
+        when :float
+          return val.class == Float ? val.dup : val.to_f rescue val
+        when :string
+          return val.class == String ? val.dup : val.to_s rescue val
         else
-          return false
-        end
-      end
-      
-      def set_attributes_as_current(*attrs)
-        @changed_attributes.clear and return if attrs.blank?
-        attrs.each do |attr|
-          @changed_attributes.delete(attr.to_s)
-        end
-      end
-      
-      def reset_attribute_changes(*attrs)
-        attrs = self.class.public_attribute_names if attrs.blank?
-        attrs.each do |attr|
-          self.send("reset_#{attr}!")
-        end
-        
-        set_attributes_as_current(*attrs)
-      end
-      
-      def attribute?(name)
-        self.class.attribute?(name)
-      end
-      
-      def protected_attribute?(name)
-        self.class.protected_attribute?(name)
-      end
-      
-      def respond_to?(sym, include_private_methods = false)
-        if sym =~ /\?$/
-          return true if self.attribute?($`)
-        elsif sym =~ /=$/
-          return true if self.class.public_attribute_names.include?($`)
-        else
-          return true if self.attribute?(sym.to_sym)
-        end
-        super
-      end
-      
-      protected
-      def typecast_attribute(field, val)
-        return val unless self.class.attribute_types.include?(field)
-        case self.class.attribute_types[field.to_sym]
-          when :date
-            return val.class == Date ? val.dup : Date.parse(val)
-          when :time
-            return val.class == Time ? val.dup : Time.parse(val)
-          when :integer, :int, :fixnum
-            return val.class == Fixnum ? val.dup : val.to_i rescue val
-          when :float
-            return val.class == Float ? val.dup : val.to_f rescue val
-          when :string
-            return val.class == String ? val.dup : val.to_s rescue val
-          else
-            # catches the nil case and just leaves it alone
-            return val.dup rescue val
-        end
+          # catches the nil case and just leaves it alone
+          return val.dup rescue val
       end
     end
     

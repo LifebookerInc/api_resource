@@ -155,19 +155,17 @@ module ApiResource
       
     end
     
-    module InstanceMethods
-      def association?(assoc)
-        self.class.association?(assoc)
-      end
-      
-      def association_class_name(assoc)
-        self.class.association_class_name(assoc)
-      end
-      
-      # list of all association names
-      def association_names
-        self.class.association_names
-      end
+    def association?(assoc)
+      self.class.association?(assoc)
+    end
+    
+    def association_class_name(assoc)
+      self.class.association_class_name(assoc)
+    end
+    
+    # list of all association names
+    def association_names
+      self.class.association_names
     end
 
   end

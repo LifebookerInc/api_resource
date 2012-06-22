@@ -16,32 +16,28 @@ module ApiResource
       
     end
     
-    module InstanceMethods
-      
-      def save_with_callbacks(*args)
-        run_callbacks :save do
-          save_without_callbacks(*args)
-        end
+    def save_with_callbacks(*args)
+      run_callbacks :save do
+        save_without_callbacks(*args)
       end
-      
-      def create_with_callbacks(*args)
-        run_callbacks :create do
-          create_without_callbacks(*args)
-        end
+    end
+    
+    def create_with_callbacks(*args)
+      run_callbacks :create do
+        create_without_callbacks(*args)
       end
-      
-      def update_with_callbacks(*args)
-        run_callbacks :update do
-          update_without_callbacks(*args)
-        end
+    end
+    
+    def update_with_callbacks(*args)
+      run_callbacks :update do
+        update_without_callbacks(*args)
       end
-      
-      def destroy_with_callbacks(*args)
-        run_callbacks :destroy do
-          destroy_without_callbacks(*args)
-        end
+    end
+    
+    def destroy_with_callbacks(*args)
+      run_callbacks :destroy do
+        destroy_without_callbacks(*args)
       end
-      
     end
     
   end

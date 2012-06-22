@@ -83,37 +83,35 @@ module ApiResource
       end
     end
 
-    module InstanceMethods
-      def get(method_name, options = {})
-        connection.get(custom_method_element_url(method_name, options), self.class.headers)
-      end
-
-      def post(method_name, options = {}, body = nil)
-        request_body = body.blank? ? encode : body
-        if new?
-          connection.post(custom_method_new_element_url(method_name, options), request_body, self.class.headers)
-        else
-          connection.post(custom_method_element_url(method_name, options), request_body, self.class.headers)
-        end
-      end
-
-      def put(method_name, options = {}, body = '')
-        connection.put(custom_method_element_url(method_name, options), body, self.class.headers)
-      end
-
-      def delete(method_name, options = {})
-        connection.delete(custom_method_element_url(method_name, options), self.class.headers)
-      end
-
-
-      private
-        def custom_method_element_url(method_name, options = {})
-          "#{self.class.prefix(prefix_options)}#{self.class.collection_name}/#{id}/#{method_name}.#{self.class.format.extension}#{self.class.__send__(:query_string, options)}"
-        end
-
-        def custom_method_new_element_url(method_name, options = {})
-          "#{self.class.prefix(prefix_options)}#{self.class.collection_name}/new/#{method_name}.#{self.class.format.extension}#{self.class.__send__(:query_string, options)}"
-        end
+    def get(method_name, options = {})
+      connection.get(custom_method_element_url(method_name, options), self.class.headers)
     end
+
+    def post(method_name, options = {}, body = nil)
+      request_body = body.blank? ? encode : body
+      if new?
+        connection.post(custom_method_new_element_url(method_name, options), request_body, self.class.headers)
+      else
+        connection.post(custom_method_element_url(method_name, options), request_body, self.class.headers)
+      end
+    end
+
+    def put(method_name, options = {}, body = '')
+      connection.put(custom_method_element_url(method_name, options), body, self.class.headers)
+    end
+
+    def delete(method_name, options = {})
+      connection.delete(custom_method_element_url(method_name, options), self.class.headers)
+    end
+
+
+    private
+      def custom_method_element_url(method_name, options = {})
+        "#{self.class.prefix(prefix_options)}#{self.class.collection_name}/#{id}/#{method_name}.#{self.class.format.extension}#{self.class.__send__(:query_string, options)}"
+      end
+
+      def custom_method_new_element_url(method_name, options = {})
+        "#{self.class.prefix(prefix_options)}#{self.class.collection_name}/new/#{method_name}.#{self.class.format.extension}#{self.class.__send__(:query_string, options)}"
+      end
   end
 end

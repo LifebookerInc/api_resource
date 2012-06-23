@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.2.11"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
@@ -60,6 +60,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/railtie.rb",
     "lib/api_resource/scopes.rb",
     "nohup.out",
+    "spec/lib/api_resource_spec.rb",
     "spec/lib/associations_spec.rb",
     "spec/lib/attributes_spec.rb",
     "spec/lib/base_spec.rb",
@@ -75,8 +76,7 @@ Gem::Specification.new do |s|
     "spec/support/requests/association_requests.rb",
     "spec/support/requests/error_resource_requests.rb",
     "spec/support/requests/test_resource_requests.rb",
-    "spec/support/test_resource.rb",
-    "spec/tmp/api_resource_test_db.sqlite"
+    "spec/support/test_resource.rb"
   ]
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]

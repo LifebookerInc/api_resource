@@ -53,16 +53,22 @@ module ApiResource
     Mocks.clear_endpoints
     Mocks.init
     
-    Dir["#{File.dirname(__FILE__)}/../spec/support/requests/*.rb"].each {|f| require f}
-    Dir["#{File.dirname(__FILE__)}/../spec/support/**/*.rb"].each {|f| require f}
+    Dir["#{File.dirname(__FILE__)}/../spec/support/requests/*.rb"].each {|f| 
+      require f
+    }
+    Dir["#{File.dirname(__FILE__)}/../spec/support/**/*.rb"].each {|f| 
+      require f
+    }
   end
-  
+
   class << self
-    [:site, :site=, :format, :format=, :token, :token=, :timeout, :open_timeout, :reset_connection].each do |m|
-      define_method(m) do |*args|
-        ApiResource::Base.send(m, *args)
-      end
-    end
+    
+    delegate :site, :site=, :format, :format=, 
+      :token, :token=, :timeout, 
+      :open_timeout, 
+      :reset_connection, :ttl, :ttl=,
+      :to => ApiResource::Base
+    
   end
 
   def self.cache(reset = false)
@@ -72,18 +78,6 @@ module ApiResource
     end
   end
   
-  # Run a block with a given token - useful for AroundFilters
-  def self.with_token(new_token, &block)
-    old_token = self.token
-    begin
-      self.token = new_token
-      yield
-    ensure
-      self.token = old_token
-    end
-  end
-  
-
   # set the timeout val and reset the connection
   def self.timeout=(val)
     ApiResource::Base.timeout = val
@@ -97,8 +91,28 @@ module ApiResource
     self.reset_connection
     val
   end
-  
   self.timeout = self.open_timeout = DEFAULT_TIMEOUT
+
+  # Run a block with a given token - useful for AroundFilters
+  def self.with_token(new_token, &block)
+    old_token = self.token
+    begin
+      self.token = new_token
+      yield
+    ensure
+      self.token = old_token
+    end
+  end
+
+  def with_ttl(new_ttl, &block)
+    old_ttl = self.ttl
+    begin
+      self.ttl = new_ttl
+      yield
+    ensure
+      self.ttl = old_ttl
+    end
+  end
   
   # logger
   def self.logger

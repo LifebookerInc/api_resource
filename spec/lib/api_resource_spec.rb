@@ -28,4 +28,16 @@ describe ApiResource do
     end
   end
 
+  context ".with_ttl" do
+
+    it "should temporarily set ttl for a block" do
+      old_ttl = ApiResource.ttl
+      ApiResource.with_ttl(10) do
+        ApiResource.ttl.should eql(10)
+      end
+      ApiResource.ttl.should eql(old_ttl)
+    end
+
+  end
+
 end

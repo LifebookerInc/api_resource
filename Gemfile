@@ -2,7 +2,7 @@ source "http://rubygems.org"
 # Add dependencies required to use your gem here.
 # Example:
 #   gem "activesupport", ">= 2.3.5"
-gem 'rails', '>= 3.2.2'
+gem 'rails', '~> 3'
 gem 'hash_dealer'
 gem 'rest-client'
 gem 'log4r'
@@ -31,6 +31,6 @@ group :development do
   gem 'mocha'
   gem "bundler"
   gem "jeweler", "~> 1.6.4"
-  gem 'activerecord', '>= 3.2.2'
+  gem 'activerecord', '~> 3'
   gem "sqlite3"
 end

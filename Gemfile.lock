@@ -156,7 +156,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord (>= 3.2.2)
+  activerecord (~> 3)
   bundler
   colorize
   differ
@@ -173,7 +173,7 @@ DEPENDENCIES
   pry
   pry-doc
   pry-nav
-  rails (>= 3.2.2)
+  rails (~> 3)
   rest-client
   rspec
   rspec-rails

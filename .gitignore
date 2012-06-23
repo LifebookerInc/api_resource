@@ -11,6 +11,9 @@ doc
 # bundler
 .bundle
 
+# remote db tmp files
+spec/tmp/*sqlite
+
 # jeweler generated
 pkg
 .DS_Store

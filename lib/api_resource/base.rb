@@ -7,8 +7,8 @@ module ApiResource
   
   class Base
     
-
-    class_attribute :site, :proxy, :user, :password, :auth_type, :format, :timeout, :open_timeout, :ssl_options, :token
+    class_attribute :site, :proxy, :user, :password, :auth_type, :format, 
+      :timeout, :open_timeout, :ssl_options, :token, :ttl
     
 
     class_attribute :include_root_in_json

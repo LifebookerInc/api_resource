@@ -64,6 +64,13 @@ module ApiResource
       end
     end
   end
+
+  def self.cache(reset = false)
+    @cache = nil if reset
+    @cache ||= begin
+      defined?(Rails) ? Rails.cache : ActiveSupport::Cache::MemoryStore.new
+    end
+  end
   
   # Run a block with a given token - useful for AroundFilters
   def self.with_token(new_token, &block)

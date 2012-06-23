@@ -75,7 +75,8 @@ Gem::Specification.new do |s|
     "spec/support/requests/association_requests.rb",
     "spec/support/requests/error_resource_requests.rb",
     "spec/support/requests/test_resource_requests.rb",
-    "spec/support/test_resource.rb"
+    "spec/support/test_resource.rb",
+    "spec/tmp/api_resource_test_db.sqlite"
   ]
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]
@@ -87,7 +88,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<rails>, [">= 3.2.2"])
+      s.add_runtime_dependency(%q<rails>, ["~> 3"])
       s.add_runtime_dependency(%q<hash_dealer>, [">= 0"])
       s.add_runtime_dependency(%q<rest-client>, [">= 0"])
       s.add_runtime_dependency(%q<log4r>, [">= 0"])
@@ -109,10 +110,10 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<mocha>, [">= 0"])
       s.add_development_dependency(%q<bundler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_development_dependency(%q<activerecord>, [">= 3.2.2"])
+      s.add_development_dependency(%q<activerecord>, ["~> 3"])
       s.add_development_dependency(%q<sqlite3>, [">= 0"])
     else
-      s.add_dependency(%q<rails>, [">= 3.2.2"])
+      s.add_dependency(%q<rails>, ["~> 3"])
       s.add_dependency(%q<hash_dealer>, [">= 0"])
       s.add_dependency(%q<rest-client>, [">= 0"])
       s.add_dependency(%q<log4r>, [">= 0"])
@@ -134,11 +135,11 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<mocha>, [">= 0"])
       s.add_dependency(%q<bundler>, [">= 0"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_dependency(%q<activerecord>, [">= 3.2.2"])
+      s.add_dependency(%q<activerecord>, ["~> 3"])
       s.add_dependency(%q<sqlite3>, [">= 0"])
     end
   else
-    s.add_dependency(%q<rails>, [">= 3.2.2"])
+    s.add_dependency(%q<rails>, ["~> 3"])
     s.add_dependency(%q<hash_dealer>, [">= 0"])
     s.add_dependency(%q<rest-client>, [">= 0"])
     s.add_dependency(%q<log4r>, [">= 0"])
@@ -160,7 +161,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mocha>, [">= 0"])
     s.add_dependency(%q<bundler>, [">= 0"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-    s.add_dependency(%q<activerecord>, [">= 3.2.2"])
+    s.add_dependency(%q<activerecord>, ["~> 3"])
     s.add_dependency(%q<sqlite3>, [">= 0"])
   end
 end

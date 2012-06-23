@@ -583,5 +583,29 @@ describe "Base" do
     end
     
   end
+
+  context ".get" do
+
+    context "with ttl" do
+      around(:each) do |example|
+
+        begin
+          initial = ApiResource::Base.ttl
+          ApiResource::Base.ttl = 1
+          example.run
+        ensure 
+          ApiResource::Base.ttl = initial
+        end
+
+      end
+
+      it "should implement caching using the ttl setting" do
+        cache = mock(:fetch => {:id => 123, :name => "Dan"})
+        ApiResource.stubs(:cache => cache)
+        TestResource.find(123)
+      end
+    end
+
+  end
   
 end

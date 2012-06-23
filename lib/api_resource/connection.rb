@@ -51,7 +51,13 @@ module ApiResource
     end
     
     def get(path, headers = {})
-      format.decode(request(:get, path, build_request_headers(headers, :get, self.site.merge(path))))
+      # our site and headers for this request
+      site = self.site.merge(path)
+      headers = build_request_headers(headers, :get, site)
+
+      self.with_caching(path, headers) do
+        format.decode(request(:get, path, headers))
+      end
     end
     
     def delete(path, headers = {})
@@ -81,6 +87,23 @@ module ApiResource
       end
     end
 
+    protected
+
+    def cache_key(path, headers)
+      key = Digest::MD5.hexdigest([path, headers].to_s)
+      return "a-#{key}-#{ApiResource::Base.ttl}"
+    end
+
+    def with_caching(path, data = {}, &block)
+      if ApiResource::Base.ttl.to_f > 0.0
+        key = self.cache_key(path, data)
+        ApiResource.cache.fetch(key, :expires_in => ApiResource::Base.ttl) do
+          yield
+        end
+      else
+        yield
+      end
+    end
 
     private
       # Makes a request to the remote service.

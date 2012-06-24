@@ -19,7 +19,12 @@ module ApiResource
       end
       
       if response.respond_to?(:body)
-        message << "\nResponse message = #{JSON.parse(response.body).pretty_inspect}."
+        begin
+          body = JSON.parse(response.body).pretty_inspect
+        rescue
+          body = "INVALID JSON: #{response.body}"
+        end
+        message << "\nResponse message = #{body}."
       end
       
       message << "\n#{@message}"

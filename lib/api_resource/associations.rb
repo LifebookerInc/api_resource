@@ -19,16 +19,20 @@ module ApiResource
 
     included do
       
-      raise "Cannot include Associations without first including AssociationActivation" unless self.ancestors.include?(ApiResource::AssociationActivation)
-      class_attribute :related_objects
-            
-      # Hash to hold onto the definitions of the related objects
-      self.related_objects = RelatedObjectHash.new
-      self.association_types.keys.each do |type|
-        self.related_objects[type] = RelatedObjectHash.new({})
+      unless self.ancestors.include?(ApiResource::AssociationActivation)
+        raise Exception.new(
+          "Can't include Associations without AssociationActivation" 
+        )
       end
-      self.related_objects[:scope] = RelatedObjectHash.new({})
-      
+
+      class_attribute :related_objects
+      self.clear_related_objects
+
+      # we need to add an inherited method here, but it can't happen
+      # until after this module in included/extended, so it's in its own
+      # little mini module
+      extend InheritedMethod
+
       self.define_association_methods
       
     end
@@ -37,7 +41,24 @@ module ApiResource
     def self.activate_active_record
       ActiveRecord::Base.class_eval do
         include ApiResource::AssociationActivation
-        self.activate_associations(:has_many_remote => :has_many_remote, :belongs_to_remote => :belongs_to_remote, :has_one_remote => :has_one_remote)
+        self.activate_associations(
+          :has_many_remote => :has_many_remote, 
+          :belongs_to_remote => :belongs_to_remote, 
+          :has_one_remote => :has_one_remote
+        )
+      end
+    end
+
+    module InheritedMethod
+      # define a method to reset our related objects
+      def inherited(descendant)
+        # we only want to do this in direct descendants of ApiResoruce::Base
+        if self == ApiResource::Base
+          descendant.clear_related_objects
+        else
+          descendant.clone_related_objects
+        end
+        super(descendant)
       end
     end
 
@@ -109,13 +130,26 @@ module ApiResource
         end
       end
       
-      def clear_associations
-        self.related_objects.each do |_, val|
-          val.clear
-        end
-      end
-      
       protected
+
+        def clear_related_objects
+          # Hash to hold onto the definitions of the related objects
+          self.related_objects = RelatedObjectHash.new
+          self.association_types.keys.each do |type|
+            self.related_objects[type] = RelatedObjectHash.new({})
+          end
+          self.related_objects[:scope] = RelatedObjectHash.new({})
+        end
+
+        def clone_related_objects
+          # Hash to hold onto the definitions of the related objects
+          self.related_objects = self.related_objects.clone
+          self.association_types.keys.each do |type|
+            self.related_objects[type] = self.related_objects[type].clone
+          end
+          self.related_objects[:scope] = self.related_objects[:scope].clone
+        end
+
         def define_association_as_attribute(assoc_type, assoc_name)
           # set up dirty tracking for associations
           

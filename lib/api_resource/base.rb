@@ -117,7 +117,7 @@ module ApiResource
         # clear the public_attribute_names, protected_attribute_names
         remove_instance_variable(:@class_data) if instance_variable_defined?(:@class_data)
         self.clear_attributes
-        self.clear_associations
+        self.clear_related_objects
         self.set_class_attributes_upon_load
       end
       

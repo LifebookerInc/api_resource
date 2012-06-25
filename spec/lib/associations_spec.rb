@@ -55,11 +55,6 @@ describe "Associations" do
       AnotherTestResource.association?(:belongs_to_object).should_not be_true
     end
     
-    it "should have its relationship cascade when sub-classed" do
-      TestResource.belongs_to :belongs_to_object
-      ChildTestResource.association?(:belongs_to_object).should be true
-    end
-    
     it "should have its relationship cascade when sub-classed after the relationship is defined" do
       TestResource.belongs_to :belongs_to_object
       class ChildTestResource2 < TestResource; end
@@ -136,6 +131,24 @@ describe "Associations" do
       TestResource.scope?(:test_scope).should be_true
       TestResource.scope_attributes(:test_scope).should eql({"item" => "test"})
     end 
+
+    it "should not propagate scopes from one class to another" do
+
+      Scope1Class = Class.new(ApiResource::Base) do
+        scope :one, {:item => "test"}
+      end
+
+      Scope2Class = Class.new(ApiResource::Base) do
+        scope :two, {:abc => "def"}
+      end
+
+      Scope1Class.scope?(:one).should be true
+      Scope1Class.scope?(:two).should be false
+
+      Scope2Class.scope?(:one).should be false
+      Scope2Class.scope?(:two).should be true
+
+    end
     
   end
   

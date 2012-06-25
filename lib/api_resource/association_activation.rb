@@ -3,7 +3,7 @@ module ApiResource
     extend ActiveSupport::Concern
     
     included do
-      cattr_accessor :association_types
+      class_attribute :association_types
       # our default association types
       self.association_types = {:belongs_to => :single, :has_one => :single, :has_many => :multi}
     end

@@ -1,7 +1,7 @@
 HashDealer.define(:new_test_object) do
   attributes({
     :protected => [:id],
-    :public => [:name, :age, [:bday, :date]],
+    :public => [:name, :age, [:bday, :date], [:roles, :array]]
   })
   scopes({
     :active => {:active => true},
@@ -17,6 +17,12 @@ end
 HashDealer.define(:test_resource) do
   name("name")
   age("age")
+end
+
+HashDealer.define(:test_resource_with_roles) do
+  name("name")
+  age("age")
+  roles([])
 end
 
 HashDealer.define(:test_resource_errors) do

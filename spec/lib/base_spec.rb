@@ -11,56 +11,6 @@ describe "Base" do
   
   describe "Loading data from a hash" do
     
-    describe "Determining Attributes, Scopes, and Associations from the server" do
-
-      it "should determine it's attributes when the class loads" do
-        tst = TestResource.new
-        tst.attribute?(:name).should be_true
-        tst.attribute?(:age).should be_true
-      end
-      
-      it "should typecast data if a format is specified" do
-        tst = TestResource.new(:bday => Date.today.to_s)
-        tst.bday.should be_a Date
-      end
-      
-      it "should determine it's associations when the class loads" do
-        tst = TestResource.new
-        tst.association?(:has_many_objects).should be_true
-        tst.association?(:belongs_to_object).should be_true
-      end
-      
-      it "should be able to determine scopes when the class loads" do
-        tst = TestResource.new
-        tst.scope?(:paginate).should be_true
-        tst.scope?(:active).should be_true
-      end
-
-    end
-    context "Attributes" do
-      before(:all) do
-        TestResource.define_attributes :attr1, :attr2
-        TestResource.define_protected_attributes :attr3
-      end
-    
-      it "should set attributes for the data loaded from a hash" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2"})
-        tst.attr1?.should be_true
-        tst.attr1.should eql("attr1")
-        tst.attr1 = "test"
-        tst.attr1.should eql("test")
-      end
-    
-      it "should create protected attributes for unknown attributes trying to be loaded" do
-        tst = TestResource.new({:attr1 => "attr1", :attr3 => "attr3"})
-        tst.attr3?.should be_true
-        tst.attr3.should eql("attr3")
-        lambda {
-          tst.attr3 = "test"
-        }.should raise_error
-      end
-    end
-    
     context "Associations" do
       before(:all) do
         TestResource.has_many :has_many_objects
@@ -390,7 +340,7 @@ describe "Base" do
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
-            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null,\"roles\":[]}}", 
             TestResource.headers
           )
 
@@ -514,7 +464,7 @@ describe "Base" do
       it "should include all attributes if include_all_attributes_on_update is true" do  
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null}}", 
+          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null,\"roles\":[]}}", 
           TestResource.headers
         )
 

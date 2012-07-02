@@ -12,7 +12,7 @@ module ApiResource
       
       class_attribute :attribute_names, :public_attribute_names, :protected_attribute_names, :attribute_types
       
-      cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string]
+      cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string, :array]
 
       attr_reader :attributes
       
@@ -47,7 +47,7 @@ module ApiResource
           # Override the setter for dirty tracking
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{arg}
-              attributes[:#{arg}]
+              attribute_with_default(:#{arg})
             end
           
             def #{arg}=(val)
@@ -80,7 +80,7 @@ module ApiResource
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
 
             def #{arg}
-              self.attributes[:#{arg}]
+              self.attribute_with_default(:#{arg})
             end
           
             def #{arg}=(val)
@@ -171,6 +171,20 @@ module ApiResource
     end
     
     protected
+    
+    def attribute_with_default(field)
+      self.attributes[field].nil? ? self.default_value_for_field(field) : self.attributes[field]
+    end
+
+    def default_value_for_field(field)
+      case self.class.attribute_types[field.to_sym]
+        when :array
+          return []
+        else
+          return nil
+      end
+    end
+
     def typecast_attribute(field, val)
       return val unless self.class.attribute_types.include?(field)
       case self.class.attribute_types[field.to_sym]
@@ -184,6 +198,8 @@ module ApiResource
           return val.class == Float ? val.dup : val.to_f rescue val
         when :string
           return val.class == String ? val.dup : val.to_s rescue val
+        when :array
+          return val.class == Array ? val.dup : Array.wrap(val)
         else
           # catches the nil case and just leaves it alone
           return val.dup rescue val

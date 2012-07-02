@@ -15,6 +15,68 @@ describe "Attributes" do
       TestResource.attribute?(:attr2).should be_true
     end
     
+
+    describe "Determining Attributes, Scopes, and Associations from the server" do
+
+      it "should determine it's attributes when the class loads" do
+        tst = TestResource.new
+        tst.attribute?(:name).should be_true
+        tst.attribute?(:age).should be_true
+      end
+      
+      it "should typecast data if a format is specified" do
+        tst = TestResource.new(:bday => Date.today.to_s)
+        tst.bday.should be_a Date
+      end
+      
+      it "should typecast data if a format is specified" do
+        tst = TestResource.new(:roles => [:role1, :role2])
+        tst.roles.should be_a Array
+      end
+
+      it "should default array fields to a blank array" do
+        tst = TestResource.new
+        tst.roles.should be_a Array
+      end
+
+      it "should determine it's associations when the class loads" do
+        tst = TestResource.new
+        tst.association?(:has_many_objects).should be_true
+        tst.association?(:belongs_to_object).should be_true
+      end
+      
+      it "should be able to determine scopes when the class loads" do
+        tst = TestResource.new
+        tst.scope?(:paginate).should be_true
+        tst.scope?(:active).should be_true
+      end
+
+    end
+
+    context "Attributes" do
+      before(:all) do
+        TestResource.define_attributes :attr1, :attr2
+        TestResource.define_protected_attributes :attr3
+      end
+    
+      it "should set attributes for the data loaded from a hash" do
+        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2"})
+        tst.attr1?.should be_true
+        tst.attr1.should eql("attr1")
+        tst.attr1 = "test"
+        tst.attr1.should eql("test")
+      end
+    
+      it "should create protected attributes for unknown attributes trying to be loaded" do
+        tst = TestResource.new({:attr1 => "attr1", :attr3 => "attr3"})
+        tst.attr3?.should be_true
+        tst.attr3.should eql("attr3")
+        lambda {
+          tst.attr3 = "test"
+        }.should raise_error
+      end
+    end
+
     it "should define methods for testing for reading and writing known attributes" do
       TestResource.define_attributes :attr1, :attr2
       tst = TestResource.new

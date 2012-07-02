@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.3.2"
+  s.version = "0.3.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2012-06-25"
+  s.date = "2012-07-02"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
@@ -83,7 +83,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.11"
+  s.rubygems_version = "1.8.10"
   s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then

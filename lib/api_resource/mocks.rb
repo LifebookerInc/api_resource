@@ -198,18 +198,18 @@ module ApiResource
       # 
       def sorted_params(data)
         ret = {}
-        data.split("&").each do |val|
-          val = val.split("=")
-          if val.last =~ /^\d+$/
-            ret[val.first] = val.last.to_i
-          elsif val.last =~ /^[\d\.]+$/
-            ret[val.first] = val.last.to_f
-          elsif val.last == "true"
-            ret[val.first] = true
-          elsif val.last == "false"
-            ret[val.first] = false  
+        data.split("&").each do |entry|
+          key, val = entry.split("=")
+          if val.to_s =~ /^\d+$/
+            ret[key] = val.to_i
+          elsif val =~ /^[\d\.]+$/
+            ret[key] = val.to_f
+          elsif val == "true"
+            ret[key] = true
+          elsif val == "false"
+            ret[key] = false  
           else
-            ret[val.first] = val.last
+            ret[key] = val || ""
           end
         end
         ret

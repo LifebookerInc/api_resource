@@ -32,5 +32,14 @@ describe Mocks do
     resp["id"].should eql "1"
     resp["test"].should eql "abc"
   end
+
+  context "Mock Request" do
+    context "Initialize" do 
+      it "should correctly assign blank params" do
+        request = ApiResource::Mocks::MockRequest.new(:get, "/authenticate.json?token=")
+        request.params.should eql({"token" => ""})
+      end
+    end
+  end
   
 end

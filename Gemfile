@@ -26,8 +26,9 @@ group :development do
   gem 'factory_girl'
   gem 'simplecov'
   gem 'faker'
-  gem 'guard'
+  gem 'guard-bundler'
   gem 'guard-rspec'
+  gem 'guard-spork'
   gem 'mocha'
   gem "bundler"
   gem "jeweler", "~> 1.6.4"

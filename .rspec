@@ -2,3 +2,4 @@
 --format nested
 --backtrace
 --fail-fast
+-X

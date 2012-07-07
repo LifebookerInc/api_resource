@@ -1,7 +1,7 @@
 HashDealer.define(:new_test_object) do
   attributes({
     :protected => [:id],
-    :public => [:name, :age, [:bday, :date], [:roles, :array]]
+    :public => [:name, :age, :is_active, [:bday, :date], [:roles, :array]]
   })
   scopes({
     :active => {:active => true},

@@ -14,11 +14,11 @@ module ApiResource
     class_attribute :include_root_in_json
     self.include_root_in_json = true
     
-    class_attribute :include_blank_attributes_on_create
-    self.include_blank_attributes_on_create = false
+    class_attribute :include_nil_attributes_on_create
+    self.include_nil_attributes_on_create = false
     
     class_attribute :include_all_attributes_on_update
-    self.include_blank_attributes_on_create = false
+    self.include_nil_attributes_on_create = false
 
     class_attribute :format
     self.format = ApiResource::Formats::JsonFormat
@@ -544,7 +544,7 @@ module ApiResource
     
     def serializable_hash(options = {})
       action = options[:action]
-      include_blank_attributes = options[:include_blank_attributes]
+      include_nil_attributes = options[:include_nil_attributes]
       options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : self.changes.keys.symbolize_array.select{|k| self.association?(k)}
       options[:include_extras] = options[:include_extras] ? options[:include_extras].symbolize_array : []
       options[:except] ||= []
@@ -552,14 +552,14 @@ module ApiResource
         # If this is an association and it's in include_associations then include it
         if options[:include_extras].include?(key.to_sym)
           accum.merge(key => val)
-        elsif options[:except].include?(key.to_sym) || (!include_blank_attributes && val.blank?)
+        elsif options[:except].include?(key.to_sym) || (!include_nil_attributes && val.nil? && self.changes[key].blank?)
           accum
         else
           !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
       end
       options[:include_associations].each do |assoc|
-        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true, :include_blank_attributes => include_blank_attributes, :action => action}) if self.association?(assoc)
+        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true, :include_nil_attributes => include_nil_attributes, :action => action}) if self.association?(assoc)
       end
       # include id - this is for nested updates
       ret[:id] = self.id if options[:include_id] && !self.new?
@@ -579,6 +579,15 @@ module ApiResource
       self.class.element_path(id, prefix_options, query_options)
     end
     
+    # list of all attributes that are not nil
+    def nil_attributes
+      self.attributes.select{|k,v|
+        # if our value is actually nil or if we are an association
+        # or array and we are blank
+        v.nil? || ((self.association?(k) || v.is_a?(Array)) && v.blank?)
+      }
+    end
+
     def new_element_path(prefix_options = {})
       self.class.new_element_path(prefix_options)
     end
@@ -597,9 +606,10 @@ module ApiResource
     def setup_create_call(*args)
       opts = args.extract_options!
       # When we create we should not include any blank attributes unless they are associations
-      except = self.class.include_blank_attributes_on_create ? {} : self.attributes.select{|k,v| v.blank?}
+      except = self.class.include_nil_attributes_on_create ? 
+        {} : self.nil_attributes
       opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-      opts[:include_blank_attributes] = self.class.include_blank_attributes_on_create
+      opts[:include_nil_attributes] = self.class.include_nil_attributes_on_create
       opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
       opts[:include_extras] ||= []
       opts[:action] = "create"
@@ -621,7 +631,7 @@ module ApiResource
       except = self.class.attribute_names - self.changed.symbolize_array
       changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
       opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
-      opts[:include_blank_attributes] = self.include_all_attributes_on_update
+      opts[:include_nil_attributes] = self.include_all_attributes_on_update
       opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
       opts[:include_extras] ||= []
       opts[:action] = "update"

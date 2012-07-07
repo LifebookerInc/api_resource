@@ -311,6 +311,17 @@ describe "Base" do
           tr.save
         end
 
+        it "should include false attributes when creating by default" do
+          ApiResource::Connection.any_instance.expects(:post).with(
+            "/test_resources.json", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"is_active\":false}}", 
+            TestResource.headers
+          )
+
+          tr = TestResource.build(:name => "Ethan", :is_active => false)
+          tr.save
+        end
+
 
         it "should not include nil attributes for associated objects when creating by default" do
           ApiResource::Connection.any_instance.expects(:post).with(
@@ -340,16 +351,16 @@ describe "Base" do
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", 
-            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null,\"roles\":[]}}", 
+            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"is_active\":null,\"bday\":null,\"roles\":[]}}", 
             TestResource.headers
           )
 
-          TestResource.include_blank_attributes_on_create = true
+          TestResource.include_nil_attributes_on_create = true
           tr = TestResource.build(:name => "Ethan")
           tr.save
 
           #hash['test_resource'].key?('age').should be_true
-          TestResource.include_blank_attributes_on_create = false
+          TestResource.include_nil_attributes_on_create = false
         end
       end
     end
@@ -425,7 +436,7 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_one_object\":{}}}", 
+          "{\"test_resource\":{\"has_one_object\":{\"size\":null}}}", 
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -464,7 +475,7 @@ describe "Base" do
       it "should include all attributes if include_all_attributes_on_update is true" do  
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"bday\":null,\"roles\":[]}}", 
+          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"is_active\":null,\"bday\":null,\"roles\":[]}}", 
           TestResource.headers
         )
 
@@ -485,6 +496,35 @@ describe "Base" do
         tr.update_attributes(:name => "Dan")
       end
       
+
+      it "should include nil attributes when updating if they have 
+        changed by default" do
+        
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"is_active\":null}}", 
+          TestResource.headers
+        )
+
+        tr = TestResource.new(
+          :id => "1", :name => "Ethan", :is_active => false
+        )
+        tr.update_attributes(:is_active => nil)
+      end
+
+      it "should include attributes that have changed to false by default" do
+        ApiResource::Connection.any_instance.expects(:put).with(
+          "/test_resources/1.json", 
+          "{\"test_resource\":{\"is_active\":false}}", 
+          TestResource.headers
+        )
+
+        tr = TestResource.new(
+          :id => "1", :name => "Ethan", :is_active => true
+        )
+        tr.update_attributes(:is_active => false)
+
+      end
       
     end
   

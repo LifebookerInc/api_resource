@@ -123,6 +123,7 @@ module ApiResource
       
       def token_with_new_token_set=(new_token)
         self.token_without_new_token_set = new_token
+        self.connection(true)
         self.descendants.each do |child|
           child.send(:token=, new_token)
         end
@@ -177,7 +178,7 @@ module ApiResource
       alias_method_chain :open_timeout=, :connection_reset
       
       def connection(refresh = false)
-        @connection = Connection.new(self.site, self.format) if refresh || @connection.nil?
+        @connection = Connection.new(self.site, self.format, self.headers) if refresh || @connection.nil?
         @connection.timeout = self.timeout
         @connection
       end

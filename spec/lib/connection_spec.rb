@@ -10,9 +10,70 @@ describe Connection do
   end
   
   it "should be able to set a default token value, which is passed through each request" do
-    TestResource.connection.expects(:get).with("/test_resources/1.json", "Lifebooker-Token" => "abc")
+    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {"Accept"=>"application/json", "Lifebooker-Token" => "abc"}).returns(ApiResource::Mocks::MockResponse.new({}))
     ApiResource::Base.token = "abc"
     TestResource.find(1)
+  end
+
+  it "should set the Lifebooker-Token if one is present for GET requests" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+
+    ApiResource::Base.token = token
+
+    TestResource.connection.get("/test_resources/1.json")
+  end
+
+  it "should set the Lifebooker-Token if one is present for DELETE requests" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Mocks::Connection.expects(:delete).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+
+    ApiResource::Base.token = token
+
+    TestResource.connection.delete("/test_resources/1.json")
+  end
+
+  it "should set the Lifebooker-Token if one is present for :head requests" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Mocks::Connection.expects(:head).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+
+    ApiResource::Base.token = token
+
+    TestResource.connection.head("/test_resources/1.json")
+  end
+
+  it "should set the Lifebooker-Token if one is present for POST requests" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Mocks::Connection.expects(:post).with("/test_resources/1.json", {}, {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+
+    ApiResource::Base.token = token
+
+    TestResource.connection.post("/test_resources/1.json")
+  end
+
+  it "should set the Lifebooker-Token if one is present for PUT requests" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Mocks::Connection.expects(:put).with("/test_resources/1.json", {}, {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+
+    ApiResource::Base.token = token
+
+    TestResource.connection.put("/test_resources/1.json")
+  end
+
+  it "should set its headers upon initialization" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Base.token = token
+
+    TestResource.connection.headers.include?("Lifebooker-Token").should eql true
+    TestResource.connection.headers["Lifebooker-Token"] = token
+  end
+
+  it "should reset headers upon initialization" do
+    token = Kernel.rand(100000).to_s
+    ApiResource::Base.token = token
+
+    TestResource.connection.headers.include?("Lifebooker-Token").should eql true
+    TestResource.connection.headers["Lifebooker-Token"] = token
   end
   
   it "should be able to set a token for a given block" do

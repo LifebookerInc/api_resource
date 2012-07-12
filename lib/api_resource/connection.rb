@@ -20,7 +20,7 @@ module ApiResource
     }
 
     attr_reader :site, :user, :password, :auth_type, :timeout, :proxy, :ssl_options
-    attr_accessor :format
+    attr_accessor :format, :headers
 
     class << self
       def requests
@@ -30,12 +30,13 @@ module ApiResource
 
     # The +site+ parameter is required and will set the +site+
     # attribute to the URI for the remote resource service.
-    def initialize(site, format = ApiResource::Formats::JsonFormat)
+    def initialize(site, format = ApiResource::Formats::JsonFormat, headers)
       raise ArgumentError, 'Missing site URI' unless site
       @user = @password = nil
       @uri_parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
       self.site = site
       self.format = format
+      self.headers = headers
     end
 
     # Set URI for remote service.
@@ -50,7 +51,7 @@ module ApiResource
       @timeout = timeout
     end
     
-    def get(path, headers = {})
+    def get(path, headers = self.headers)
       # our site and headers for this request
       site = self.site.merge(path)
       headers = build_request_headers(headers, :get, site)
@@ -60,17 +61,17 @@ module ApiResource
       end
     end
     
-    def delete(path, headers = {})
+    def delete(path, headers = self.headers)
       request(:delete, path, build_request_headers(headers, :delete, self.site.merge(path)))
       return true
     end
     
-    def head(path, headers = {})
+    def head(path, headers = self.headers)
       request(:head, path, build_request_headers(headers, :head, self.site.merge(path)))
     end
     
     
-    def put(path, body = {}, headers = {})
+    def put(path, body = {}, headers = self.headers)
       # If there's a file to send then we can't use JSON or XML
       if !body.is_a?(String) && RestClient::Payload.has_file?(body)
         format.decode(request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path))))
@@ -79,7 +80,7 @@ module ApiResource
       end
     end
     
-    def post(path, body = {}, headers = {})
+    def post(path, body = {}, headers = self.headers)
       if !body.is_a?(String) && RestClient::Payload.has_file?(body)
         format.decode(request(:post, path, body, build_request_headers(headers, :post, self.site.merge(path))))
       else

@@ -104,7 +104,7 @@ module ApiResource
     end
   end
 
-  def with_ttl(new_ttl, &block)
+  def self.with_ttl(new_ttl, &block)
     old_ttl = self.ttl
     begin
       self.ttl = new_ttl

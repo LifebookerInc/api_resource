@@ -26,6 +26,12 @@ module ApiResource
       end
 
       class_attribute :related_objects
+      attr_accessor :assoc_attributes
+
+      define_method(:assoc_attributes) do
+        @assoc_attributes ||= Hash.new
+      end
+
       self.clear_related_objects
 
       # we need to add an inherited method here, but it can't happen
@@ -155,7 +161,7 @@ module ApiResource
           
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{assoc_name}
-              self.attributes[:#{assoc_name}] ||= #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy.new(self.association_class_name('#{assoc_name}'), nil, self)
+              self.assoc_attributes[:#{assoc_name}] ||= (self.attributes[:#{assoc_name}] || #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy.new(self.association_class_name('#{assoc_name}'), nil, self))
             end
             def #{assoc_name}=(val)
               # get old internal object

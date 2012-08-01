@@ -597,5 +597,21 @@ describe "Base" do
     end
 
   end
+
+  context ".respond_to?" do
+
+    it "should load the resouce definition when respond_to? is called" do
+      # remove our attribute that denotes that the definition was loaded
+      TestResource.send(:remove_instance_variable, :@class_data)
+      TestResource.expects(:set_class_attributes_upon_load)
+      TestResource.respond_to?(:test)
+    end
+
+    it "should not load the resource definition when respond_to? is called
+      if the definition has already been loaded"
+
+  end
+
+
   
 end

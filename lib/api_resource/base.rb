@@ -112,6 +112,16 @@ module ApiResource
       def reset_connection
         remove_instance_variable(:@connection) if @connection.present?
       end
+
+      # load our resource definition to make sure we know what this class
+      # responds to
+      def respond_to?(*args)
+        unless self.instance_variable_defined?(:@class_data)
+          self.instance_variable_set(:@class_data, true)
+          self.set_class_attributes_upon_load
+        end
+        super
+      end
       
       def reload_class_attributes
         # clear the public_attribute_names, protected_attribute_names

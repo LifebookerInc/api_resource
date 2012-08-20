@@ -51,6 +51,14 @@ describe "Attributes" do
         tst.scope?(:active).should be_true
       end
 
+      it "should provide attributes without proxies if attributes_without_proxies is called" do
+        tst = TestResource.new({:has_many_objects => []})
+        tst.attributes_without_proxies.each do |k,v|
+          [ApiResource::Associations::SingleObjectProxy, ApiResource::Associations::MultiObjectProxy]
+            .include?(v.class).should be_false
+        end
+      end
+
     end
 
     context "Attributes" do

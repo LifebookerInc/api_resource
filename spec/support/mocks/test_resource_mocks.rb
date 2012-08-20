@@ -14,7 +14,7 @@ Mocks.define do
   end
   
   endpoint("/test_resources/:id") do
-    get(HashDealer.roll(:test_resource)) do |params|
+    get(HashDealer.roll(:test_resource_with_proxies)) do |params|
       self.merge(params)
     end
     delete({})

@@ -30,6 +30,38 @@ module ApiResource
         end
         @attributes
       end
+
+
+      # This method is important for reloading an object. If the
+      # object has already been loaded, its associations will trip
+      # up the load method unless we pass in the internal objects.
+
+      define_method(:attributes_without_proxies) do
+        attributes = @attributes
+
+        if attributes.nil?
+          attributes = self.class.attribute_names.each do |attr|
+            attributes[attr] = self.send("#{attr}")
+          end
+        end
+
+        attributes.each do |k,v|
+          if v.respond_to?(:internal_object)
+            if v.internal_object.present?
+              internal = v.internal_object
+              if internal.is_a?(Array)
+                attributes[k] = internal.collect{|item| item.attributes}
+              else
+                attributes[k] = internal.attributes
+              end
+            else
+              attributes[k] = nil
+            end
+          end
+        end
+
+        attributes
+      end
       
     end
     

@@ -60,6 +60,7 @@ module ApiResource
 
       def reload
         remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
+        self.load(self.load_from_remote({}))
         self
       end
       

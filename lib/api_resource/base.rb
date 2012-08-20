@@ -483,7 +483,8 @@ module ApiResource
     end
     
     def reload
-      self.load(self.class.find(to_param, :params => @prefix_options).attributes)
+      remove_instance_variable(:@assoc_attributes) if instance_variable_defined?(:@assoc_attributes)
+      self.load(self.class.find(to_param, :params => @prefix_options).attributes_without_proxies)
     end
     
     def to_param

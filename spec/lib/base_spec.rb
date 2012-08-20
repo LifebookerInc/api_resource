@@ -549,6 +549,33 @@ describe "Base" do
       tr = TestResource.new(:name => "Ethan")
       tr.persisted?.should be_false
     end
+
+    it "should know how to reload attributes" do
+      tr = TestResource.find(1)
+
+      tr.age = 47
+      tr.name = "Ethan"
+
+      tr.reload
+
+      tr.age.should eql "age"
+      tr.name.should eql "name"
+    end
+
+    it "should know how to reload associations" do
+      tr = TestResource.find(1)
+
+      tr.has_one_object.size = "small"
+      tr.has_many_objects.first.name = "Ethan"
+
+      tr.has_one_object.size.should eql "small"
+      tr.has_many_objects.first.name.should eql "Ethan"
+
+      tr.reload
+
+      tr.has_one_object.size.should eql "large"
+      tr.has_many_objects.first.name.should eql "name"
+    end
     
   end
   

@@ -411,6 +411,35 @@ describe "Associations" do
       end
       
     end
+
+    it "should be able to reload a single-object association" do
+      ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :scopes_only => true})
+
+      old_name = ap.name
+
+      str = "krdflkjsd"
+
+      ap.name = str
+      ap.name.should eql str
+      ap.reload
+
+      ap.name.should eql old_name
+    end
+
+    it "should be able to reload a multi-object association" do
+      ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => false}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
+
+      old_name = ap.first.name
+
+      str = "krdflkjsd"
+
+      ap.first.name = str
+      ap.first.name.should eql str
+
+      ap.reload
+
+      ap.first.name.should eql old_name
+    end
     
     context "Multi Object" do
       
@@ -547,10 +576,22 @@ describe "Associations" do
           tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
         end
         
+        it "should be able to reload a single-object association" do
+          ApiResource::Associations::SingleObjectProxy.any_instance.stubs(:remote_path => "/has_one_objects")
+          HasOneObject.connection.stubs(:get => nil)
+
+          tr = TestResource.new()
+
+          tr.has_one_object = {:color => "Blue"}
+
+          tr.has_one_object.reload
+
+          tr.has_one_object.should be_blank
+        end
         
       end
       
-      context "Single Object Association" do
+      context "Multi Object Association" do
         before(:all) do
           TestResource.has_many(:has_many_objects)
         end
@@ -570,7 +611,17 @@ describe "Associations" do
           tr.has_many_objects.internal_object.first.should be_instance_of HasManyObject
         end
         
-        
+        it "should be able to reload a multi-object association" do
+          ApiResource::Associations::MultiObjectProxy.any_instance.stubs(:remote_path => "/has_many_objects")
+          ApiResource::Connection.any_instance.stubs(:get => [])
+
+          tr = TestResource.new(:has_many_objects => [{:color => "blue"}])
+
+          tr.has_many_objects.reload
+
+          tr.has_many_objects.should be_blank
+        end
+
       end
       
       context "ActiveModel" do

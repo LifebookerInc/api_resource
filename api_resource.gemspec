@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.3.10"
+  s.version = "0.3.11"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2012-08-22"
+  s.date = "2012-08-23"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [

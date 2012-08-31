@@ -225,7 +225,7 @@ describe "Associations" do
   describe "Multi Object Associations" do
 
     before(:all) do
-      TestResource.related_objects[:scope].clear
+      TestResource.related_objects[:scopes].clear
     end
 
     after(:each) do
@@ -658,7 +658,7 @@ describe "Associations" do
           end
         end
         it "should add remote associations to related objects" do
-          TestAR.related_objects.should eql({"has_many_remote"=>{}, "belongs_to_remote"=>{"my_favorite_thing"=>"TestClassYay"}, "has_one_remote"=>{}, "scope"=>{}})
+          TestAR.related_objects.should eql({"has_many_remote"=>{}, "belongs_to_remote"=>{"my_favorite_thing"=>"TestClassYay"}, "has_one_remote"=>{}, "scopes"=>{}})
         end
         context "Not Overriding Scopes" do
           it "should not override scopes, which would raise an error with lambda-style scopes" do

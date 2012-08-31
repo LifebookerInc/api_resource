@@ -119,14 +119,14 @@ module ApiResource
       
       def association?(assoc)
         self.related_objects.any? do |key, value|
-          next if key.to_s == "scope"
+          next if key.to_s == "scopes"
           value.detect { |k,v| k.to_sym == assoc.to_sym }
         end
       end
       
       def association_names
         # structure is {:has_many => {"myname" => "ClassName"}}
-        self.related_objects.clone.delete_if{|k,v| k.to_s == "scope"}.collect{|k,v| v.keys.collect(&:to_sym)}.flatten
+        self.related_objects.clone.delete_if{|k,v| k.to_s == "scopes"}.collect{|k,v| v.keys.collect(&:to_sym)}.flatten
       end
       
       def association_class_name(assoc)
@@ -145,7 +145,9 @@ module ApiResource
           self.association_types.keys.each do |type|
             self.related_objects[type] = RelatedObjectHash.new({})
           end
-          self.related_objects[:scope] = RelatedObjectHash.new({})
+
+          # TODO :Remove scopes from related_objects.
+          self.related_objects[:scopes] = RelatedObjectHash.new({})
         end
 
         def clone_related_objects
@@ -154,7 +156,8 @@ module ApiResource
           self.association_types.keys.each do |type|
             self.related_objects[type] = self.related_objects[type].clone
           end
-          self.related_objects[:scope] = self.related_objects[:scope].clone
+          # TODO :Remove scopes from related_objects.
+          self.related_objects[:scopes] = self.related_objects[:scopes].clone
         end
 
         def define_association_as_attribute(assoc_type, assoc_name)

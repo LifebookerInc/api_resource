@@ -26,8 +26,6 @@ module ApiResource
     class_attribute :primary_key
     self.primary_key = "id"
     
-    attr_accessor :prefix_options
-    
     class << self
       
       # writers - accessors with defaults were not working
@@ -243,8 +241,9 @@ module ApiResource
         "#{prefix(prefix_options)}#{collection_name}/#{URI.escape id.to_s}.#{format.extension}#{query_string(query_options)}"
       end
       
-      def new_element_path(prefix_options = {})
-        "#{prefix(prefix_options)}#{collection_name}/new.#{format.extension}"
+      # TODO: Add back in support for non-dynamic prefix paths (e.g. /subdir/resources/new.json)
+      def new_element_path
+        "/#{collection_name}/new.#{format.extension}"
       end
       
       def collection_path(prefix_options = {}, query_options = nil)
@@ -344,7 +343,7 @@ module ApiResource
             else
               prefix_options, query_options = split_options(options[:params])
               path = collection_path(prefix_options, query_options)
-              instantiate_collection( (connection.get(path, headers) || []), prefix_options )
+              instantiate_collection( (connection.get(path, headers) || []))
             end
           rescue ApiResource::ResourceNotFound
             # Swallowing ResourceNotFound exceptions and return nil - as per
@@ -368,17 +367,15 @@ module ApiResource
         def find_single(scope, options)
           prefix_options, query_options = split_options(options[:params])
           path = element_path(scope, prefix_options, query_options)
-          instantiate_record(connection.get(path, headers), prefix_options)
+          instantiate_record(connection.get(path, headers))
         end
 
-        def instantiate_collection(collection, prefix_options = {})
-          collection.collect! { |record| instantiate_record(record, prefix_options) }
+        def instantiate_collection(collection)
+          collection.collect! { |record| instantiate_record(record) }
         end
 
-        def instantiate_record(record, prefix_options = {})
-          new(record).tap do |resource|
-            resource.prefix_options = prefix_options
-          end
+        def instantiate_record(record)
+          new(record)
         end
 
 
@@ -421,7 +418,6 @@ module ApiResource
     end
     
     def initialize(attributes = {})
-      @prefix_options = {}
       # if we initialize this class, load the attributes
       unless self.class.instance_variable_defined?(:@class_data)
         self.class.set_class_attributes_upon_load
@@ -450,7 +446,7 @@ module ApiResource
     end
     
     def ==(other)
-      other.equal?(self) || (other.instance_of?(self.class) && other.id == self.id && other.prefix_options == self.prefix_options)
+      other.equal?(self) || (other.instance_of?(self.class) && other.id == self.id)
     end
     
     def eql?(other)
@@ -464,7 +460,6 @@ module ApiResource
     def dup
       self.class.new.tap do |resource|
         resource.attributes = self.attributes
-        resource.prefix_options = @prefix_options
       end
     end
     
@@ -499,11 +494,25 @@ module ApiResource
       # We can't use alias_method here, because method 'id' optimizes itself on the fly.
       id && id.to_s # Be sure to stringify the id for routes
     end
+
+    def prefix_options
+      return {} unless self.class.prefix_source =~ /\:/
+      ret = {}
+      self.prefix_attribute_names.each do |name|
+        ret[name] = self.send(name)
+      end
+      ret
+    end
+
+    def prefix_attribute_names
+      return [] unless self.class.prefix_source =~ /\:/
+      self.class.prefix_source.scan(/\:(\w+)/).collect{|match| match.first.to_sym}
+    end
     
     def load(attributes)
       return if attributes.nil?
       raise ArgumentError, "expected an attributes Hash, got #{attributes.inspect}" unless attributes.is_a?(Hash)
-      @prefix_options, attributes = split_options(attributes)
+      
       attributes.symbolize_keys.each do |key, value|
         # If this attribute doesn't exist define it as a protected attribute
         self.class.define_protected_attributes(key) unless self.respond_to?(key)
@@ -571,7 +580,12 @@ module ApiResource
         # If this is an association and it's in include_associations then include it
         if options[:include_extras].include?(key.to_sym)
           accum.merge(key => val)
-        elsif options[:except].include?(key.to_sym) || (!include_nil_attributes && val.nil? && self.changes[key].blank?)
+        elsif options[:except].include?(key.to_sym)
+          accum
+        # this attribute is already accounted for in the URL
+        elsif self.prefix_attribute_names.include?(key.to_sym)
+          accum
+        elsif(!include_nil_attributes && val.nil? && self.changes[key].blank?)
           accum
         else
           !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
@@ -594,8 +608,12 @@ module ApiResource
       load(response)
     end
     
-    def element_path(id, prefix_options = {}, query_options = nil)
-      self.class.element_path(id, prefix_options, query_options)
+    def element_path(id, prefix_override_options = {}, query_options = nil)
+      self.class.element_path(
+        id, 
+        self.prefix_options.merge(prefix_override_options), 
+        query_options
+      )
     end
     
     # list of all attributes that are not nil
@@ -611,8 +629,11 @@ module ApiResource
       self.class.new_element_path(prefix_options)
     end
     
-    def collection_path(prefix_options = {},query_options = nil)
-      self.class.collection_path(prefix_options, query_options)
+    def collection_path(override_prefix_options = {},query_options = nil)
+      self.class.collection_path(
+        self.prefix_options.merge(override_prefix_options), 
+        query_options
+      )
     end
     
     def create(*args)
@@ -639,7 +660,7 @@ module ApiResource
     def update(*args)
       body = setup_update_call(*args)
       # We can just ignore the response
-      connection.put(element_path(self.id, prefix_options), body, self.class.headers).tap do |response|
+      connection.put(element_path(self.id), body, self.class.headers).tap do |response|
         load_attributes_from_response(response)
       end
     end

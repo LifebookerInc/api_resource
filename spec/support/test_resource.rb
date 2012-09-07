@@ -31,6 +31,10 @@ class ErrorResource < ApiResource::Base
   
 end
 
+class PrefixModel < ApiResource::Base
+  self.prefix = "/foreign/:foreign_key_id/"
+end
+
 class ScopeResource < ApiResource::Base
   
 end

@@ -238,7 +238,15 @@ module ApiResource
       
       def element_path(id, prefix_options = {}, query_options = nil)
         prefix_options, query_options = split_options(prefix_options) if query_options.nil?
-        "#{prefix(prefix_options)}#{collection_name}/#{URI.escape id.to_s}.#{format.extension}#{query_string(query_options)}"
+
+        # If we have a prefix, we need a foreign key id
+        # This regex detects '//', which means no foreign key id is present.
+        if prefix(prefix_options) =~ /\/\/$/
+          "/#{collection_name}/#{URI.escape id.to_s}.#{format.extension}#{query_string(query_options)}"
+        else
+          # Fall back on this rather than search without the id
+          "#{prefix(prefix_options)}#{collection_name}/#{URI.escape id.to_s}.#{format.extension}#{query_string(query_options)}"
+        end
       end
       
       # TODO: Add back in support for non-dynamic prefix paths (e.g. /subdir/resources/new.json)
@@ -248,7 +256,15 @@ module ApiResource
       
       def collection_path(prefix_options = {}, query_options = nil)
         prefix_options, query_options = split_options(prefix_options) if query_options.nil?
-        "#{prefix(prefix_options)}#{collection_name}.#{format.extension}#{query_string(query_options)}"
+
+        # If we have a prefix, we need a foreign key id
+        # This regex detects '//', which means no foreign key id is present.
+        if prefix(prefix_options) =~ /\/\/$/
+          "/#{collection_name}.#{format.extension}#{query_string(query_options)}"
+        else
+          # Fall back on this rather than search without the id
+          "#{prefix(prefix_options)}#{collection_name}.#{format.extension}#{query_string(query_options)}"
+        end
       end
       
       def build(attributes = {})

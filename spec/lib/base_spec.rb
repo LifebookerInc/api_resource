@@ -643,7 +643,10 @@ describe "Base" do
     end
 
     it "should not load the resource definition when respond_to? is called
-      if the definition has already been loaded"
+      if the definition has already been loaded" do
+      TestResource.expects(:set_class_attributes_upon_load).never
+      TestResource.send(:respond_to?, :some_method)
+    end
 
   end
 

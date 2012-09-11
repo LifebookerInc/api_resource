@@ -13,8 +13,10 @@ module ApiResource
       end
     end
     
-    initializer do
-      ApiResource::Associations.activate_active_record if defined?(ActiveRecord)
+    initializer "api_resource.activate_associations" do
+      ActiveSupport.on_load(:active_record) do
+        ApiResource::Associations.activate_active_record 
+      end
     end
     
   end

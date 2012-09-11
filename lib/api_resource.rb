@@ -37,6 +37,7 @@ module ApiResource
   autoload :Scopes
   autoload :Validations
   
+  require 'api_resource/railtie'
   
   mattr_writer :logger
   mattr_accessor :raise_missing_definition_error; self.raise_missing_definition_error = false

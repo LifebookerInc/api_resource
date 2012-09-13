@@ -54,5 +54,9 @@ Mocks.define do
   endpoint("/childern/new") do
     get({})
   end
+
+  endpoint("/test_throughs/new") do
+    get({})
+  end
   
 end

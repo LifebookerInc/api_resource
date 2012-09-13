@@ -35,6 +35,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/associations/belongs_to_remote_object_proxy.rb",
     "lib/api_resource/associations/dynamic_resource_scope.rb",
     "lib/api_resource/associations/has_many_remote_object_proxy.rb",
+    "lib/api_resource/associations/has_many_through_remote_object_proxy.rb",
     "lib/api_resource/associations/has_one_remote_object_proxy.rb",
     "lib/api_resource/associations/multi_argument_resource_scope.rb",
     "lib/api_resource/associations/multi_object_proxy.rb",

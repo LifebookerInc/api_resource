@@ -10,6 +10,7 @@ require 'api_resource/associations/single_object_proxy'
 require 'api_resource/associations/belongs_to_remote_object_proxy'
 require 'api_resource/associations/has_one_remote_object_proxy'
 require 'api_resource/associations/has_many_remote_object_proxy'
+require 'api_resource/associations/has_many_through_remote_object_proxy'
 require 'api_resource/associations/related_object_hash'
 
 module ApiResource
@@ -50,7 +51,7 @@ module ApiResource
         self.activate_associations(
           :has_many_remote => :has_many_remote, 
           :belongs_to_remote => :belongs_to_remote, 
-          :has_one_remote => :has_one_remote
+          :has_one_remote => :has_one_remote,
         )
       end
     end

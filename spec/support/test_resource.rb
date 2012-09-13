@@ -39,6 +39,10 @@ class ErrorFullMessageResource < ApiResource::Base
   
 end
 
+class TestThrough < ApiResource::Base
+
+end
+
 module TestMod
   
   module InnerMod

@@ -658,13 +658,11 @@ describe "Associations" do
           end
         end
         context "Belongs To" do
-
           before(:all) do
             TestAR.class_eval do
               belongs_to_remote :test_resource
             end
           end
-
           it "should attempt to load a single remote object for a belongs_to relationship" do
             tar = TestAR.new
             tar.stubs(:test_resource_id).returns(1)
@@ -672,7 +670,6 @@ describe "Associations" do
             # load the test resource
             tar.test_resource.name.should eql "testing"
           end
-          
         end
         context "Has One" do
           before(:all) do
@@ -701,7 +698,28 @@ describe "Associations" do
             # load the test resource
             tar.has_many_objects.first.name.should eql "testing"
           end
-          
+        end
+        context "Has Many Through" do
+          before(:all) do       
+            TestAR.class_eval do 
+              self.extend ApiResource::Associations::HasManyThroughRemoteObjectProxy
+              has_many :test_throughs
+              has_many_through_remote(:belongs_to_objects, :through => :test_throughs)
+            end
+          end
+          it "should attempt to load a collection of remote objects for a has_many_through relationship" do
+            tar = TestAR.new
+            through_test_resource_1 = TestThrough.new
+            through_test_resource_2 = TestThrough.new
+            belongs_to_object_1 = BelongsToObject.new
+            belongs_to_object_2 = BelongsToObject.new
+            tar.expects(:test_throughs).returns([through_test_resource_1, through_test_resource_2])
+            through_test_resource_1.expects(:belongs_to_object).returns([belongs_to_object_1])
+            through_test_resource_2.expects(:belongs_to_object).returns([belongs_to_object_2])
+
+            tar.belongs_to_objects.should eql [belongs_to_object_1, belongs_to_object_2]
+          end
+
         end
       end
     end

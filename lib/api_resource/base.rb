@@ -260,16 +260,23 @@ module ApiResource
         self.new(attributes).tap{ |resource| resource.save }
       end
       
+      # This decides which finder method to call. 
+      # It accepts arguments of the form "scope", "options={}"
+      # where options can be standard rails options or :expires_in. 
+      # If :expires_in is set, it caches it for expires_in seconds.
       def find(*arguments)
         scope   = arguments.slice!(0)
         options = arguments.slice!(0) || {}
-
-        case scope
-          when :all   then find_every(options)
-          when :first then find_every(options).first
-          when :last  then find_every(options).last
-          when :one   then find_one(options)
-          else             find_single(scope, options)
+        
+        expiry = options.delete(:expires_in) || ApiResource::Base.ttl || 0
+        ApiResource.with_ttl(expiry.to_f) do
+          case scope
+            when :all   then find_every(options)
+            when :first then find_every(options).first
+            when :last  then find_every(options).last
+            when :one   then find_one(options)
+            else             find_single(scope, options)
+          end
         end
       end
 

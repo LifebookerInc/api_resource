@@ -621,6 +621,14 @@ describe "Base" do
         ApiResource.stubs(:cache => cache)
         TestResource.find(123)
       end
+      
+      it "should find with expires_in and cache" do
+        ApiResource.cache.expects(:fetch).with(anything, :expires_in => 10.0).returns{:id => 2, :name => "d"}
+        res = TestResource.find("adfa", :expires_in => 10)
+        
+        ApiResource::Base.ttl.should eql(1)
+        res[:id].to_i.should eql(2)
+      end
     end
 
   end

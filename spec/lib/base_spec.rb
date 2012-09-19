@@ -623,7 +623,7 @@ describe "Base" do
       end
       
       it "should find with expires_in and cache" do
-        ApiResource.cache.expects(:fetch).with(anything, :expires_in => 10.0).returns{:id => 2, :name => "d"}
+        ApiResource.cache.expects(:fetch).with(anything, :expires_in => 10.0).returns({:id => 2, :name => "d"})
         res = TestResource.find("adfa", :expires_in => 10)
         
         ApiResource::Base.ttl.should eql(1)

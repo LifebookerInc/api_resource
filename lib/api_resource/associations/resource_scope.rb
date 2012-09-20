@@ -9,7 +9,7 @@ module ApiResource
       include Enumerable
 
       def internal_object
-        ApiResource.with_ttl(ttl)
+        ApiResource.with_ttl(ttl) do
           @internal_object ||= self.klass.send(:find, :all, :params => self.to_hash)
         end
       end

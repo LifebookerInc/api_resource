@@ -9,7 +9,9 @@ module ApiResource
       include Enumerable
 
       def internal_object
-        @internal_object ||= self.klass.send(:find, :all, :params => self.to_hash)
+        ApiResource.with_ttl(ttl)
+          @internal_object ||= self.klass.send(:find, :all, :params => self.to_hash)
+        end
       end
       
       alias_method :all, :internal_object

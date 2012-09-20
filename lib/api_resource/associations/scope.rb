@@ -12,6 +12,7 @@ module ApiResource
         # Holds onto the association proxy this RelationScope is bound to
         @klass = klass
         @parent = opts.delete(:parent)
+        @ttl = opts.delete(:expires_in)
         # splits on _and_ and sorts to get a consistent scope key order
         @current_scope = (self.parent_scope + Array.wrap(current_scope.to_s)).sort
         # define methods for the scopes of the object
@@ -32,7 +33,11 @@ module ApiResource
         # This expression substitutes the options from opts into the default attributes of the scope, it will only copy keys that exist in the original
         self.scopes[self.current_scope] = opts.inject(self.scopes[current_scope]){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum}
       end
-
+      
+      def ttl
+        @ttl || 0
+      end
+      
       # Use this method to access the internal data, this guarantees that loading only occurs once per object
       def internal_object
         raise "Not Implemented: This method must be implemented in a subclass"

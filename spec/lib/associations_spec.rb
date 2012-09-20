@@ -393,6 +393,20 @@ describe "Associations" do
         ap.times_loaded.should eql(1)
       end
       
+      it "should load scopes with caching" do
+        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
+        ap.times_loaded.should eql(0)
+        ap.active(:active => true, :expires_in => 10).internal_object
+        ap.times_loaded.should eql(1)
+        ap.active(:active => true, :expires_in => 10).ttl.should eql(10)
+      end
+      
+      it "should cache scopes when caching enabled" do
+        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
+        ApiResource.expects(:with_ttl).with(10)
+        ap.active(:active => true, :expires_in => 10).internal_object
+      end
+      
       it "should only load each distinct set of scopes once" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ap.times_loaded.should eql(0)

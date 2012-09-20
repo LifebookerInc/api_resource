@@ -8,7 +8,7 @@ module ApiResource
 
       # Use this method to access the internal data, this guarantees that loading only occurs once per object
       def internal_object
-        ApiResource::Base.with_ttl(ttl) do
+        ApiResource.with_ttl(ttl) do
           @internal_object ||= self.klass.send(:load_scope_with_options, self.current_scope, self.to_hash)
         end
       end

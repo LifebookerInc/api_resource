@@ -627,7 +627,7 @@ describe "Base" do
         res = TestResource.find("adfa", :expires_in => 10)
         
         ApiResource::Base.ttl.should eql(1)
-        res[:id].to_i.should eql(2)
+        res.id.to_i.should eql(2)
       end
     end
 

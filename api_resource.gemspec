@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.3.13"
+  s.version = "0.3.14"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2012-09-20"
+  s.date = "2012-09-24"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
@@ -71,12 +71,15 @@ Gem::Specification.new do |s|
     "spec/lib/local_spec.rb",
     "spec/lib/mocks_spec.rb",
     "spec/lib/model_errors_spec.rb",
+    "spec/lib/prefixes_spec.rb",
     "spec/spec_helper.rb",
     "spec/support/mocks/association_mocks.rb",
     "spec/support/mocks/error_resource_mocks.rb",
+    "spec/support/mocks/prefix_model_mocks.rb",
     "spec/support/mocks/test_resource_mocks.rb",
     "spec/support/requests/association_requests.rb",
     "spec/support/requests/error_resource_requests.rb",
+    "spec/support/requests/prefix_model_requests.rb",
     "spec/support/requests/test_resource_requests.rb",
     "spec/support/test_resource.rb",
     "spec/tmp/DIR"
@@ -84,7 +87,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ejlangev/resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.22"
+  s.rubygems_version = "1.8.17"
   s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
 
   if s.respond_to? :specification_version then

@@ -3,13 +3,13 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 include ApiResource
 
 describe "Associations" do
-  
+
   after(:all) do
     TestResource.reload_class_attributes
   end
-  
+
   context "creating and testing for associations of various types" do
-    
+
     it "should be able to give a list of all associations" do
       AllAssociations = Class.new(ApiResource::Base)
       AllAssociations.class_eval do
@@ -20,90 +20,90 @@ describe "Associations" do
       AllAssociations.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
       AllAssociations.new.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
     end
-    
+
     it "should be be able to define an asociation using a method named after that association type" do
       TestResource.has_many :has_many_objects
       TestResource.has_many?(:has_many_objects).should be_true
     end
-    
+
     it "should be able to define associations with different class names" do
       TestResource.has_many :test_name, :class_name => :has_many_objects
       TestResource.has_many?(:test_name).should be_true
       TestResource.has_many_class_name(:test_name).should eql("HasManyObject")
     end
-    
+
     it "should be able to define multiple associations at the same time" do
       TestResource.has_many :has_many_objects, :other_has_many_objects
       TestResource.has_many?(:has_many_objects).should be_true
       TestResource.has_many?(:other_has_many_objects).should be_true
     end
-    
+
     it "should be able to tell if something is an association via the association? method" do
       TestResource.belongs_to :belongs_to_object
       TestResource.association?(:belongs_to_object).should be_true
     end
-    
+
     it "should be able to get the class name of an association via the association_class_name method" do
       TestResource.belongs_to :belongs_to_object
       TestResource.association_class_name(:belongs_to_object).should eql("BelongsToObject")
       TestResource.belongs_to :strange_name, :class_name => :belongs_to_object
       TestResource.association_class_name(:strange_name).should eql("BelongsToObject")
     end
-    
+
     it "should only define relationships for the given class - they should not cascade" do
       TestResource.belongs_to :belongs_to_object
       AnotherTestResource.association?(:belongs_to_object).should_not be_true
     end
-    
+
     it "should have its relationship cascade when sub-classed after the relationship is defined" do
       TestResource.belongs_to :belongs_to_object
       class ChildTestResource2 < TestResource; end
       ChildTestResource2.association?(:belongs_to_object).should be true
     end
-    
+
     context "Determining associated classes with a namespace" do
-      
+
       it "should be able to find classes for associations that exist in the same module without a namespace" do
         TestMod::TestClass.belongs_to :test_association
         TestMod::TestClass.association_class_name(:test_association).should eql("TestMod::TestAssociation")
       end
-      
+
       it "should be return a regular class name for a class defined at the root level" do
         TestMod::TestClass.belongs_to :belongs_to_object
         TestMod::TestClass.association_class_name(:belongs_to_object).should eql("BelongsToObject")
       end
-      
+
       it "should work for a class name specified with a namespace module" do
         TestMod::TestClass.belongs_to :nonsense, :class_name => "TestMod::TestAssociation"
         TestMod::TestClass.association_class_name(:nonsense).should eql("TestMod::TestAssociation")
       end
-      
+
       it "should work for nested module as well" do
         TestMod::InnerMod::InnerClass.belongs_to :test_association
         TestMod::InnerMod::InnerClass.association_class_name(:test_association).should eql("TestMod::TestAssociation")
       end
-      
+
       it "should prefer to find classes within similar modules to ones in the root namespace" do
         TestMod::InnerMod::InnerClass.belongs_to :test_resource
         TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("TestMod::TestResource")
       end
-      
+
       it "should be able to override into the root namespace by prefixing with ::" do
         TestMod::InnerMod::InnerClass.belongs_to :test_resource, :class_name => "::TestResource"
         TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("::TestResource")        
       end
-      
+
     end
-    
-    
+
+
   end
-  
+
   context "Remote Definitions" do
-    
+
     before(:all) do
       TestResource.reload_class_attributes
     end
-    
+
     it "should be able define an association remotely" do
       TestResource.belongs_to?(:belongs_to_object).should be true
       TestResource.new.belongs_to_object.klass.should eql BelongsToObject
@@ -113,19 +113,19 @@ describe "Associations" do
       TestResource.belongs_to?(:custom_name).should be true
       TestResource.new.custom_name.klass.should eql BelongsToObject
     end
-    
+
   end
-  
-  
+
+
   context "creating and testing for scopes" do
-    
+
     it "should be able to define scopes which require class names" do
       lambda {
         TestResource.scope :test_scope
       }.should raise_error
       TestResource.scope :test_scope, {:has_many_objects => "test"}
     end
-    
+
     it "should be able to test if a scope exists" do
       TestResource.scope :test_scope, {:item => "test"}
       TestResource.scope?(:test_scope).should be_true
@@ -149,66 +149,66 @@ describe "Associations" do
       Scope2Class.scope?(:two).should be true
 
     end
-    
+
   end
-  
+
   context "testing for scopes and associations on an instance" do
-    
+
     it "should be able to define associations on a class and test for them on an instance" do
       TestResource.has_many :has_many_objects, :class_name => :other_has_many_objects
       tst = TestResource.new
       tst.has_many?(:has_many_objects).should be_true
       tst.has_many_class_name(:has_many_objects).should eql("OtherHasManyObject")
     end
-    
+
     it "should be able to define scopes on a class and test for them on an instance" do
       TestResource.scope :has_many_objects, {:item => "test"}
       tst = TestResource.new
       tst.scope?(:has_many_objects).should be_true
       tst.scope_attributes(:has_many_objects).should eql({"item" => "test"})
     end
-    
+
   end
-  
+
   describe "Single Object Associations" do
-    
+
     before(:all) do
       TestResource.reload_class_attributes
     end
-    
+
     after(:all) do
       TestResource.reload_class_attributes
     end
-    
+
     it "should return nil if its internal object is nil" do
       ap = Associations::SingleObjectProxy.new("TestResource", {})
       ap.instance_variable_set(:@internal_object, nil)
       ap.blank?.should be_true
     end
-    
+
     it "should not throw an error on serializable hash if its internal object is nil" do
       ap = Associations::SingleObjectProxy.new("TestResource", {})
       ap.instance_variable_set(:@internal_object, nil)
       lambda {ap.serializable_hash}.should_not raise_error
     end
-    
+
     it "should be able to create a SingleObjectProxy around a blank hash" do
       ap = Associations::SingleObjectProxy.new("TestResource", {})
       ap.remote_path.should be_blank
     end
-    
+
     it "should be able to extract a service uri from the contents hash" do
       ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => "/path"})
       ap.remote_path.should eql("/path")
     end
-    
+
     it "should be able to recognize the attributes of an object and not make them scopes" do
       TestResource.define_attributes :test
       ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => "/path", :test => "testval"})
       ap.scope?("test").should be_false
       ap.remote_path.should eql("/path")
     end
-    
+
     it "should make all attributes except the service uri into scopes given the scopes_only option" do
       ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => "/path", :test_scope => {"testval" => true}, :scopes_only => true})
       ap.scope?("test_scope").should be_true
@@ -221,7 +221,7 @@ describe "Associations" do
       ap.internal_object.attributes.keys.should include("test")
     end
   end
-  
+
   describe "Multi Object Associations" do
 
     before(:all) do
@@ -297,24 +297,29 @@ describe "Associations" do
     end
 
     describe "Selecting scopes" do
-      
+
       before(:all) do
         ScopeResource.class_eval do
-          scope :one, :one => true
-          scope :two, :two => "test"
-          scope :three, :three => ["id"]
+          scope :no_arg, {}
+          scope :one_arg, {:id => :req}
+          scope :one_array_arg, {:ids => :req}
+          scope :two_args, {:page => :req, :per_page => :req}
+          scope :opt_args, {:arg1 => :opt}
+          scope :var_args, {:ids => :rest}
+          scope :mix_args, {:id => :req, :vararg => :rest}
         end
       end
-      
-      
+
       it "should be able to query scopes on the current model" do
-        ScopeResource.one.to_query.should eql "one=true"
-        ScopeResource.two("test").to_query.should eql "two=test"
-        ScopeResource.three(1,2,3).to_query.should eql "three[]=1&three[]=2&three[]=3"
-        
-        ScopeResource.one.two("testing").three([2]).to_query.should eql "one=true&three[]=2&two=testing"
+        ScopeResource.no_arg.to_query.should eql                "no_arg=true"
+        # ScopeResource.one_arg(5).to_query.should eql            "one_arg[id]=5"
+        # ScopeResource.one_array_arg([3, 5]).to_query.should eql "one_array_arg[ids][]=3&one_array_arg[ids][]=5"
+        # ScopeResource.two_args(1, 20).to_query.should eql       "two_args[page]=1&two_args[per_page]=20"
+        # ScopeResource.opt_arg.to_query.should eql               "opt_args=true"
+        # ScopeResource.opt_args(3).to_query.should eql           "opt_args[arg1]=3"
+        # ScopeResource.var_args(1, 2).to_query.should eql        "var_args[ids][]=1&var_args[ids][]=2"
+        # ScopeResource.mix_args("a", {:opt1 => 1}, {:opt2 => 2}).to_query.should eql "mix_args[arg1]=a&mix_args[vararg][][opt1]=1&mix_arg[vararg][][opt2]=2"
       end
-      
 
       it "should be able to change scopes" do
         ap = Associations::MultiObjectProxy.new("TestResource", [{:service_uri => "/route", :scope1 => {"scope1" => true}, :scope2 => {"scope2" => true}}])
@@ -327,17 +332,17 @@ describe "Associations" do
         ap.scope1.scope2.current_scope.scope1_and_scope2_scope?.should be_true
         ap.scope1.scope2.to_query.should eql("scope1=true&scope2=true")
       end
-      
+
       it "should support scopes that contain underscores" do
         ap = Associations::MultiObjectProxy.new("TestResource", [{:service_uri => "/route", :scope_1 => {"scope_1" => true}, :scope_2 => {"scope_2" => true}}])
         ap.scope_1.scope_2.current_scope.scope_1_and_scope_2_scope?.should be_true
       end
-      
+
       it "should be able to return the current query string" do
         ap = Associations::MultiObjectProxy.new("TestResource", [{:service_uri => "/route", :scope_1 => {"scope_1" => true}, :scope_2 => {"scope_2" => true}}])
         ap.scope_1.scope_2.to_query.should eql("scope_1=true&scope_2=true")
       end
-      
+
       it "should be able to substitute values into the scope query strings by passing a hash to the methods" do
         ap = Associations::MultiObjectProxy.new("TestResource", [{:service_uri => "/route", :scope_1 => {"scope_1" => true, :test_sub => false}, :scope_2 => {"scope_2" => true}}])
         obj = ap.scope_1(:test_sub => true).scope_2
@@ -347,15 +352,15 @@ describe "Associations" do
 
 
   end
-  
+
   describe "Loading and Caching loaded data" do
-    
+
     context "Single Object" do
-      
+
       before(:all) do
         TestResource.reload_class_attributes
       end
-      
+
       it "should be able to force load an object" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :scopes_only => true})
         ap.loaded.should be_blank
@@ -365,7 +370,7 @@ describe "Associations" do
         # Make sure it isn't reloaded
         ap.name.should eql(name)
       end
-      
+
       it "should be able to load a scope" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :scopes_only => true})
         ap.internal_object.active.should be_false
@@ -377,7 +382,7 @@ describe "Associations" do
         # another check that the resource wasn't reloaded
         ap.times_loaded.should eql(2)       
       end
-      
+
       it "should be able to load a chain of scopes" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :with_birthday => {:birthday => true}, :scopes_only => true})
         first = ap.active.with_birthday.id
@@ -385,36 +390,42 @@ describe "Associations" do
         ap.times_loaded.should eql(1)
         ap.active.with_birthday.birthday.should_not be_blank
       end
-      
+
       it "should proxy unknown methods to the object loading if it hasn't already" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ap.times_loaded.should eql(0)
         ap.id.should_not be_blank
         ap.times_loaded.should eql(1)
       end
-      
+
       it "should load scopes with caching" do
-        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
+        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :scopes_only => true})
         ap.times_loaded.should eql(0)
-        ap.active(:active => true, :expires_in => 10).internal_object
+        ap.active.expires_in(30).internal_object
+        ap.active.expires_in(30).internal_object
         ap.times_loaded.should eql(1)
-        ap.active(:active => true, :expires_in => 10).ttl.should eql(10)
       end
-      
+
+      it "should check that ttl matches the expiration parameter" do
+        ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :scopes_only => true})
+        ap.active.expires_in(10).ttl.should eql(10)
+      end
+
       it "should cache scopes when caching enabled" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ApiResource.expects(:with_ttl).with(10)
         ap.active(:active => true, :expires_in => 10).internal_object
       end
-      
+
       it "should only load each distinct set of scopes once" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => false}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ap.times_loaded.should eql(0)
-        ap.active(:active => true).with_birthday.internal_object
-        ap.with_birthday.active(:active => true).internal_object
+        ap.active.with_birthday.internal_object
+        ap.active.with_birthday.internal_object
+        ap.with_birthday.active.internal_object
         ap.times_loaded.should eql(1)
       end
-      
+
       it "should be able to clear it's loading cache" do
         ap = Associations::SingleObjectProxy.new("TestResource",{:service_uri => '/single_object_association', :active => {:active => true}, :with_birthday => {:birthday => true}, :scopes_only => true})
         ap.active.internal_object
@@ -423,7 +434,7 @@ describe "Associations" do
         ap.active.internal_object
         ap.times_loaded.should eql(1)
       end
-      
+
     end
 
     it "should be able to reload a single-object association" do
@@ -454,44 +465,44 @@ describe "Associations" do
 
       ap.first.name.should eql old_name
     end
-    
+
     context "Multi Object" do
-      
+
       it "should be able to load 'all'" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => false}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         results = ap.all
         results.size.should eql(5)
         results.first.active.should be_false
       end
-      
+
       it "should be able to load a scope" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => false}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         results = ap.active.internal_object
         results.size.should eql(5)
         results.first.active.should be_true
       end
-      
+
       it "should be able to load a chain of scopes" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         results = ap.active.with_birthday.internal_object
         results.first.active.should be_true
         results.first.birthday.should_not be_blank
       end
-      
+
       it "should be able to load a chain of scopes with substitution" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         results = ap.inactive(:active => true).with_birthday.internal_object
         results.first.active.should be_true
         results.first.birthday.should_not be_blank
       end
-      
+
       it "should proxy unknown methods to the object array loading if it hasn't already" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         ap.first.should be_a TestResource
         ap.active.first.should be_a TestResource
         ap.times_loaded.should eql(2)
       end
-      
+
       it "should only load each distinct set of scopes once" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         ap.first
@@ -503,7 +514,7 @@ describe "Associations" do
         ap.with_birthday.active.first
         ap.times_loaded.should eql(3)
       end
-      
+
       it "should be able to clear it's loading cache" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         ap.active.first
@@ -512,38 +523,38 @@ describe "Associations" do
         ap.active.first
         ap.times_loaded.should eql(1)
       end
-      
+
       it "should be enumerable" do
         ap = Associations::MultiObjectProxy.new("TestResource",{:service_uri => '/multi_object_association', :active => {:active => true}, :inactive => {:active => false}, :with_birthday => {:birthday => true}})
         ap.each do |tr|
           tr.name.should_not be_blank
         end
       end
-      
+
     end
-    
+
     context "Scopes" do
-      
+
       before(:all) do
         TestResource.reload_class_attributes
       end
-      
+
       it "should define class methods for the known scopes" do
         TestResource.scopes.each do |key, _|
           TestResource.should respond_to key
         end
       end
-      
+
       it "should return a ResourceScope when calling any scope on a class" do
         TestResource.send(TestResource.scopes.first.first.to_sym).should be_a Associations::ResourceScope
       end
-      
+
       it "should be able to chain scopes" do
         scp = TestResource.active.paginate
         scp.should be_a Associations::ResourceScope
-        scp.to_query.should eql("active=true&current_page=current_page&paginate=true&per_page=per_page")
+        scp.to_query.should eql("active=true&paginate=true")
       end
-      
+
       it "should load when calling all" do
         TestResource.active.should respond_to :all
         TestResource.active.should respond_to :internal_object
@@ -554,14 +565,14 @@ describe "Associations" do
           res.should be_a TestResource
         end
       end
-      
+
       it "should load when calling an enumerable method or an array method" do
         TestResource.active.each do |result|
           result.should be_a TestResource
         end
       end
     end
-    
+
     context "Assigning Data" do
       context "Single Object Association" do
         before(:all) do
@@ -571,25 +582,25 @@ describe "Associations" do
         after(:all) do
           TestResource.reload_class_attributes
         end
-        
+
         it "should assign associations to the correct type on initialization" do
           #binding.pry
           tr = TestResource.new(:has_one_object => {:name => "Dan"}, :belongs_to_object => {:name => "Dan"})
-          
+
           tr.has_one_object.internal_object.should be_instance_of HasOneObject
           tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
-          
+
         end
-        
+
         it "should assign associations to the correct type when setting attributes directly" do
           tr = TestResource.new()
           tr.has_one_object = {:name => "Dan"}
           tr.belongs_to_object = {:name => "Dan"} 
-          
+
           tr.has_one_object.internal_object.should be_instance_of HasOneObject
           tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
         end
-        
+
         it "should be able to reload a single-object association" do
           ApiResource::Associations::SingleObjectProxy.any_instance.stubs(:remote_path => "/has_one_objects")
           HasOneObject.connection.stubs(:get => nil)
@@ -602,9 +613,9 @@ describe "Associations" do
 
           tr.has_one_object.should be_blank
         end
-        
+
       end
-      
+
       context "Multi Object Association" do
         before(:all) do
           TestResource.has_many(:has_many_objects)
@@ -612,19 +623,19 @@ describe "Associations" do
         after(:all) do
           TestResource.reload_class_attributes
         end
-        
+
         it "should assign associations to the correct type on initialization" do
           tr = TestResource.new(:has_many_objects => [{:name => "Dan"}])
           tr.has_many_objects.internal_object.first.should be_instance_of HasManyObject
-          
+
         end
-        
+
         it "should assign associations to the correct type when setting attributes directly" do
           tr = TestResource.new()
           tr.has_many_objects = [{:name => "Dan"}]
           tr.has_many_objects.internal_object.first.should be_instance_of HasManyObject
         end
-        
+
         it "should be able to reload a multi-object association" do
           ApiResource::Associations::MultiObjectProxy.any_instance.stubs(:remote_path => "/has_many_objects")
           ApiResource::Connection.any_instance.stubs(:get => [])
@@ -637,7 +648,7 @@ describe "Associations" do
         end
 
       end
-      
+
       context "ActiveModel" do
         before(:all) do
           require 'active_record'

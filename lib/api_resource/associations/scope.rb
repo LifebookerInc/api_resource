@@ -1,7 +1,7 @@
 module ApiResource
-  
+
   module Associations
-    
+
     class Scope
 
       attr_accessor :klass, :current_scope, :internal_object
@@ -33,11 +33,11 @@ module ApiResource
         # This expression substitutes the options from opts into the default attributes of the scope, it will only copy keys that exist in the original
         self.scopes[self.current_scope] = opts.inject(self.scopes[current_scope]){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum}
       end
-      
+
       def ttl
         @ttl || 0
       end
-      
+
       # Use this method to access the internal data, this guarantees that loading only occurs once per object
       def internal_object
         raise "Not Implemented: This method must be implemented in a subclass"
@@ -58,11 +58,20 @@ module ApiResource
       def to_hash
         self.parent_hash.merge(self.scopes[self.current_scope])
       end
-      
-      # gets the current hash and calls to_query on it
+
+      # takes empty hashes and replaces them with true so that to_query doesn't strip them out
+      def to_query_safe_hash(hash)
+        hash.each_pair do |k, v|
+          hash[k] = to_query_safe_hash(v) if v.is_a?(Hash)
+          hash[k] = true if v == {}
+        end
+        return hash
+      end
+
+       # gets the current hash and calls to_query on it
       def to_query
         #We need to add the unescape because to_query breaks on nested arrays
-        CGI.unescape(self.to_hash.to_query)
+        CGI.unescape(to_query_safe_hash(self.to_hash).to_query)
       end
 
       def method_missing(method, *args, &block)
@@ -77,15 +86,19 @@ module ApiResource
       def to_s
         self.internal_object.to_s
       end
-      
+
       def inspect
         self.internal_object.inspect
       end
-      
+
       def blank?
         self.internal_object.blank?
       end
       alias_method :empty?, :blank?
+
+      def expires_in(ttl)
+        ApiResource::Decorators::CachingDecorator.new(self, ttl)
+      end
 
       protected
         # scope from the parent
@@ -109,7 +122,7 @@ module ApiResource
           raise ArgumentError, "Unknown scope #{scp}" unless self.scope?(scp.to_s)
         end
     end
-    
+
   end
-  
+
 end

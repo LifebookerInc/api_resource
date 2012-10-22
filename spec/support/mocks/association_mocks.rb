@@ -6,6 +6,7 @@ Mocks.define do
     get(HashDealer.roll(:test_association_resource), :params => {})
     get(HashDealer.roll(:active_test_association_resource), :params => {:active => true})
     get(HashDealer.roll(:active_birthday_test_association_resource), :params => {:active => true, :birthday => true})
+    get(HashDealer.roll(:inactive_birthday_test_association_resource), :params => {:active => false, :birthday => true})
   end
 
   endpoint("/mock_with_block/:id") do

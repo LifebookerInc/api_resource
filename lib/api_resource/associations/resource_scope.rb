@@ -1,11 +1,11 @@
 require 'api_resource/associations/scope'
 
 module ApiResource
-  
+
   module Associations
-    
+
     class ResourceScope < Scope
-      
+
       include Enumerable
 
       def internal_object
@@ -13,23 +13,19 @@ module ApiResource
           @internal_object ||= self.klass.send(:find, :all, :params => self.to_hash)
         end
       end
-      
+
       alias_method :all, :internal_object
-      
+
       def each(*args, &block)
         self.internal_object.each(*args, &block)
       end
-      
-      # get the relevant class
+
+      # Used by ApiResource::Scopes to create methods with the same name
+      # as the scope
+      #
+      # Weird place to have a factory... could have been on Scope or a separate class...
       def self.class_factory(hsh)
-        case hsh.values.first
-          when TrueClass, FalseClass
-            ApiResource::Associations::ResourceScope
-          when Array
-            ApiResource::Associations::MultiArgumentResourceScope
-          else
-            ApiResource::Associations::DynamicResourceScope
-        end
+        return ApiResource::Associations::GenericScope
       end
     end
   end

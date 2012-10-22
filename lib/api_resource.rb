@@ -1,10 +1,6 @@
 require 'active_support'
 require 'active_support/inflector'
 require 'active_support/core_ext'
-#require 'active_support/core_ext/hash'
-#require 'active_support/core_ext/object'
-#require 'active_support/core_ext/class/attribute_accessors'
-#require 'active_support/core_ext/class/inheritable_attributes'
 require 'api_resource/core_extensions'
 
 require 'active_model'
@@ -28,6 +24,7 @@ module ApiResource
   autoload :Callbacks
   autoload :Connection
   autoload :CustomMethods
+  autoload :Decorators
   autoload :Formats
   autoload :Local
   autoload :LogSubscriber

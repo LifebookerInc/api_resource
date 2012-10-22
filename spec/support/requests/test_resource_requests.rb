@@ -4,8 +4,8 @@ HashDealer.define(:new_test_object) do
     :public => [:name, :age, :is_active, [:bday, :date], [:roles, :array]]
   })
   scopes({
-    :active => {:active => true},
-    :paginate => {:paginate => true, :per_page => :per_page, :current_page => :current_page}
+    :active => {:active => :opt},
+    :paginate => {:per_page => :opt, :current_page => :opt}
   })
   associations({
     :has_many => {:has_many_objects => {}},

@@ -13,11 +13,19 @@ HashDealer.define(:active_birthday_test_association_resource, :parent => :active
   birthday{Date.today}
 end
 
+HashDealer.define(:inactive_test_association_resource, :parent => :test_association_resource) do
+  active(false)
+end
+
+HashDealer.define(:inactive_birthday_test_association_resource, :parent => :inactive_test_association_resource) do
+  birthday{Date.today}
+end
+
 HashDealer.define(:has_one_object) do
-	size("large")
-	color("blue")
+  size("large")
+  color("blue")
 end
 
 HashDealer.define(:has_many_object) do
-	name("name")
+  name("name")
 end

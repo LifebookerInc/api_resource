@@ -8,6 +8,9 @@ module ApiResource
         return self.related_objects[:scopes]
       end
       
+      # Called by base.rb
+      # @param name is the name of the scope from the json
+      # @param hsh is always a hash with the arguments for the scope
       def scope(name, hsh)
         raise ArgumentError, "Expecting an attributes hash given #{hsh.inspect}" unless hsh.is_a?(Hash)
         self.related_objects[:scopes][name.to_sym] = hsh

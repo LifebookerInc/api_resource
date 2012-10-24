@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.3.14"
+  s.version = "0.4.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ethan Langevin"]
-  s.date = "2012-09-24"
+  s.date = "2012-10-24"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
   s.email = "ejl6266@gmail.com"
   s.extra_rdoc_files = [
@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
     "lib/api_resource/associations/association_proxy.rb",
     "lib/api_resource/associations/belongs_to_remote_object_proxy.rb",
     "lib/api_resource/associations/dynamic_resource_scope.rb",
+    "lib/api_resource/associations/generic_scope.rb",
     "lib/api_resource/associations/has_many_remote_object_proxy.rb",
     "lib/api_resource/associations/has_many_through_remote_object_proxy.rb",
     "lib/api_resource/associations/has_one_remote_object_proxy.rb",
@@ -50,6 +51,8 @@ Gem::Specification.new do |s|
     "lib/api_resource/connection.rb",
     "lib/api_resource/core_extensions.rb",
     "lib/api_resource/custom_methods.rb",
+    "lib/api_resource/decorators.rb",
+    "lib/api_resource/decorators/caching_decorator.rb",
     "lib/api_resource/exceptions.rb",
     "lib/api_resource/formats.rb",
     "lib/api_resource/formats/json_format.rb",

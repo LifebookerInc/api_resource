@@ -96,6 +96,10 @@ module ApiResource
       end
       alias_method :empty?, :blank?
 
+      def present?
+        self.internal_object.present?
+      end
+
       def expires_in(ttl)
         ApiResource::Decorators::CachingDecorator.new(self, ttl)
       end

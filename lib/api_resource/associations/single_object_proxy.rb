@@ -20,14 +20,6 @@ module ApiResource
           return load(contents)
         end
       end
-
-      def blank?
-        return @internal_object.blank?
-      end
-
-      def present?
-	      return @internal_object.present?
-      end
       
       def ==(other)
         return false if self.class != other.class

@@ -610,8 +610,7 @@ describe "Associations" do
           tr.has_one_object = {:color => "Blue"}
 
           tr.has_one_object.reload
-
-          tr.has_one_object.should be_blank
+          tr.has_one_object.instance_variable_get(:@internal_object).should be_blank
         end
 
       end

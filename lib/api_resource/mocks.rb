@@ -187,7 +187,9 @@ module ApiResource
             when :post, :put
               @params = JSON.parse(opts[:body] || "")
             when :get, :delete, :head
-              @params = sorted_params(@query || "")
+              @params = typecast_values(
+                Rack::Utils.parse_nested_query(@query || "")
+              )
           end
         end
         @body = opts[:body]
@@ -196,23 +198,29 @@ module ApiResource
       end
 
       # 
-      def sorted_params(data)
-        ret = {}
-        data.split("&").each do |entry|
-          key, val = entry.split("=")
-          if val.to_s =~ /^\d+$/
-            ret[key] = val.to_i
-          elsif val =~ /^[\d\.]+$/
-            ret[key] = val.to_f
-          elsif val == "true"
-            ret[key] = true
-          elsif val == "false"
-            ret[key] = false  
+      def typecast_values(data)
+        if data.is_a?(Hash)
+          data.each_pair do |k,v|
+            data[k] = typecast_values(v)
+          end
+        elsif data.is_a?(Array)
+          data = data.collect{|v|
+            typecast_values(v)
+          }
+        else
+          data = if data.to_s =~ /^\d+$/
+            data.to_i
+          elsif data =~ /^[\d\.]+$/
+            data.to_f
+          elsif data == "true"
+            true
+          elsif data == "false"
+            false
           else
-            ret[key] = val || ""
+            data
           end
         end
-        ret
+        data.nil? ? "" : data
       end
 
       # because of the context these come from, we can assume that the path already matches

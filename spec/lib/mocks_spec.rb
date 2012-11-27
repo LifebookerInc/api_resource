@@ -3,7 +3,7 @@ require 'json'
 
 include ApiResource
 
-describe Mocks do
+describe Mocks, :focus do
   
   # we set up the mocks in spec helper, so we can just assert this
   it "should hijack the connection" do
@@ -39,6 +39,35 @@ describe Mocks do
         request = ApiResource::Mocks::MockRequest.new(:get, "/authenticate.json?token=")
         request.params.should eql({"token" => ""})
       end
+
+      it "should handle nested params" do
+        params = {
+          "a" => {
+            "b" => ["c", "d"]
+          }
+        }
+        request = ApiResource::Mocks::MockRequest.new(
+          :get, "/authenticate.json?#{params.to_query}"
+        )
+
+        request.params.should eql(params)
+
+      end
+
+      it "should parse true and false values into booleans" do
+
+        params = {
+          "a" => true,
+          "b" => false
+        }
+        request = ApiResource::Mocks::MockRequest.new(
+          :get, "/authenticate.json?#{params.to_query}"
+        )
+
+        request.params.should eql(params)
+
+      end
+
     end
   end
   

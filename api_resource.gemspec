@@ -5,22 +5,24 @@
 
 Gem::Specification.new do |s|
   s.name = "api_resource"
-  s.version = "0.4.1"
+  s.version = "0.4.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Ethan Langevin"]
+  s.authors = ["Ethan Langevin", "Dan Langevin"]
   s.date = "2012-11-27"
   s.description = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
-  s.email = "ejl6266@gmail.com"
+  s.email = "dan.langevin@lifebooker.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
   ]
-  s.homepage = "http://github.com/ejlangev/resource"
+  s.homepage = "http://github.com/LifebookerInc/api_resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.24"
   s.summary = "A replacement for ActiveResource for RESTful APIs that handles associated object and multiple data sources"
+
+  s.files = Dir.glob("**/*")
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

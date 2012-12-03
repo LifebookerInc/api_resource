@@ -114,20 +114,29 @@ module ApiResource
       # load our resource definition to make sure we know what this class
       # responds to
       def respond_to?(*args)
-        unless self.instance_variable_defined?(:@class_data)
-          self.instance_variable_set(:@class_data, true)
-          self.set_class_attributes_upon_load
-        end
+        self.load_class_data
         super
       end
       
-      def reload_class_attributes
-        # clear the public_attribute_names, protected_attribute_names
-        remove_instance_variable(:@class_data) if instance_variable_defined?(:@class_data)
-        self.clear_attributes
-        self.clear_related_objects
-        self.set_class_attributes_upon_load
+      def load_class_data
+        unless instance_variable_defined?(:@class_data)
+          @class_data = true
+          self.set_class_attributes_upon_load
+        end
+        true
       end
+
+      def reload_class_data
+        # clear the public_attribute_names, protected_attribute_names
+        if instance_variable_defined?(:@class_data)
+          remove_instance_variable(:@class_data)
+          self.clear_attributes
+          self.clear_related_objects
+        end
+        self.load_class_data
+      end
+      # backwards compatibility
+      alias_method :reload_class_attributes, :reload_class_data
       
       def token_with_new_token_set=(new_token)
         self.token_without_new_token_set = new_token
@@ -154,7 +163,7 @@ module ApiResource
         
         # reset class attributes and try to reload them if the site changed
         unless self.site.to_s == old_site
-          self.reload_class_attributes
+          self.reload_class_data
         end
         
         return site
@@ -435,10 +444,7 @@ module ApiResource
     
     def initialize(attributes = {})
       # if we initialize this class, load the attributes
-      unless self.class.instance_variable_defined?(:@class_data)
-        self.class.set_class_attributes_upon_load
-        self.class.instance_variable_set(:@class_data, true)
-      end
+      self.class.load_class_data
       # Now we can make a call to setup the inheriting klass with its attributes
       load(attributes)
     end

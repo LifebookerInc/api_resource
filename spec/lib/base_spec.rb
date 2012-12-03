@@ -6,7 +6,7 @@ include ApiResource
 describe "Base" do
   
   after(:all) do
-    TestResource.reload_class_attributes
+    TestResource.reload_class_data
   end
   
   describe "Loading data from a hash" do
@@ -128,7 +128,7 @@ describe "Base" do
   describe "Serialization" do
     
     before(:all) do
-      TestResource.reload_class_attributes
+      TestResource.reload_class_data
       TestResource.has_many :has_many_objects
       TestResource.define_attributes :attr1, :attr2
       TestResource.include_root_in_json = true
@@ -193,7 +193,7 @@ describe "Base" do
           TestResource.has_many(:has_many_objects)
         end
         after(:all) do
-          TestResource.reload_class_attributes
+          TestResource.reload_class_data
         end
         
         it "should include the id of nested objects in the serialization" do
@@ -229,7 +229,7 @@ describe "Base" do
   describe "Finding Data" do
     
     before(:all) do
-      TestResource.reload_class_attributes
+      TestResource.reload_class_data
     end
     
     it "should be able to find all" do
@@ -262,7 +262,7 @@ describe "Base" do
     
     before(:all) do
       TestResource.include_root_in_json = true
-      TestResource.reload_class_attributes
+      TestResource.reload_class_data
     end
     
     context "Creating new records" do
@@ -367,7 +367,7 @@ describe "Base" do
     
     context "Updating old records" do
       before(:all) do
-        TestResource.reload_class_attributes
+        TestResource.reload_class_data
         TestResource.has_many :has_many_objects
         RestClient::Payload.stubs(:has_file? => false)
       end
@@ -623,7 +623,10 @@ describe "Base" do
       end
       
       it "should find with expires_in and cache" do
-        ApiResource.cache.expects(:fetch).with(anything, :expires_in => 10.0).returns({:id => 2, :name => "d"})
+        ApiResource.cache.expects(:fetch)
+          .with(anything, :expires_in => 10.0)
+          .returns({:id => 2, :name => "d"})
+          
         res = TestResource.find("adfa", :expires_in => 10)
         
         ApiResource::Base.ttl.should eql(1)

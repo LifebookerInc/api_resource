@@ -3,7 +3,7 @@ require 'json'
 
 include ApiResource
 
-describe Mocks, :focus do
+describe Mocks do
   
   # we set up the mocks in spec helper, so we can just assert this
   it "should hijack the connection" do

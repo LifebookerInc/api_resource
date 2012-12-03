@@ -17,7 +17,9 @@ describe "Associations" do
         belongs_to :belongs_to_object
         has_one :has_one_object
       end
-      AllAssociations.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
+      AllAssociations.association_names.sort.should eql(
+        [:has_many_objects, :belongs_to_object, :has_one_object].sort
+      )
       AllAssociations.new.association_names.sort.should eql [:has_many_objects, :belongs_to_object, :has_one_object].sort
     end
 
@@ -466,6 +468,16 @@ describe "Associations" do
       ap.first.name.should eql old_name
     end
 
+    it "should propagate the scopes from the associated class" do
+
+      ap = Associations::MultiObjectProxy.new(
+        "TestResource", {:service_uri => "/multi_object_association"}
+      )
+      ap.scopes.should eql(TestResource.scopes)
+      true
+    end
+
+
     context "Multi Object" do
 
       it "should be able to load 'all'" do
@@ -571,6 +583,8 @@ describe "Associations" do
           result.should be_a TestResource
         end
       end
+
+
     end
 
     context "Assigning Data" do

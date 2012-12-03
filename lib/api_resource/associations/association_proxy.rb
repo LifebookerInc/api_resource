@@ -17,8 +17,13 @@ module ApiResource
         self.times_loaded = 0
         self.owner = owner
         self.klass = klass_name.to_s.classify.constantize
+        # make sure we have the remote definition
+        self.klass.load_class_data
         self.load(contents)
         self.loaded = {}.with_indifferent_access
+
+      #debugger
+
         if self.class.include_class_scopes
           self.scopes = self.scopes.reverse_merge(self.klass.scopes)
         end

@@ -21,7 +21,15 @@ Mocks.define do
     get((0..4).to_a.collect{HashDealer.roll(:test_association_resource)}, :params => {})
     get((0..4).to_a.collect{HashDealer.roll(:active_test_association_resource)}, :params => {:active => true})
     get((0..4).to_a.collect{HashDealer.roll(:active_test_association_resource)}, :params => {:active => false})
-    get((0..4).to_a.collect{HashDealer.roll(:active_birthday_test_association_resource)}, :params => {:active => true, :birthday => true})
+    get(
+      (0..4).to_a.collect{
+        HashDealer.roll(:active_birthday_test_association_resource)
+      }, 
+      :params => {
+        :active => true, 
+        :birthday => {:date => Date.today}
+      }.matcher
+    )
   end
 
   endpoint("/has_one_objects/new") do

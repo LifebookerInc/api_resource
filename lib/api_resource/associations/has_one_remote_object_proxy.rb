@@ -2,23 +2,22 @@ require 'api_resource/associations/single_object_proxy'
 module ApiResource
   module Associations
     class HasOneRemoteObjectProxy < SingleObjectProxy
-      def initialize(klass_name, contents, owner)
-        super
-        return if self.internal_object
+      
+      def initialize(klass, owner)
+        super(klass, owner)
+        
         # now if we have an owner and a foreign key, we set the data up to load
-        if owner
-          self.load({"service_uri" => self.klass.collection_path(self.owner.class.to_s.foreign_key => self.owner.id)}.merge(self.klass.scopes))
-        end
-        true
+        self.remote_path = self.klass.collection_path(self.owner.class.to_s.foreign_key => self.owner.id)
       end
+
       protected
-      # load data from the remote server
-      # In a has_one, we can get back an Array, so we use the first element
-      def load_from_remote(options)
-        data = super(options)
-        data = data.first if data.is_a?(Array)
-        data
+      
+      def load(opts = {})
+        data = self.klass.connection.get(self.build_load_path(opts))
+        return nil if data.blank?
+        return self.klass.new(data.first)
       end
+
     end
   end
 end

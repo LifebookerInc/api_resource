@@ -10,27 +10,20 @@ module ApiResource
       
       alias_method_chain :save, :dirty_tracking
       
-      class_attribute :attribute_names, :public_attribute_names, :protected_attribute_names, :attribute_types
+      class_attribute(
+        :attribute_names, 
+        :public_attribute_names, 
+        :protected_attribute_names, 
+        :attribute_types
+      )
       
       cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string, :array]
 
-      attr_reader :attributes
-      
       self.attribute_names = []
       self.public_attribute_names = []
       self.protected_attribute_names = []
       self.attribute_types = {}.with_indifferent_access
       
-      define_method(:attributes) do
-        return @attributes if @attributes
-        # Otherwise make the attributes hash of all the attributes
-        @attributes = HashWithIndifferentAccess.new
-        self.class.attribute_names.each do |attr|
-          @attributes[attr] = self.send("#{attr}")
-        end
-        @attributes
-      end
-
 
       # This method is important for reloading an object. If the
       # object has already been loaded, its associations will trip
@@ -68,6 +61,7 @@ module ApiResource
     module ClassMethods
       
       def define_attributes(*args)
+
         args.each do |arg|
           if arg.is_a?(Array)
             self.define_attribute_type(arg.first, arg.second)
@@ -75,24 +69,9 @@ module ApiResource
           end
           self.attribute_names += [arg.to_sym]
           self.public_attribute_names += [arg.to_sym]
-          
-          # Override the setter for dirty tracking
-          self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-            def #{arg}
-              attribute_with_default(:#{arg})
-            end
-          
-            def #{arg}=(val)
-              real_val = typecast_attribute(:#{arg}, val)
-              #{arg}_will_change! unless self.#{arg} == real_val
-              attributes[:#{arg}] = real_val
-            end
-            
-            def #{arg}?
-              attributes[:#{arg}].present?
-            end
-          EOE
+          self.define_accessor_methods(arg)
         end
+
         self.attribute_names.uniq!
         self.public_attribute_names.uniq!
       end
@@ -108,28 +87,35 @@ module ApiResource
           self.attribute_names += [arg.to_sym]
           self.protected_attribute_names += [arg.to_sym]
           
-          # These attributes cannot be set, throw an error if you try
-          self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-
-            def #{arg}
-              self.attribute_with_default(:#{arg})
-            end
-          
-            def #{arg}=(val)
-              raise "#{arg} is a protected attribute and cannot be set"
-            end
-            
-            def #{arg}?
-              self.attributes[:#{arg}].present?
-            end
-          EOE
+          self.define_accessor_methods(arg)
         end
         self.attribute_names.uniq!
         self.protected_attribute_names.uniq!
       end
       
+      def define_accessor_methods(meth)
+        # Override the setter for dirty tracking
+        self.class_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{meth}
+            read_attribute(:#{meth})
+          end
+        
+          def #{meth}=(new_val)
+            write_attribute(:#{meth}, new_val)
+          end
+          
+          def #{meth}?
+            read_attribute(:#{meth}).present?
+          end
+        EOE
+        # sets up dirty tracking
+        define_attribute_method(meth)
+      end
+
       def define_attribute_type(field, type)
-        raise "#{type} is not a valid type" unless self.valid_typecasts.include?(type.to_sym)
+        unless self.valid_typecasts.include?(type.to_sym)
+          raise "#{type} is not a valid type" 
+        end
         self.attribute_types[field] = type.to_sym
       end
       
@@ -148,15 +134,31 @@ module ApiResource
         self.protected_attribute_names.clear
       end
     end
-    
+
+    # override the initializer to set up some default values
+    def initialize(*args)
+      @attributes = @attributes_cache = HashWithIndifferentAccess.new
+    end
+
+    def attributes
+      attrs = {}
+      self.attribute_names.each{|name| attrs[name] = read_attribute(name)}
+      attrs
+    end
+
     # set new attributes
     def attributes=(new_attrs)
       new_attrs.each_pair do |k,v|
+        if self.protected_attribute?(k)
+          raise Exception.new(
+            "#{k} is a protected attribute and cannot be mass-assigned"
+          )
+        end
         self.send("#{k}=",v) unless k.to_sym == :id
       end
       new_attrs
     end
-    
+
     def save_with_dirty_tracking(*args)
       if save_without_dirty_tracking(*args)
         @previously_changed = self.changes
@@ -182,6 +184,23 @@ module ApiResource
       
       set_attributes_as_current(*attrs)
     end
+
+    def read_attribute(name)
+      self.typecasted_attribute(name.to_sym)
+    end
+
+    def write_attribute(name, val)
+      old_val = read_attribute(name)
+      new_val = self.typecast_attribute(name, val)
+
+      unless old_val == new_val
+        self.send("#{name}_will_change!")
+      end
+      # delete the old cached value and assign new val to both
+      # @attributes and @attributes_cache
+      @attributes_cache.delete(name.to_sym)
+      @attributes[name.to_sym] = @attributes_cache[name.to_sym] = new_val
+    end
     
     def attribute?(name)
       self.class.attribute?(name)
@@ -204,10 +223,6 @@ module ApiResource
     
     protected
     
-    def attribute_with_default(field)
-      self.attributes[field].nil? ? self.default_value_for_field(field) : self.attributes[field]
-    end
-
     def default_value_for_field(field)
       case self.class.attribute_types[field.to_sym]
         when :array
@@ -217,25 +232,49 @@ module ApiResource
       end
     end
 
-    def typecast_attribute(field, val)
-      return val unless self.class.attribute_types.include?(field)
-      case self.class.attribute_types[field.to_sym]
-        when :date
-          return val.class == Date ? val.dup : Date.parse(val)
-        when :time
-          return val.class == Time ? val.dup : Time.parse(val)
-        when :integer, :int, :fixnum
-          return val.class == Fixnum ? val.dup : val.to_i rescue val
-        when :float
-          return val.class == Float ? val.dup : val.to_f rescue val
-        when :string
-          return val.class == String ? val.dup : val.to_s rescue val
-        when :array
-          return val.class == Array ? val.dup : Array.wrap(val)
+    def typecasted_attribute(field)
+
+      @attributes ||= HashWithIndifferentAccess.new
+      @attributes_cache ||= HashWithIndifferentAccess.new
+
+      if @attributes_cache.has_key?(field.to_sym)
+        return @attributes_cache[field.to_sym]
+      else
+        # pull out of the raw attributes
+        if @attributes.has_key?(field.to_sym)
+          val = @attributes[field.to_sym]
         else
-          # catches the nil case and just leaves it alone
-          return val.dup rescue val
+          val = self.default_value_for_field(field)
+        end
+        # now we typecast
+        val = self.typecast_attribute(field, val)
+        return @attributes_cache[field.to_sym] = val
       end
+    end
+
+    def typecast_attribute(field, val)
+      # if we have a valid value and we are planning to typecast go 
+      # into this case statement
+      if self.class.attribute_types.include?(field.to_sym) && val.present?
+        val = case self.class.attribute_types[field.to_sym]
+          when :date
+            val.class == Date ? val.dup : Date.parse(val)
+          when :time
+            val.class == Time ? val.dup : Time.parse(val)
+          when :integer, :int, :fixnum
+            val.class == Fixnum ? val.dup : val.to_i rescue val
+          when :float
+            val.class == Float ? val.dup : val.to_f rescue val
+          when :string
+            val.class == String ? val.dup : val.to_s rescue val
+          when :array
+            val.class == Array ? val.dup : Array.wrap(val)
+          else
+            # catches the nil case and just leaves it alone
+            val.dup rescue val
+        end
+      end
+      val
     end
     
   end

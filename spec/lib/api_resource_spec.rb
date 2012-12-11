@@ -4,13 +4,9 @@ describe ApiResource do
 
   context ".cache" do
 
-    around(:each) do |example|
-      begin
-        old_rails = Object.send(:remove_const, :Rails)
-        example.run
-      ensure
-        Rails = old_rails
-        ApiResource
+    after(:each) do
+      if defined?(Rails)
+        Object.send(:remove_const, :Rails)
       end
     end
 

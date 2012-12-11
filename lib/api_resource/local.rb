@@ -5,7 +5,7 @@ module ApiResource
       true
     end
     # shouldn't do anything here either - 
-    def self.reload_class_attributes
+    def self.reload_resource_definition
       true
     end
   end

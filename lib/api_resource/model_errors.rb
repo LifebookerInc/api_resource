@@ -4,11 +4,16 @@ module ApiResource
     
     def from_array(messages, save_cache = false)
       clear unless save_cache
-      humanized_attributes = @base.attributes.keys.inject({}) { |h, attr_name| h.update(attr_name.humanize => attr_name) }
+      humanized_attributes = @base.attributes.keys.inject({}){|h, attr_name| 
+        h.update(attr_name.to_s.humanize => attr_name) 
+      }
       messages.each do |message|
         attr_message = humanized_attributes.keys.detect do |attr_name|
           if message[0,attr_name.size + 1] == "#{attr_name} "
-            add humanized_attributes[attr_name], message[(attr_name.size + 1)..-1]
+            self.add(
+              humanized_attributes[attr_name], 
+              message[(attr_name.size + 1)..-1]
+            )
           end
         end
       end
@@ -18,7 +23,7 @@ module ApiResource
       clear unless save_cache
       messages.each do |attr, message_array|
         message_array.each do |message|
-          add attr, message
+          self.add(attr, message)
         end
       end
     end
@@ -61,10 +66,8 @@ module ApiResource
       elsif error_data.is_a?(Array)
         self.errors.from_array(error_data)
       else
-        raise Exception.new
+        raise "Invalid response for invalid object: expected an array or hash got #{remote_errors}"
       end
-    rescue Exception
-      raise "Invalid response for invalid object: expected an array or hash got #{remote_errors}"
     end
     
     # This method runs any local validations but not remote ones

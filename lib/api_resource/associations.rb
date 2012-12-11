@@ -1,13 +1,12 @@
 require 'active_support'
 require 'active_support/string_inquirer'
 require 'api_resource/association_activation'
-require 'api_resource/associations/relation_scope'
+require 'api_resource/associations/abstract_scope'
+require 'api_resource/associations/scope'
 require 'api_resource/associations/resource_scope'
-require 'api_resource/associations/dynamic_resource_scope'
-require 'api_resource/associations/generic_scope'
-require 'api_resource/associations/multi_argument_resource_scope'
-require 'api_resource/associations/multi_object_proxy'
+require 'api_resource/associations/association_scope'
 require 'api_resource/associations/single_object_proxy'
+require 'api_resource/associations/multi_object_proxy'
 require 'api_resource/associations/belongs_to_remote_object_proxy'
 require 'api_resource/associations/has_one_remote_object_proxy'
 require 'api_resource/associations/has_many_remote_object_proxy'
@@ -129,6 +128,10 @@ module ApiResource
         # structure is {:has_many => {"myname" => "ClassName"}}
         self.related_objects.clone.delete_if{|k,v| k.to_s == "scopes"}.collect{|k,v| v.keys.collect(&:to_sym)}.flatten
       end
+
+      def association_class(assoc)
+        self.association_class_name(assoc).constantize
+      end
       
       def association_class_name(assoc)
         raise ArgumentError, "#{assoc} is not a valid association of #{self}" unless self.association?(assoc)
@@ -162,18 +165,32 @@ module ApiResource
         end
 
         def define_association_as_attribute(assoc_type, assoc_name)
-          # set up dirty tracking for associations
-          
+          # set up dirty tracking for associations, but only for ApiResource
+          # these methods are also used for ActiveRecord
+          # TODO: change this
+          if self.ancestors.include?(ApiResource::Base)
+            define_attribute_method(assoc_name)
+          end
+        
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{assoc_name}
-              self.assoc_attributes[:#{assoc_name}] ||= (self.attributes[:#{assoc_name}] || #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy.new(self.association_class_name('#{assoc_name}'), nil, self))
+              @attributes_cache[:#{assoc_name}] ||= begin
+                klass = #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy
+                instance = klass.new(
+                  self.association_class('#{assoc_name}'), self
+                )
+                if @attributes[:#{assoc_name}].present?
+                  instance.internal_object = @attributes[:#{assoc_name}]
+                end
+                instance
+              end
             end
             def #{assoc_name}=(val)
               # get old internal object
-              old_internal_object = self.#{assoc_name}.internal_object
+              unless self.#{assoc_name}.internal_object == val
+                #{assoc_name}_will_change! 
+              end
               self.#{assoc_name}.internal_object = val
-              #{assoc_name}_will_change! unless self.#{assoc_name} == old_internal_object
-              self.#{assoc_name}.internal_object
             end
             def #{assoc_name}?
               self.#{assoc_name}.internal_object.present?
@@ -204,6 +221,10 @@ module ApiResource
       self.class.association?(assoc)
     end
     
+    def association_class(assoc)
+      self.class.association_class(assoc)
+    end
+
     def association_class_name(assoc)
       self.class.association_class_name(assoc)
     end

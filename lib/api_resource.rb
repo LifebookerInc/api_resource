@@ -72,7 +72,9 @@ module ApiResource
   def self.cache(reset = false)
     @cache = nil if reset
     @cache ||= begin
-      defined?(Rails) ? Rails.cache : ActiveSupport::Cache::MemoryStore.new
+        defined?(Rails) ? Rails.cache : ActiveSupport::Cache::MemoryStore.new
+      rescue 
+        ActiveSupport::Cache::MemoryStore.new
     end
   end
   

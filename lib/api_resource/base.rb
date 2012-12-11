@@ -25,11 +25,15 @@ module ApiResource
     
     class_attribute :primary_key
     self.primary_key = "id"
+
+    delegate :logger, :to => ApiResource
     
     class << self
       
       # writers - accessors with defaults were not working
       attr_writer :element_name, :collection_name
+
+      delegate :logger, :to => ApiResource
       
       def inherited(klass)
         # Call the methods of the superclass to make sure inheritable accessors and the like have been inherited
@@ -44,33 +48,38 @@ module ApiResource
         EOE
         true
       end
+
+      def resource_definition
+        @resource_definition
+      end
+
       # This makes a request to new_element_path
       def set_class_attributes_upon_load
         return true if self == ApiResource::Base
         begin
-          class_data = self.connection.get(
+          @resource_definition = self.connection.get(
             self.new_element_path, self.headers
           )
           # Attributes go first
-          if class_data["attributes"]
+          if resource_definition["attributes"]
             
             define_attributes(
-              *(class_data["attributes"]["public"] || [])
+              *(resource_definition["attributes"]["public"] || [])
             )
             define_protected_attributes(
-              *(class_data["attributes"]["protected"] || [])
+              *(resource_definition["attributes"]["protected"] || [])
             ) 
             
           end
           # Then scopes
-          if class_data["scopes"]
-            class_data["scopes"].each_pair do |scope_name, opts|
+          if resource_definition["scopes"]
+            resource_definition["scopes"].each_pair do |scope_name, opts|
               self.scope(scope_name, opts)
             end
           end
           # Then associations
-          if class_data["associations"]
-            class_data["associations"].each_pair do |key, hash|
+          if resource_definition["associations"]
+            resource_definition["associations"].each_pair do |key, hash|
               hash.each_pair do |assoc_name, assoc_options|
                 self.send(key, assoc_name, assoc_options)
               end
@@ -81,15 +90,14 @@ module ApiResource
           # define the basic methods but we need to override all the setters 
           # so we do dirty tracking
           attrs = []
-          if class_data["attributes"] && class_data["attributes"]["public"]
-            attrs += class_data["attributes"]["public"].collect{|v| 
+          if resource_definition["attributes"] && resource_definition["attributes"]["public"]
+            attrs += resource_definition["attributes"]["public"].collect{|v| 
               v.is_a?(Array) ? v.first : v
             }.flatten
           end
-          if class_data["associations"]
-            attrs += class_data["associations"].values.collect(&:keys).flatten
+          if resource_definition["associations"]
+            attrs += resource_definition["associations"].values.collect(&:keys).flatten
           end
-          define_attribute_methods(attrs)
           
         # Swallow up any loading errors because the site may be incorrect
         rescue Exception => e
@@ -114,29 +122,32 @@ module ApiResource
       # load our resource definition to make sure we know what this class
       # responds to
       def respond_to?(*args)
-        self.load_class_data
+        self.load_resource_definition
         super
       end
       
-      def load_class_data
-        unless instance_variable_defined?(:@class_data)
-          @class_data = true
+      def load_resource_definition
+        unless instance_variable_defined?(:@resource_definition)
+          # set to not nil so we don't get an infinite loop
+          @resource_definition = true
           self.set_class_attributes_upon_load
+          return true
         end
-        true
+        # we didn't do anything
+        false
       end
 
-      def reload_class_data
+      def reload_resource_definition
         # clear the public_attribute_names, protected_attribute_names
-        if instance_variable_defined?(:@class_data)
-          remove_instance_variable(:@class_data)
+        if instance_variable_defined?(:@resource_definition)
+          remove_instance_variable(:@resource_definition)
           self.clear_attributes
           self.clear_related_objects
         end
-        self.load_class_data
+        self.load_resource_definition
       end
       # backwards compatibility
-      alias_method :reload_class_attributes, :reload_class_data
+      alias_method :reload_class_attributes, :reload_resource_definition
       
       def token_with_new_token_set=(new_token)
         self.token_without_new_token_set = new_token
@@ -163,7 +174,7 @@ module ApiResource
         
         # reset class attributes and try to reload them if the site changed
         unless self.site.to_s == old_site
-          self.reload_class_data
+          self.reload_resource_definition
         end
         
         return site
@@ -292,6 +303,10 @@ module ApiResource
       # where options can be standard rails options or :expires_in. 
       # If :expires_in is set, it caches it for expires_in seconds.
       def find(*arguments)
+
+        # make sure we have class data before loading
+        self.load_resource_definition
+
         scope   = arguments.slice!(0)
         options = arguments.slice!(0) || {}
         
@@ -346,13 +361,29 @@ module ApiResource
       def delete(id, options = {})
         connection.delete(element_path(id, options))
       end
-      
+
+      def instantiate_collection(collection)
+        collection.collect{|record| 
+          instantiate_record(record)
+        }
+      end
+
+      def instantiate_record(record)
+        self.load_resource_definition
+        ret = self.allocate
+        ret.instance_variable_set(
+          :@attributes, record.with_indifferent_access
+        )
+        ret.instance_variable_set(
+          :@attributes_cache, HashWithIndifferentAccess.new
+        )
+        ret
+      end
+
       protected
         def method_missing(meth, *args, &block)
           # make one attempt to load remote attrs
-          unless self.instance_variable_defined?(:@class_data)
-            self.set_class_attributes_upon_load
-            self.instance_variable_set(:@class_data, true)
+          if self.load_resource_definition
             return self.send(meth, *args, &block)
           end
           super
@@ -398,15 +429,6 @@ module ApiResource
           instantiate_record(connection.get(path, headers))
         end
 
-        def instantiate_collection(collection)
-          collection.collect! { |record| instantiate_record(record) }
-        end
-
-        def instantiate_record(record)
-          new(record)
-        end
-
-
         # Accepts a URI and creates the site URI from that.
         def create_site_uri_from(site)
           site.is_a?(URI) ? site.dup : uri_parser.parse(site)
@@ -446,10 +468,13 @@ module ApiResource
     end
     
     def initialize(attributes = {})
+      # call super's initialize to set up any variables that we need
+      super(attributes)
       # if we initialize this class, load the attributes
-      self.class.load_class_data
-      # Now we can make a call to setup the inheriting klass with its attributes
-      load(attributes)
+      self.class.load_resource_definition
+      # Now we can make a call to setup the inheriting 
+      # klass with its attributes
+      self.attributes = attributes
     end
     
     def new?
@@ -462,12 +487,12 @@ module ApiResource
     end
     
     def id
-      self.attributes[self.class.primary_key]
+      self.read_attribute(self.class.primary_key)
     end
     
     # Bypass dirty tracking for this field
     def id=(id)
-      attributes[self.class.primary_key] = id
+      @attributes[self.class.primary_key] = id
     end
     
     def ==(other)
@@ -483,9 +508,7 @@ module ApiResource
     end
     
     def dup
-      self.class.new.tap do |resource|
-        resource.attributes = self.attributes
-      end
+      self.class.instantiate_record(self.attributes)
     end
     
     def update_attributes(attrs)
@@ -510,8 +533,15 @@ module ApiResource
     end
     
     def reload
-      remove_instance_variable(:@assoc_attributes) if instance_variable_defined?(:@assoc_attributes)
-      self.load(self.class.find(to_param, :params => @prefix_options).attributes_without_proxies)
+      # find the record from the remote service
+      reloaded = self.class.find(self.id)
+      
+      # clear out the attributes cache
+      @attributes_cache = HashWithIndifferentAccess.new
+      # set up our attributes cache on our record
+      @attributes = reloaded.instance_variable_get(:@attributes)
+      
+      reloaded
     end
     
     def to_param
@@ -534,56 +564,13 @@ module ApiResource
       self.class.prefix_source.scan(/\:(\w+)/).collect{|match| match.first.to_sym}
     end
     
-    def load(attributes)
-      return if attributes.nil?
-      raise ArgumentError, "expected an attributes Hash, got #{attributes.inspect}" unless attributes.is_a?(Hash)
-      
-      attributes.symbolize_keys.each do |key, value|
-        # If this attribute doesn't exist define it as a protected attribute
-        self.class.define_protected_attributes(key) unless self.respond_to?(key)
-        #self.send("#{key}_will_change!") if self.respond_to?("#{key}_will_change!")
-        self.attributes[key] =
-          case value
-            when Array
-              if self.has_many?(key)
-                MultiObjectProxy.new(self.has_many_class_name(key), value)
-              elsif self.association?(key)
-                raise ArgumentError, "Expected a hash value or nil, got: #{value.inspect}"
-              else
-                typecast_attribute(key, value)
-              end
-            when Hash
-              if self.has_many?(key)
-                MultiObjectProxy.new(self.has_many_class_name(key), value)
-              elsif self.association?(key)
-                #binding.pry
-                SingleObjectProxy.new(self.association_class_name(key), value)
-              else
-                typecast_attribute(key, value)
-              end
-            when NilClass
-              # If it's nil and an association then create a blank object
-              if self.has_many?(key)
-                return MultiObjectProxy.new(self.has_many_class_name(key), [])
-              elsif self.association?(key)
-                SingleObjectProxy.new(self.association_class_name(key), value)
-              end
-            else
-              raise ArgumentError, "expected an array or a hash for the association #{key}, got: #{value.inspect}" if self.association?(key)
-              typecast_attribute(key, value)
-          end
-      end
-      return self
-    end
-    
     # Override to_s and inspect so they only show attributes
     # and not associations, this prevents force loading of associations
     # when we call to_s or inspect on a descendent of base but allows it if we 
     # try to evaluate an association directly
     def to_s
-      return "#<#{self.class}:#{(self.object_id * 2).to_s(16)} @attributes=#{self.attributes.inject({}){|accum,(k,v)| self.association?(k) ? accum : accum.merge(k => v)}}"
+      return "#<#{self.class}:#{(self.object_id * 2).to_s(16)} @attributes=#{self.attributes}"
     end
-    
     alias_method :inspect, :to_s
     
     # Methods for serialization as json or xml, relying on the serializable_hash method
@@ -596,11 +583,17 @@ module ApiResource
     end
     
     def serializable_hash(options = {})
+      
       action = options[:action]
+      
       include_nil_attributes = options[:include_nil_attributes]
+      
       options[:include_associations] = options[:include_associations] ? options[:include_associations].symbolize_array : self.changes.keys.symbolize_array.select{|k| self.association?(k)}
+      
       options[:include_extras] = options[:include_extras] ? options[:include_extras].symbolize_array : []
+      
       options[:except] ||= []
+      
       ret = self.attributes.inject({}) do |accum, (key,val)|
         # If this is an association and it's in include_associations then include it
         if options[:include_extras].include?(key.to_sym)
@@ -617,7 +610,13 @@ module ApiResource
         end
       end
       options[:include_associations].each do |assoc|
-        ret[assoc] = self.send(assoc).serializable_hash({:include_id => true, :include_nil_attributes => include_nil_attributes, :action => action}) if self.association?(assoc)
+        if self.association?(assoc)
+          ret[assoc] = self.send(assoc).serializable_hash({
+            :include_id => true, 
+            :include_nil_attributes => include_nil_attributes, 
+            :action => action
+          })
+        end
       end
       # include id - this is for nested updates
       ret[:id] = self.id if options[:include_id] && !self.new?
@@ -630,7 +629,13 @@ module ApiResource
     end
     
     def load_attributes_from_response(response)
-      load(response)
+      if response.present?
+        @attributes_cache = {}
+        @attributes = @attributes.merge(
+          response.with_indifferent_access
+        )
+      end
+      response
     end
     
     def element_path(id, prefix_override_options = {}, query_options = nil)

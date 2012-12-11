@@ -1,132 +1,34 @@
 module ApiResource
-
   module Associations
+    class Scope < AbstractScope
 
-    class Scope
-
-      attr_accessor :klass, :current_scope, :internal_object
-
-      attr_reader :scopes
-
-      def initialize(klass, current_scope, opts = {})
-        # Holds onto the association proxy this RelationScope is bound to
-        @klass = klass
-        @parent = opts.delete(:parent)
-        @ttl = opts.delete(:expires_in)
-        # splits on _and_ and sorts to get a consistent scope key order
-        @current_scope = (self.parent_scope + Array.wrap(current_scope.to_s)).sort
-        # define methods for the scopes of the object
-
-        klass.scopes.each do |key, val|
-          self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
-            # This class always has at least one scope, adding a new one should clone this object
-            def #{key}(*args)
-              obj = self.clone
-              # Call reload to make it go back to the webserver the next time it loads
-              obj.reload
-              return obj.enhance_current_scope(:#{key}, *args)
-            end
-          EOE
-          self.scopes[key.to_s] = val
+      def initialize(klass, opts = {})
+        # see if we have a hash of options and it has a parent in it
+        unless opts[:__parent].respond_to?(:load)
+          raise ArgumentError.new(
+            "Scopes must have a parent object passed in that " + 
+            "responds to #load"
+          )
         end
-        # Use the method current scope because it gives a string
-        # This expression substitutes the options from opts into the default attributes of the scope, it will only copy keys that exist in the original
-        self.scopes[self.current_scope] = opts.inject(self.scopes[current_scope]){|accum,(k,v)| accum.key?(k.to_s) ? accum.merge(k.to_s => v) : accum}
+        super(klass, opts)
       end
 
-      def ttl
-        @ttl || 0
+      def load
+        ret = self.klass.load(self.to_hash)
+        @loaded = true
+        ret
       end
 
-      # Use this method to access the internal data, this guarantees that loading only occurs once per object
-      def internal_object
-        raise "Not Implemented: This method must be implemented in a subclass"
+      # we break this out here because Scope needs to pass self.klass to 
+      # any sub-scopes.  This is because Scope does not have knowledge
+      # of how to actually load data and delegates that to either
+      # a ResourceScope or an AssociationScope
+      def get_subscope_instance(finder_opts)
+        ApiResource::Associations::Scope.new(
+          self.klass, finder_opts.merge(:__parent => self)
+        )
       end
 
-      def scopes
-        @scopes ||= {}.with_indifferent_access
-      end
-
-      def scope?(scp)
-        self.scopes.key?(scp.to_s)
-      end
-
-      def current_scope
-        ActiveSupport::StringInquirer.new(@current_scope.join("_and_").concat("_scope"))
-      end
-
-      def to_hash
-        self.parent_hash.merge(self.scopes[self.current_scope])
-      end
-
-      # takes empty hashes and replaces them with true so that to_query doesn't strip them out
-      def to_query_safe_hash(hash)
-        hash.each_pair do |k, v|
-          hash[k] = to_query_safe_hash(v) if v.is_a?(Hash)
-          hash[k] = true if v == {}
-        end
-        return hash
-      end
-
-       # gets the current hash and calls to_query on it
-      def to_query
-        #We need to add the unescape because to_query breaks on nested arrays
-        CGI.unescape(to_query_safe_hash(self.to_hash).to_query)
-      end
-
-      def method_missing(method, *args, &block)
-        self.internal_object.send(method, *args, &block)
-      end
-
-      def reload
-        remove_instance_variable(:@internal_object) if instance_variable_defined?(:@internal_object)
-        self
-      end
-
-      def to_s
-        self.internal_object.to_s
-      end
-
-      def inspect
-        self.internal_object.inspect
-      end
-
-      def blank?
-        self.internal_object.blank?
-      end
-      alias_method :empty?, :blank?
-
-      def present?
-        self.internal_object.present?
-      end
-
-      def expires_in(ttl)
-        ApiResource::Decorators::CachingDecorator.new(self, ttl)
-      end
-
-      protected
-        # scope from the parent
-        def parent_scope
-          ret = @parent ? Array.wrap(@parent.current_scope).collect{|el| el.gsub(/_scope$/,'')} : []
-          ret.collect{|el| el.split(/_and_/)}.flatten
-        end
-        # querystring hash from parent
-        def parent_hash
-          @parent ? @parent.to_hash : {}
-        end
-        def enhance_current_scope(scp, *args)
-          opts = args.extract_options!
-          check_scope(scp)
-          cache_key = "a#{Digest::MD5.hexdigest((args.sort + [scp]).to_s)}"
-          return instance_variable_get("@#{cache_key}") if instance_variable_defined?("@#{cache_key}")
-          return instance_variable_set("@#{cache_key}", self.class.class_factory(self.scopes[scp]).new(self.klass, scp, *args, opts.merge(:parent => self)))
-        end
-        # make sure we have a valid scope
-        def check_scope(scp)
-          raise ArgumentError, "Unknown scope #{scp}" unless self.scope?(scp.to_s)
-        end
     end
-
   end
-
 end

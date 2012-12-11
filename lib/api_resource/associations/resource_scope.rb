@@ -1,18 +1,8 @@
-require 'api_resource/associations/scope'
-
 module ApiResource
-
   module Associations
-
-    class ResourceScope < Scope
+    class ResourceScope < AbstractScope
 
       include Enumerable
-
-      def internal_object
-        ApiResource.with_ttl(ttl) do
-          @internal_object ||= self.klass.send(:find, :all, :params => self.to_hash)
-        end
-      end
 
       alias_method :all, :internal_object
 
@@ -20,12 +10,11 @@ module ApiResource
         self.internal_object.each(*args, &block)
       end
 
-      # Used by ApiResource::Scopes to create methods with the same name
-      # as the scope
-      #
-      # Weird place to have a factory... could have been on Scope or a separate class...
-      def self.class_factory(hsh)
-        return ApiResource::Associations::GenericScope
+      # perform a find with a given set of query params
+      def load(opts = {})
+        ret = self.klass.all(:params => opts)
+        @loaded = true
+        ret
       end
     end
   end

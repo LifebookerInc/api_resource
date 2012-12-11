@@ -5,8 +5,12 @@ include ApiResource
 
 describe "Base" do
   
+  before(:all) do
+    TestResource.reload_resource_definition
+  end
+
   after(:all) do
-    TestResource.reload_class_data
+    TestResource.reload_resource_definition
   end
 
   context ".new_element_path" do
@@ -69,6 +73,44 @@ describe "Base" do
   
   describe "Loading data from a hash" do
     
+
+    context ".instantiate_record" do
+
+      it "should set boolean values" do
+
+        tr = TestResource.instantiate_record(:is_active => true)
+        tr.is_active.should eql(true)
+
+      end
+
+      it "should set boolean values" do
+
+        tr = TestResource.instantiate_record(:is_active => false)
+        tr.is_active.should eql(false)
+
+      end
+
+    end
+
+    context ".instantiate_collection" do
+
+      it "should set boolean values" do
+
+        data = [
+          {"id"=>96229, "name"=>"Mathew", "age"=>31544, "is_active"=>true},
+          {"id"=>82117, "name"=>"Rick", "age"=>14333, "is_active"=>true},
+          {"id"=>92922, "name"=>"Jimmie", "age"=>89153, "is_active"=>true},
+          {"id"=>67548, "name"=>"Forest", "age"=>35062, "is_active"=>true},
+          {"id"=>6993, "name"=>"Georgette", "age"=>84223, "is_active"=>true}
+        ]
+
+        tr = TestResource.instantiate_collection(data)
+        tr.first.is_active.should eql(true)
+
+      end
+
+    end
+
     context "Associations" do
       before(:all) do
         TestResource.has_many :has_many_objects
@@ -97,9 +139,14 @@ describe "Base" do
         end
         
         it "should properly load the data from the provided array or hash" do
-          tst = TestResource.new({:has_many_objects => [{:service_uri => '/path'}]})
+          tst = TestResource.new({
+            :has_many_objects => [{:service_uri => '/path'}]
+          })
           tst.has_many_objects.remote_path.should eql('/path')
-          tst = TestResource.new({:has_many_objects => {:service_uri => '/path'}})
+
+          tst = TestResource.new({
+            :has_many_objects => {:service_uri => '/path'}
+          })
           tst.has_many_objects.remote_path.should eql('/path')
         end
         
@@ -113,7 +160,8 @@ describe "Base" do
           tst.has_one_object.should be_a(Associations::SingleObjectProxy)
         end
         
-        it "should throw an error if a belongs_to or has_many association is not a hash or nil" do
+        it "should throw an error if a belongs_to or 
+          has_many association is not a hash or nil" do
           lambda {
             TestResource.new(:belongs_to_object => [])
           }.should raise_error
@@ -123,7 +171,11 @@ describe "Base" do
         end
         
         it "should properly load data from the provided hash" do
-          tst = TestResource.new(:has_one_object => {:service_uri => "/path"})
+          tst = TestResource.new(
+            :has_one_object => {
+              :service_uri => "/path"
+            }
+          )
           tst.has_one_object.remote_path.should eql('/path')
         end
         
@@ -186,7 +238,7 @@ describe "Base" do
   describe "Serialization" do
     
     before(:all) do
-      TestResource.reload_class_data
+      TestResource.reload_resource_definition
       TestResource.has_many :has_many_objects
       TestResource.define_attributes :attr1, :attr2
       TestResource.include_root_in_json = true
@@ -213,15 +265,28 @@ describe "Base" do
         hash["test_resource"].should_not be_nil
       end
       
-      it "should not include associations by default if they have not changed" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
+      it "should not include associations by default if 
+        they have not changed" do
+        tst = TestResource.new({
+          :attr1 => "attr1", 
+          :attr2 => "attr2", 
+          :has_many_objects => []
+        })
         hash = JSON.parse(tst.to_json)
         hash["has_many_objects"].should be_nil
       end
       
       it "should include associations passed given in the include_associations array" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
-        hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
+        tst = TestResource.new({
+          :attr1 => "attr1", 
+          :attr2 => "attr2", 
+          :has_many_objects => []
+        })
+        hash = JSON.parse(
+          tst.to_json(
+            :include_associations => [:has_many_objects]
+          )
+        )
         hash["has_many_objects"].should_not be_nil
       end
       
@@ -232,8 +297,19 @@ describe "Base" do
         hash["has_many_objects"].should_not be_nil
       end
       
-      it "should not include unknown attributes unless they are passed in via the include_extras array" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :attr3 => "attr3"})
+      it "should not include unknown attributes unless they 
+        are passed in via the include_extras array" do
+
+        TestResource.class_eval do
+          define_protected_attributes(:attr3)
+        end
+
+        tst = TestResource.instantiate_record({
+          :attr1 => "attr1", 
+          :attr2 => "attr2", 
+          :attr3 => "attr3"
+        })
+        
         hash = JSON.parse(tst.to_json)
         hash["attr3"].should be_nil
         hash = JSON.parse(tst.to_json(:include_extras => [:attr3]))
@@ -241,7 +317,11 @@ describe "Base" do
       end
       
       it "should ignore fields set under the except option" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :attr3 => "attr3"})
+        tst = TestResource.instantiate_record({
+          :attr1 => "attr1", 
+          :attr2 => "attr2", 
+          :attr3 => "attr3"
+        })
         hash = JSON.parse(tst.to_json(:except => [:attr1]))
         hash["attr1"].should be_nil
       end
@@ -251,16 +331,32 @@ describe "Base" do
           TestResource.has_many(:has_many_objects)
         end
         after(:all) do
-          TestResource.reload_class_data
+          TestResource.reload_resource_definition
         end
         
         it "should include the id of nested objects in the serialization" do
-          tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => [{:name => "123", :id => "1"}]})
-          hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
-          hash["has_many_objects"].first["id"].should_not be nil
+          tst = TestResource.new({
+            :attr1 => "attr1", 
+            :attr2 => "attr2", 
+            :has_many_objects => [
+              {:name => "123", :id => "1"}
+            ]
+          })
+          tst.has_many_objects.first.id
+          hash = JSON.parse(
+            tst.to_json(:include_associations => [:has_many_objects])
+          )
+          hash["has_many_objects"].first["id"].should_not be_nil
         end
+        
         it "should include the id of nested objects in the serialization" do
-          tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => [{:name => "123"}]})
+          tst = TestResource.new({
+            :attr1 => "attr1", 
+            :attr2 => "attr2", 
+            :has_many_objects => [
+              {:name => "123"}
+            ]
+          })
           hash = JSON.parse(tst.to_json(:include_associations => [:has_many_objects]))
           hash["has_many_objects"].first.keys.should_not include "id"
         end
@@ -276,7 +372,9 @@ describe "Base" do
       end
       
       it "should properly serialize associations if they are included" do
-        tst = TestResource.new({:attr1 => "attr1", :attr2 => "attr2", :has_many_objects => []})
+        tst = TestResource.new({
+          :has_many_objects => []
+        })
         hash = Hash.from_xml(tst.to_xml(:include_associations => [:has_many_objects]))
         hash["test_resource"]["has_many_objects"].should eql([])
       end
@@ -287,7 +385,7 @@ describe "Base" do
   describe "Finding Data" do
     
     before(:all) do
-      TestResource.reload_class_data
+      TestResource.reload_resource_definition
     end
     
     it "should be able to find all" do
@@ -320,18 +418,13 @@ describe "Base" do
     
     before(:all) do
       TestResource.include_root_in_json = true
-      TestResource.reload_class_data
+      TestResource.reload_resource_definition
     end
     
     context "Creating new records" do
       
       before(:all) do
         TestResource.has_many :has_many_objects
-      end
-    
-      it "should be able to post new data via the create method" do
-        tr = TestResource.create({:name => "Ethan", :age => 20})
-        tr.id.should_not be_blank
       end
     
       it "should be able to post new data via the save method" do
@@ -425,7 +518,7 @@ describe "Base" do
     
     context "Updating old records" do
       before(:all) do
-        TestResource.reload_class_data
+        TestResource.reload_resource_definition
         TestResource.has_many :has_many_objects
         RestClient::Payload.stubs(:has_file? => false)
       end
@@ -438,11 +531,17 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"age\":6}}", 
+          JSON.unparse({
+            :test_resource => {
+              :name => "Ethan", 
+              :age => 6
+            }
+          }), 
           TestResource.headers
         )
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
         tr.should_not be_new
         
         # Thus we know we are calling update
@@ -454,11 +553,18 @@ describe "Base" do
       it "should include changed associations without specification" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_many_objects\":[{}]}}", 
+          JSON.unparse({
+            :test_resource => {
+              :name => "Ethan", 
+              :has_many_objects => [{}]
+            }
+          }),  
           TestResource.headers
         )
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
+
         tr.has_many_objects = [HasManyObject.new]
         tr.save
       end
@@ -467,11 +573,17 @@ describe "Base" do
       it "should include unchanged associations if they are specified" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_many_objects\":[]}}", 
+          JSON.unparse({
+            :test_resource => {
+              :name => "Ethan", 
+              :has_many_objects => []
+            }
+          }), 
           TestResource.headers
         )
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
         tr.save(:has_many_objects)
       end
       
@@ -483,18 +595,32 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
+          JSON.unparse({
+            :test_resource => {
+              :name => "Ethan", 
+              :has_one_object => {
+                :size => "large"
+              }
+            }
+          }),
           TestResource.headers
         ).in_sequence(correct_order)
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
         tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
         tr.save(:include_associations => [:has_one_object])
 
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_one_object\":{\"size\":null}}}", 
+          JSON.unparse({
+            :test_resource => {
+              :has_one_object => {
+                :size => nil
+              }
+            }
+          }), 
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -510,11 +636,19 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
-          "{\"test_resource\":{\"has_one_object\":{\"size\":\"large\"}}}", 
+          JSON.unparse({
+            :test_resource => {
+              :name => "Ethan", 
+              :has_one_object => {
+                :size => "large"
+              }
+            }
+          }),
           TestResource.headers
         ).in_sequence(correct_order)
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
         tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
         tr.save(:include_associations => [:has_one_object])
 
@@ -531,26 +665,41 @@ describe "Base" do
 
 
       it "should include all attributes if include_all_attributes_on_update is true" do  
+        
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json", 
           "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"is_active\":null,\"bday\":null,\"roles\":[]}}", 
           TestResource.headers
         )
-
-        TestResource.include_all_attributes_on_update = true
-        tr = TestResource.new(:id => 1, :name => "Ethan")
-        tr.save
-        TestResource.include_all_attributes_on_update = false
+        begin
+          TestResource.include_all_attributes_on_update = true
+          tr = TestResource.new(:name => "Ethan")
+          tr.stubs(:id => 1)
+          tr.save
+        ensure 
+          TestResource.include_all_attributes_on_update = false
+        end
       end
     
       it "should provide an update_attributes method to set attrs and save" do
-        ApiResource::Connection.any_instance.expects(:put).with(
-          "/test_resources/1.json", 
-          "{\"test_resource\":{\"name\":\"Dan\"}}", 
-          TestResource.headers
-        )
+        
+        correct_order = sequence("ordering")
 
-        tr = TestResource.new(:id => 1, :name => "Ethan")
+        # initial save
+        ApiResource::Connection.any_instance.expects(:put)
+          .in_sequence(correct_order)
+
+        ApiResource::Connection.any_instance.expects(:put)
+          .with(
+            "/test_resources/1.json", 
+             {:test_resource => {:name => "Dan"}}.to_json, 
+            TestResource.headers
+          ).in_sequence(correct_order)
+
+        tr = TestResource.new(:name => "Ethan")
+        tr.stubs(:id => 1)
+        tr.save
+
         tr.update_attributes(:name => "Dan")
       end
       
@@ -558,28 +707,50 @@ describe "Base" do
       it "should include nil attributes when updating if they have 
         changed by default" do
         
-        ApiResource::Connection.any_instance.expects(:put).with(
-          "/test_resources/1.json", 
-          "{\"test_resource\":{\"is_active\":null}}", 
-          TestResource.headers
-        )
+        correct_order = sequence("ordering")
+
+        # initial save
+        ApiResource::Connection.any_instance.expects(:put)
+          .in_sequence(correct_order)
+
+        ApiResource::Connection.any_instance.expects(:put)
+          .with(
+            "/test_resources/1.json", 
+            {:test_resource => {:is_active => nil}}.to_json,
+            TestResource.headers
+          )
+          .in_sequence(correct_order)
 
         tr = TestResource.new(
-          :id => "1", :name => "Ethan", :is_active => false
+          :name => "Ethan", :is_active => false
         )
+        tr.stubs(:id => 1)
+        tr.save
+
         tr.update_attributes(:is_active => nil)
       end
 
       it "should include attributes that have changed to false by default" do
-        ApiResource::Connection.any_instance.expects(:put).with(
-          "/test_resources/1.json", 
-          "{\"test_resource\":{\"is_active\":false}}", 
-          TestResource.headers
-        )
+        correct_order = sequence("ordering")
+
+        # initial save
+        ApiResource::Connection.any_instance.expects(:put)
+          .in_sequence(correct_order)
+
+        # update
+        ApiResource::Connection.any_instance.expects(:put)
+          .with(
+            "/test_resources/1.json", 
+            {:test_resource => {:is_active => false}}.to_json,
+            TestResource.headers
+          ).in_sequence(correct_order)
 
         tr = TestResource.new(
-          :id => "1", :name => "Ethan", :is_active => true
+          :name => "Ethan", :is_active => true
         )
+        tr.stubs(:id => 1)
+        tr.save
+
         tr.update_attributes(:is_active => false)
 
       end
@@ -594,7 +765,9 @@ describe "Base" do
     end
     
     it "should be able to destroy itself as an instance" do
-      tr = TestResource.new(:id => 1, :name => "Ethan")
+      tr = TestResource.new(:name => "Ethan")
+      tr.stubs(:id => 1)
+
       tr.destroy.should be_true
     end
   end
@@ -602,8 +775,11 @@ describe "Base" do
   describe "Random methods" do
     
     it "should know if it is persisted" do
-      tr = TestResource.new(:id => 1, :name => "Ethan")
+      tr = TestResource.new(:name => "Ethan")
+      tr.stubs(:id => 1)
+
       tr.persisted?.should be_true
+
       tr = TestResource.new(:name => "Ethan")
       tr.persisted?.should be_false
     end
@@ -667,6 +843,9 @@ describe "Base" do
         begin
           initial = ApiResource::Base.ttl
           ApiResource::Base.ttl = 1
+          if defined?(Rails)
+            Object.send(:remove_const, :Rails)
+          end
           example.run
         ensure 
           ApiResource::Base.ttl = initial
@@ -698,13 +877,14 @@ describe "Base" do
 
     it "should load the resouce definition when respond_to? is called" do
       # remove our attribute that denotes that the definition was loaded
-      TestResource.send(:remove_instance_variable, :@class_data)
+      TestResource.send(:remove_instance_variable, :@resource_definition)
       TestResource.expects(:set_class_attributes_upon_load)
       TestResource.respond_to?(:test)
     end
 
     it "should not load the resource definition when respond_to? is called
       if the definition has already been loaded" do
+      TestResource.send(:respond_to?, :some_method)
       TestResource.expects(:set_class_attributes_upon_load).never
       TestResource.send(:respond_to?, :some_method)
     end

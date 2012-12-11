@@ -3,11 +3,39 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 include ApiResource
 
 describe "Attributes" do
+
+  before(:all) do
+    TestResource.reload_class_attributes
+  end
   
   after(:all) do
     TestResource.reload_class_attributes
   end
-  
+
+  context "setters" do
+
+    it "should allow setting of protected attributes individually" do
+      test_resource = TestResource.new
+      test_resource.protected_attr = 100
+      test_resource.protected_attr.should eql(100)
+    end
+
+    it "should not allow mass assignment of protected attributes" do
+      test_resource = TestResource.new
+      lambda{
+        test_resource.attributes = {:protected_attr => 100}  
+      }.should raise_error
+    end
+
+    it "should not allow mass assignment in the constructor" do
+      lambda{
+        TestResource.new({:protected_attr => 100})
+      }.should raise_error
+    end
+
+  end
+
+
   context "Defining, getting, and setting attributes" do
     it "should be able to define known attributes" do
       TestResource.define_attributes :attr1, :attr2
@@ -76,12 +104,12 @@ describe "Attributes" do
       end
     
       it "should create protected attributes for unknown attributes trying to be loaded" do
-        tst = TestResource.new({:attr1 => "attr1", :attr3 => "attr3"})
+        
+        TestResource.connection.stubs(:get => {:attr1 => "attr1", :attr3 => "attr3"})
+        tst = TestResource.find(1)
+
         tst.attr3?.should be_true
         tst.attr3.should eql("attr3")
-        lambda {
-          tst.attr3 = "test"
-        }.should raise_error
       end
     end
 
@@ -114,16 +142,6 @@ describe "Attributes" do
       tst.attr3.should eql "123"
     end
     
-  end
-  
-  context "Protected attributes" do
-    it "should allow protected attributes that cannot be changed" do
-      TestResource.define_protected_attributes :pattr3
-      lambda {
-        tst = TestResource.new
-        tst.pattr3 = "test"
-      }.should raise_error
-    end
   end
   
   context "Dirty tracking" do

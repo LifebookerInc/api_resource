@@ -1,12 +1,18 @@
-require 'api_resource/associations/association_proxy'
+require 'api_resource/associations/association_scope'
 
 module ApiResource
   
   module Associations
    
-      class MultiObjectProxy < AssociationProxy
+      class MultiObjectProxy < AssociationScope
 
         include Enumerable
+
+        # override the constructor to set data to nil by 
+        # default
+        def initialize(klass, owner, data = nil)
+          super
+        end
 
         def all
           self.internal_object
@@ -16,6 +22,39 @@ module ApiResource
           self.internal_object.each(*args, &block)
         end
         
+        def internal_object
+          @internal_object ||= begin
+            if self.remote_path.present?
+              self.load
+            else
+              []
+            end
+          end
+        end
+
+        def internal_object=(contents)
+          # if we were passed in a service uri, stop here
+          return true if self.set_remote_path_and_scopes(contents)
+
+          if contents.try(:first).is_a?(self.klass)
+            return @internal_object = contents 
+          elsif contents.instance_of?(self.class)
+            return @internal_object = contents.internal_object
+          elsif contents.is_a?(Array)
+            return @internal_object = self.klass.instantiate_collection(
+              contents
+            )
+          # we have only provided the resource definition
+          elsif contents.nil?
+            return @internal_object = nil
+          else
+            raise ArgumentError.new(
+              "#{contents} must be a #{self.klass}, #{self.class}, " + 
+              "Array or nil"
+            )
+          end
+        end
+
         def ==(other)
           return false if self.class != other.class
           if self.internal_object.is_a?(Array)
@@ -30,53 +69,40 @@ module ApiResource
           self.internal_object.collect{|obj| obj.serializable_hash(options) }
         end
 
-        # force a load when calling this method
-        def internal_object
-          @internal_object ||= self.load_scope_with_options(:all, {})
-        end
-        
-        def internal_object=(contents)
-          return @internal_object = contents if contents.all?{|o| o.is_a?(self.klass)}
-          return load(contents)
+        def load(opts = {})
+          data = self.klass.connection.get(self.build_load_path(opts))
+          @loaded = true
+          return [] if data.blank?
+          return self.klass.instantiate_collection(data)
         end
 
         protected
-        def load_scope_with_options(scope, options)
-          scope = self.loaded_hash_key(scope.to_s, options)
-          return [] if self.remote_path.blank?
 
-          self.loaded[scope] ||= begin
-            self.times_loaded += 1
-            self.load_from_remote(options).collect{|item| self.klass.new(item)}
+        # set up the remote path from a set of options passed in
+        def set_remote_path_and_scopes(opts)
+          if opts.is_a?(Array) && opts.first.is_a?(Hash)
+            if opts.first.symbolize_keys[self.class.remote_path_element.to_sym]
+              service_uri_el = opts.shift
+            else
+              service_uri_el = {}
+            end
+          elsif opts.is_a?(Hash)
+            service_uri_el = opts
+          else
+            service_uri_el = {}
           end
-          
+
+          @remote_path = service_uri_el.symbolize_keys.delete(
+            self.class.remote_path_element.to_sym
+          )
+
+          service_uri_el.each_pair do |scope_name, scope_def|
+            self.define_subscope(scope_name, scope_def)
+          end
+
+          return @remote_path.present?
         end
 
-        def load(contents)
-          @internal_object = [] and return nil if contents.blank?
-          if contents.is_a?(Array) && contents.first.is_a?(Hash) && contents.first[self.class.remote_path_element]
-            settings = contents.slice!(0).with_indifferent_access
-          end
-
-          settings = contents.with_indifferent_access if contents.is_a?(Hash)
-          settings ||= {}.with_indifferent_access
-
-          raise "Invalid response for multi object relationship: #{contents}" unless settings[self.class.remote_path_element] || contents.is_a?(Array)
-          self.remote_path = settings.delete(self.class.remote_path_element)
-
-          settings.each do |key, value|
-            raise "Expected the scope #{key} to point to a hash, to #{value}" unless value.is_a?(Hash)
-            self.instance_eval <<-EOE, __FILE__, __LINE__ + 1
-              def #{key}(opts = {})
-                @#{key} ||= ApiResource::Associations::RelationScope.new(self, :#{key}, opts)
-              end
-            EOE
-            self.scopes[key.to_s] = value
-          end
-
-          # Create the internal object
-          @internal_object = contents.is_a?(Array) ? contents.collect{|item| self.klass.new(item)} : nil
-        end
       end
     
   end

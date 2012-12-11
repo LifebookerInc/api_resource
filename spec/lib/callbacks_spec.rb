@@ -49,7 +49,8 @@ describe "Should put callbacks around save, create, update, and destroy by defau
   end
   
   it "should fire save and update callbacks when updating a record" do
-    tr = TestResource.new(:id => 1, :name => "Ethan", :age => 20)
+    tr = TestResource.new(:name => "Ethan", :age => 20)
+    tr.stubs(:id => 1)
     tr.name = "Test"
     tr.age = 21
     tr.save.should be_true
@@ -59,7 +60,8 @@ describe "Should put callbacks around save, create, update, and destroy by defau
   end
   
   it "should only fire destroy callbacks when destroying a record" do
-    tr = TestResource.new(:id => 1, :name => "Ethan", :age => 20)
+    tr = TestResource.new(:name => "Ethan", :age => 20)
+    tr.stubs(:id => 1)
     tr.destroy.should be_true
     tr.d_val.should eql(2)
     tr.s_val.should be_nil   

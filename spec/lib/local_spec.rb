@@ -12,7 +12,11 @@ describe "Local" do
     end
     mtr = MyTestResource.new
     # should still have scopes
-    MyTestResource.reload_class_attributes
+
+    MyTestResource.expects(:clear_attributes).never
+    MyTestResource.expects(:clear_related_objects).never
+
+    MyTestResource.reload_resource_definition
     mtr.scopes.should_not be_blank
     
   end

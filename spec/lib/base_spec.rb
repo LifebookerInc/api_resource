@@ -38,6 +38,34 @@ describe "Base" do
 
   end
 
+  context "Comparison" do
+
+    context "&group_by" do
+
+      it "should allow grouping by resources with the same id" do
+
+        test_resource_1 = TestResource.new
+        test_resource_1.stubs(:id => 1)
+
+        test_resource_2 = TestResource.new
+        test_resource_2.stubs(:id => 1)
+
+
+        ParentResource = Struct.new(:resource, :name)
+
+        data = [
+          ParentResource.new(test_resource_1, "Dan"),
+          ParentResource.new(test_resource_2, "Brian")
+        ]
+
+        data.group_by(&:resource).keys.length.should be 1
+
+      end
+
+    end
+
+  end
+
   
   describe "Loading data from a hash" do
     

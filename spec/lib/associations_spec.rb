@@ -8,6 +8,26 @@ describe "Associations" do
     TestResource.reload_class_attributes
   end
 
+  context "Comparison" do
+
+    context "&group_by" do
+
+      it "should allow grouping by resources with the same id" do
+
+        tr1 = TestResource.find(1)
+        tr2 = TestResource.find(1)
+
+
+        tr1.has_one_object
+        tr2.has_one_object
+
+        [tr1, tr2].group_by(&:has_one_object).keys.length.should be 1
+      end
+
+    end
+
+  end
+
   context "creating and testing for associations of various types" do
 
     it "should be able to give a list of all associations" do

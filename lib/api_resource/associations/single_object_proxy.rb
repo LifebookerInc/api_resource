@@ -27,6 +27,14 @@ module ApiResource
         return true
       end
 
+      def hash
+        self.id.hash
+      end
+
+      def eql?(other)
+        return self == other
+      end
+
       protected
       def load_scope_with_options(scope, options)
         scope = self.loaded_hash_key(scope.to_s, options)

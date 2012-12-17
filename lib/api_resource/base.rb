@@ -219,12 +219,17 @@ module ApiResource
       end
 
       def prefix=(value = '/')
-        prefix_call = value.gsub(/:\w+/) { |key| "\#{URI.escape options[#{key}].to_s}"}
+        prefix_call = value.gsub(/:\w+/) { |key| 
+          "\#{URI.escape options[#{key}].to_s}"
+        }
         @prefix_parameters = nil
         silence_warnings do
           instance_eval <<-EOE, __FILE__, __LINE__ + 1
             def prefix_source() "#{value}" end
-            def prefix(options={}) "#{prefix_call}" end
+            def prefix(options={}) 
+              ret = "#{prefix_call}"
+              ret =~ Regexp.new(Regexp.escape("//")) ? "/" : ret
+            end
           EOE
         end
       rescue Exception => e
@@ -258,22 +263,20 @@ module ApiResource
         end
       end
       
-      # TODO: Add back in support for non-dynamic prefix paths (e.g. /subdir/resources/new.json)
-      def new_element_path
-        "/#{collection_name}/new.#{format.extension}"
+      # path to find 
+      def new_element_path(prefix_options = {})
+        File.join(
+          self.prefix(prefix_options), 
+          self.collection_name, 
+          "new.#{format.extension}"
+        )
       end
       
       def collection_path(prefix_options = {}, query_options = nil)
         prefix_options, query_options = split_options(prefix_options) if query_options.nil?
 
-        # If we have a prefix, we need a foreign key id
-        # This regex detects '//', which means no foreign key id is present.
-        if prefix(prefix_options) =~ /\/\/$/
-          "/#{collection_name}.#{format.extension}#{query_string(query_options)}"
-        else
-          # Fall back on this rather than search without the id
-          "#{prefix(prefix_options)}#{collection_name}.#{format.extension}#{query_string(query_options)}"
-        end
+        # Fall back on this rather than search without the id
+        "#{prefix(prefix_options)}#{collection_name}.#{format.extension}#{query_string(query_options)}"
       end
       
       def build(attributes = {})

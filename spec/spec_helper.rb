@@ -35,7 +35,7 @@ Spork.prefork do
   ApiResource.format = :json
   ApiResource.load_mocks_and_factories
 
-  ApiResource.logger.level = Log4r::INFO
+  ApiResource.logger.level = Log4r::DEBUG
 
   Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 

@@ -8,6 +8,36 @@ describe "Base" do
   after(:all) do
     TestResource.reload_class_data
   end
+
+  context ".new_element_path" do
+
+    before(:all) do
+
+      PrefixResource = Class.new(ApiResource::Base) do
+        self.prefix = "/path/to/project"
+      end
+
+      DynamicPrefixResource = Class.new(ApiResource::Base) do
+        self.prefix = "/path/to/nested/:id/"
+      end
+
+    end
+
+
+    it "should return a full path if there are no nested ids" do
+      PrefixResource.new_element_path.should eql(
+        "/path/to/project/prefix_resources/new.json"
+      )
+    end
+
+    it "should return a non-nested path if there are nested ids" do
+      DynamicPrefixResource.new_element_path.should eql(
+        "/dynamic_prefix_resources/new.json"
+      )
+    end
+
+  end
+
   
   describe "Loading data from a hash" do
     

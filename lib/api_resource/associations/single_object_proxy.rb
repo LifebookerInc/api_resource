@@ -27,12 +27,9 @@ module ApiResource
         return true
       end
 
+      # override hash method so that 
       def hash
         self.id.hash
-      end
-
-      def eql?(other)
-        return self == other
       end
 
       protected

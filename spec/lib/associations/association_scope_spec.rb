@@ -2,6 +2,10 @@ require 'spec_helper'
 
 describe ApiResource::Associations::AssociationScope do
 
+  before(:all) do
+    TestResource.reload_resource_definition
+  end
+
   context "#remote_path" do
 
     it "should provide access to its remote path when 

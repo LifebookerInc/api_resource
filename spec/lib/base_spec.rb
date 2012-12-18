@@ -220,7 +220,7 @@ describe "Base" do
     end
 
     it "should only allow proper formats to be set" do
-      expect {TestResource.format = :blah}.should raise_error(::ApiResource::Formats::BadFormat)
+      expect {TestResource.format = :blah}.to raise_error(::ApiResource::Formats::BadFormat)
     end 
     
     it "should be able to set an http timeout" do
@@ -770,6 +770,10 @@ describe "Base" do
   end
   
   describe "Random methods" do
+
+    before(:all) do
+      HasOneObject.reload_resource_definition
+    end
     
     it "should know if it is persisted" do
       tr = TestResource.new(:name => "Ethan")

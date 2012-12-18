@@ -1,5 +1,6 @@
 --color
 --format nested
 --backtrace
-#--fail-fast
+--order random
+--fail-fast
 -X

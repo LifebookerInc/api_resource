@@ -3,8 +3,11 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 include ApiResource
 
 describe "Should put callbacks around save, create, update, and destroy by default" do
-  
+
   before(:all) do
+
+    TestResource.reload_resource_definition
+
     # This defines all the callbacks to check and see if they are fired
     TestResource.class_eval <<-EOE, __FILE__, __LINE__ + 1
       attr_accessor :s_val, :c_val, :u_val, :d_val

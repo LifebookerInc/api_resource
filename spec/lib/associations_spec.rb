@@ -4,7 +4,7 @@ include ApiResource
 
 describe "Associations" do
 
-  after(:all) do
+  before(:each) do
     TestResource.reload_class_attributes
   end
 

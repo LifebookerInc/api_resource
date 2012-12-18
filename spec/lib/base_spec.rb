@@ -5,11 +5,7 @@ include ApiResource
 
 describe "Base" do
   
-  before(:all) do
-    TestResource.reload_resource_definition
-  end
-
-  after(:all) do
+  before(:each) do
     TestResource.reload_resource_definition
   end
 
@@ -237,16 +233,17 @@ describe "Base" do
   
   describe "Serialization" do
     
-    before(:all) do
+    before(:each) do
       TestResource.reload_resource_definition
       TestResource.has_many :has_many_objects
       TestResource.define_attributes :attr1, :attr2
-      TestResource.include_root_in_json = true
-    end
-    
-    before(:each) do
       TestResource.include_root_in_json = false
     end
+
+    after(:all) do
+      TestResource.include_root_in_json = true
+    end
+      
     
     context "JSON" do
       

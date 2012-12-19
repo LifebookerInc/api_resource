@@ -113,7 +113,7 @@ module ApiResource
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
             
             # debug logging
-            ApiResource.logger.debug("#{method.to_s.upcase} #{path}")
+            ApiResource.logger.debug("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
             
             payload[:method]      = method
             payload[:request_uri] = "#{site.scheme}://#{site.host}:#{site.port}#{path}"

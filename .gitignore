@@ -13,6 +13,7 @@ doc
 
 # remote db tmp files
 spec/tmp/*sqlite
+tmp
 
 # jeweler generated
 pkg

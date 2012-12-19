@@ -11,7 +11,7 @@ module ApiResource
       end
 
       # perform a find with a given set of query params
-      def load(opts = {})
+      def load(opts = self.to_hash)
         ret = self.klass.all(:params => opts)
         @loaded = true
         ret

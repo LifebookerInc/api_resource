@@ -70,22 +70,28 @@ module ApiResource
       request(:head, path, build_request_headers(headers, :head, self.site.merge(path)))
     end
     
-    
+    # make a put request
     def put(path, body = {}, headers = self.headers)
-      # If there's a file to send then we can't use JSON or XML
-      if !body.is_a?(String) && RestClient::Payload.has_file?(body)
-        format.decode(request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path))))
-      else
-        format.decode(request(:put, path, body, build_request_headers(headers, :put, self.site.merge(path))))
-      end
+      format.decode(
+        request(
+          :put, 
+          path, 
+          body, 
+          build_request_headers(headers, :put, self.site.merge(path))
+        )
+      )
     end
     
+    # make a post request
     def post(path, body = {}, headers = self.headers)
-      if !body.is_a?(String) && RestClient::Payload.has_file?(body)
-        format.decode(request(:post, path, body, build_request_headers(headers, :post, self.site.merge(path))))
-      else
-        format.decode(request(:post, path, body, build_request_headers(headers, :post, self.site.merge(path))))
-      end
+      format.decode(
+        request(
+          :post, 
+          path, 
+          body, 
+          build_request_headers(headers, :post, self.site.merge(path))
+        )
+      )
     end
 
     protected

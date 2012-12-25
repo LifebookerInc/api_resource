@@ -61,38 +61,21 @@ module ApiResource
     module ClassMethods
       
       def define_attributes(*args)
-
         args.each do |arg|
-          if arg.is_a?(Array)
-            self.define_attribute_type(arg.first, arg.second)
-            arg = arg.first
-          end
-          self.attribute_names += [arg.to_sym]
-          self.public_attribute_names += [arg.to_sym]
-          self.define_accessor_methods(arg)
+          self.store_attribute_data(arg, :public)
         end
-
         self.attribute_names.uniq!
         self.public_attribute_names.uniq!
       end
       
       def define_protected_attributes(*args)
         args.each do |arg|
-          
-          if arg.is_a?(Array)
-            self.define_attribute_type(arg.first, arg.second)
-            arg = arg.first
-          end
-
-          self.attribute_names += [arg.to_sym]
-          self.protected_attribute_names += [arg.to_sym]
-          
-          self.define_accessor_methods(arg)
+          self.store_attribute_data(arg, :protected)
         end
         self.attribute_names.uniq!
         self.protected_attribute_names.uniq!
       end
-      
+
       def define_accessor_methods(meth)
         # Override the setter for dirty tracking
         self.class_eval <<-EOE, __FILE__, __LINE__ + 1
@@ -133,6 +116,19 @@ module ApiResource
         self.public_attribute_names.clear
         self.protected_attribute_names.clear
       end
+
+      # stores the attribute type data and the name of the 
+      # attributes we are creating
+      def store_attribute_data(arg, type)
+        if arg.is_a?(Array)
+          self.define_attribute_type(arg.first, arg.second)
+          arg = arg.first
+        end
+        self.attribute_names += [arg.to_sym]
+        self.send("#{type}_attribute_names").push(arg.to_sym)
+        self.define_accessor_methods(arg)
+      end
+
     end
 
     # override the initializer to set up some default values

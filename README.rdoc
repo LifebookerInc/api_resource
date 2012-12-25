@@ -1,4 +1,8 @@
-= resource
+= Api Resource
+
+{<img src="https://travis-ci.org/LifebookerInc/api_resource.png?branch=master" alt="Build Status" />}[https://travis-ci.org/LifebookerInc/api_resource]
+
+Library for working with remote Rails applications
 
 Description goes here.
 

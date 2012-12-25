@@ -516,6 +516,7 @@ describe "Base" do
     context "Updating old records" do
       before(:all) do
         TestResource.reload_resource_definition
+        HasOneObject.reload_resource_definition
         TestResource.has_many :has_many_objects
         RestClient::Payload.stubs(:has_file? => false)
       end

@@ -4,6 +4,12 @@ describe ApiResource do
 
   context ".cache" do
 
+    before(:each) do
+      if defined?(Rails)
+        Object.send(:remove_const, :Rails)
+      end
+    end
+
     after(:each) do
       if defined?(Rails)
         Object.send(:remove_const, :Rails)

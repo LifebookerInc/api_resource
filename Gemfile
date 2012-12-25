@@ -20,7 +20,7 @@ end
 # Include everything needed to run rake, tests, features, etc.
 group :development do
   gem "rspec"
-  gem "ruby-debug19", :require => "ruby-debug"
+  gem "debugger"
   gem "growl"
   gem 'rspec-rails'
   gem 'factory_girl'

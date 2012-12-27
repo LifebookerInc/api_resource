@@ -38,6 +38,27 @@ describe "Base" do
 
   end
 
+  context ".load_resource_definition" do
+
+    it "should not inherit from unrelated objects" do
+
+      ErrorResource.new
+      orig_public_attr_names = ErrorResource.public_attribute_names
+      orig_protected_attr_names = ErrorResource.protected_attribute_names
+      
+      TestResource.new
+
+      ErrorResource.public_attribute_names.should eql(
+        orig_public_attr_names
+      )
+      ErrorResource.protected_attribute_names.should eql(
+        orig_protected_attr_names
+      )
+      true
+    end
+
+  end
+
   context "Comparison" do
 
     context "&group_by" do

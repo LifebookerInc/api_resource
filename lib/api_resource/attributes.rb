@@ -125,7 +125,10 @@ module ApiResource
           arg = arg.first
         end
         self.attribute_names += [arg.to_sym]
-        self.send("#{type}_attribute_names").push(arg.to_sym)
+        self.send(
+          "#{type}_attribute_names=",
+          self.send("#{type}_attribute_names") + [arg.to_sym]
+        )
         self.define_accessor_methods(arg)
       end
 

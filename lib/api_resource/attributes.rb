@@ -7,6 +7,9 @@ module ApiResource
     include ActiveModel::Dirty
     
     included do
+
+      # include ApiResource::Typecast if it isn't already
+      include ApiResource::Typecast
       
       alias_method_chain :save, :dirty_tracking
       
@@ -16,8 +19,6 @@ module ApiResource
         :protected_attribute_names, 
         :attribute_types
       )
-      
-      cattr_accessor :valid_typecasts; self.valid_typecasts = [:date, :time, :float, :integer, :int, :fixnum, :string, :array]
 
       self.attribute_names = []
       self.public_attribute_names = []
@@ -96,7 +97,7 @@ module ApiResource
       end
 
       def define_attribute_type(field, type)
-        unless self.valid_typecasts.include?(type.to_sym)
+        unless self.typecasters.keys.include?(type.to_sym)
           raise "#{type} is not a valid type" 
         end
         self.attribute_types[field] = type.to_sym
@@ -254,26 +255,14 @@ module ApiResource
     def typecast_attribute(field, val)
       # if we have a valid value and we are planning to typecast go 
       # into this case statement
-      if self.class.attribute_types.include?(field.to_sym) && val.present?
-        val = case self.class.attribute_types[field.to_sym]
-          when :date
-            val.class == Date ? val.dup : Date.parse(val)
-          when :time
-            val.class == Time ? val.dup : Time.parse(val)
-          when :integer, :int, :fixnum
-            val.class == Fixnum ? val.dup : val.to_i rescue val
-          when :float
-            val.class == Float ? val.dup : val.to_f rescue val
-          when :string
-            val.class == String ? val.dup : val.to_s rescue val
-          when :array
-            val.class == Array ? val.dup : Array.wrap(val)
-          else
-            # catches the nil case and just leaves it alone
-            val.dup rescue val
+      if self.class.attribute_types.include?(field.to_sym)
+        caster = self.class.typecasters[self.class.attribute_types[field.to_sym]]
+        if caster.present?
+          val = caster.from_api(val)
         end
       end
-      val
+
+      return val
     end
     
   end

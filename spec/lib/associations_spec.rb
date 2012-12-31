@@ -81,6 +81,13 @@ describe "Associations" do
       TestResource.association_class_name(:strange_name).should eql("BelongsToObject")
     end
 
+    it "should be able to return the name of the foreign key field field for the association" do
+      TestResource.belongs_to :belongs_to_object
+      TestResource.has_many :has_many_objects
+      TestResource.association_foreign_key_field(:belongs_to_object).should eql(:belongs_to_object_id)
+      TestResource.association_foreign_key_field(:has_many_objects).should eql(:has_many_object_ids)
+    end
+
     it "should only define relationships for the given class - they should not cascade" do
       TestResource.belongs_to :belongs_to_object
       AnotherTestResource.association?(:belongs_to_object).should_not be_true
@@ -338,38 +345,6 @@ describe "Associations" do
         end
       end
 
-      context "Defining scopes" do
-
-        it "should identify known scopes based on the scopes defined on 
-          the object it is a proxy to" do
-          
-          TestResource.scope :class_scope, "class_scope" => "true"
-          
-          ap = Associations::MultiObjectProxy.new(
-            "TestResource",
-            BelongsToObject.new,
-            [{:service_uri => "/route"}]
-          )
-          ap.scope?(:class_scope).should be_true
-        end
-
-        it "scopes in the response should shadow class defined scopes" do
-          TestResource.scope(:scope1, "scope1" => "true")
-          ap = Associations::MultiObjectProxy.new(
-            "TestResource",
-            BelongsToObject.new,
-            [
-              {
-                :service_uri => "/route", 
-                :scope1 => {"scope1" => true}, 
-                :scope2 => {"scope2" => true}
-              }
-            ]
-          )
-          ap.scopes[:scope1].should eql({"scope1" => true})
-        end
-      end
-
     end
 
     describe "Selecting scopes" do
@@ -421,6 +396,12 @@ describe "Associations" do
 
   describe "Loading and Caching loaded data" do
 
+
+    before(:each) do
+      # Clear the cache to prevent any funny business
+      ApiResource.cache(true)
+    end
+
     context "Single Object" do
 
       before(:all) do
@@ -460,9 +441,8 @@ describe "Associations" do
         ap.active.expires_in(30).internal_object
 
         # should only be called once
-        TestResource.connection.expects(:get).never
+        TestResource.connection.expects(:request).never
         ap.active.expires_in(30).internal_object
-        ap.should be_loaded
       end
 
       it "should check that ttl matches the expiration parameter" do
@@ -544,19 +524,6 @@ describe "Associations" do
 
       ap.first.name.should eql old_name
     end
-
-    it "should propagate the scopes from the associated class" do
-
-      ap = Associations::MultiObjectProxy.new(
-        "TestResource", 
-        BelongsToObject.new, {
-          :service_uri => '/multi_object_association'
-        }
-      )
-      ap.scopes.should eql(TestResource.scopes)
-      true
-    end
-
 
     context "Multi Object" do
 
@@ -642,13 +609,13 @@ describe "Associations" do
         end
       end
 
-      it "should return a ResourceScope when calling any scope on a class" do
-        TestResource.send(TestResource.scopes.first.first.to_sym).should be_a Associations::ResourceScope
+      it "should return a ScopeCondition when calling any scope on a class" do
+        TestResource.send(TestResource.scopes.first.first.to_sym).should be_a Conditions::ScopeCondition
       end
 
       it "should be able to chain scopes" do
         scp = TestResource.active.paginate(20, 1)
-        scp.should be_a Associations::Scope
+        scp.should be_a Conditions::ScopeCondition
         scp.to_query.should eql(
           "active=true&paginate[current_page]=1&paginate[per_page]=20"
         )

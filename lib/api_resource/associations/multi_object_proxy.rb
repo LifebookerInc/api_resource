@@ -1,10 +1,8 @@
-require 'api_resource/associations/association_scope'
-
 module ApiResource
   
   module Associations
    
-      class MultiObjectProxy < AssociationScope
+      class MultiObjectProxy < AssociationProxy
 
         include Enumerable
 
@@ -34,7 +32,7 @@ module ApiResource
 
         def internal_object=(contents)
           # if we were passed in a service uri, stop here
-          return true if self.set_remote_path_and_scopes(contents)
+          return true if self.set_remote_path(contents)
 
           if contents.try(:first).is_a?(self.klass)
             return @internal_object = contents 
@@ -69,18 +67,19 @@ module ApiResource
           self.internal_object.collect{|obj| obj.serializable_hash(options) }
         end
 
-        def load(opts = {})
-          data = self.klass.connection.get(self.build_load_path(opts))
-          @loaded = true
-          return [] if data.blank?
-          return self.klass.instantiate_collection(data)
-        end
-
         protected
 
-        # set up the remote path from a set of options passed in
-        def set_remote_path_and_scopes(opts)
-          if opts.is_a?(Array) && opts.first.is_a?(Hash)
+        def to_condition
+          ApiResource::Conditions::MultiObjectAssociationCondition.new(self.klass, self.remote_path)
+        end
+
+        def load(opts = {})
+          @loaded = true
+          self.to_condition.find
+        end
+
+        def set_remote_path(opts)
+         if opts.is_a?(Array) && opts.first.is_a?(Hash)
             if opts.first.symbolize_keys[self.class.remote_path_element.to_sym]
               service_uri_el = opts.shift
             else
@@ -95,10 +94,6 @@ module ApiResource
           @remote_path = service_uri_el.symbolize_keys.delete(
             self.class.remote_path_element.to_sym
           )
-
-          service_uri_el.each_pair do |scope_name, scope_def|
-            self.define_subscope(scope_name, scope_def)
-          end
 
           return @remote_path.present?
         end

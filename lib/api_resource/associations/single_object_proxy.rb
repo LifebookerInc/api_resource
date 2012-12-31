@@ -1,10 +1,8 @@
-require 'api_resource/associations/association_scope'
-
 module ApiResource
   
   module Associations
     
-    class SingleObjectProxy < AssociationScope
+    class SingleObjectProxy < AssociationProxy
 
       def serializable_hash(options = {})
         return if self.internal_object.nil?
@@ -57,12 +55,16 @@ module ApiResource
         return self == other
       end
 
+      protected
 
+      def to_condition
+        ApiResource::Conditions::SingleObjectAssociationCondition.new(self.klass, self.remote_path)
+      end
+
+      # Should make a proper conditions object and call find on it
       def load(opts = {})
-        data = self.klass.connection.get(self.build_load_path(opts))
         @loaded = true
-        return nil if data.blank?
-        return self.klass.instantiate_record(data)
+        @internal_object = self.to_condition.find
       end
 
       

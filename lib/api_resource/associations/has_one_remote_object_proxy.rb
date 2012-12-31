@@ -1,4 +1,3 @@
-require 'api_resource/associations/single_object_proxy'
 module ApiResource
   module Associations
     class HasOneRemoteObjectProxy < SingleObjectProxy
@@ -11,11 +10,15 @@ module ApiResource
       end
 
       protected
+
+      # because of how this works we use a multi object proxy and return the first element
+      def to_condition
+        ApiResource::Conditions::MultiObjectAssociationCondition.new(self.klass, self.remote_path)
+      end
       
       def load(opts = {})
-        data = self.klass.connection.get(self.build_load_path(opts))
-        return nil if data.blank?
-        return self.klass.new(data.first)
+        @loaded = true
+        Array.wrap(self.to_condition.find).first
       end
 
     end

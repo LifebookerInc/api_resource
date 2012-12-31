@@ -22,16 +22,19 @@ module ApiResource
   autoload :Attributes
   autoload :Base
   autoload :Callbacks
+  autoload :Conditions
   autoload :Connection
   autoload :CustomMethods
   autoload :Decorators
   autoload :Formats
+  autoload :Finders
   autoload :Local
   autoload :LogSubscriber
   autoload :Mocks
   autoload :ModelErrors
   autoload :Observing
   autoload :Scopes
+  autoload :Typecast
   autoload :Validations
   
   require 'api_resource/railtie'
@@ -65,7 +68,7 @@ module ApiResource
       :token, :token=, :timeout, 
       :open_timeout, 
       :reset_connection, :ttl, :ttl=,
-      :to => ApiResource::Base
+      :to => "ApiResource::Base"
     
   end
 

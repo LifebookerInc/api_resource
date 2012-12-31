@@ -1,4 +1,3 @@
-require 'api_resource/associations/multi_object_proxy'
 module ApiResource
   module Associations
     class HasManyRemoteObjectProxy < MultiObjectProxy

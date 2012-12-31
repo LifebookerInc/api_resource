@@ -6,6 +6,30 @@ require 'active_support/string_inquirer'
 module ApiResource
   
   class Base
+
+    # TODO: There's way too much in this class as it stands, some glaring problems:
+    # => 1) class_attributes for connection options belong in the connection class
+    # => 2) Attributes about serialization belong with the serializers
+    # => 3) Logging seems to be an unmitigated disaster
+    # => 4) All the resource definition should be in its own module with the data mapper implementation
+    # => 5) Random shit about tokens all over the place, clearly does not belong
+    # => 6) Everything related to the pathing should go somewhere by itself
+    # => 7) Everything about saving should go in a persistence module
+    # => 8) Everything about loading data should go in a Finder module
+    # => 9) Delete serializable_hash and start again
+    # => 10) setup_create_call and setup_update_call should modify the results from another method
+    # => 11) nil_attributes probably belongs with the attributes
+    # => 12) Add instrumentation in some key places
+
+    # Other Random TODOs:
+    # => 1) Profile and benchmark this code
+    # => 2) Deal with arrays and hashes as attributes in a more reasonable way
+    # => 3) Finish implementing typecasting (to_api portion)
+    # => 4) Add a reasonable way to load and activate observers, verify that it works
+    # => 5) Hook up the custom_methods module
+    # => 6) Implement an IdentityMap
+    # => 7) Write documentation
+    # => 8) Write Examples
     
     class_attribute :site, :proxy, :user, :password, :auth_type, :format, 
       :timeout, :open_timeout, :ssl_options, :token, :ttl
@@ -297,51 +321,6 @@ module ApiResource
       def create(attributes = {})
         self.new(attributes).tap{ |resource| resource.save }
       end
-      
-      # This decides which finder method to call. 
-      # It accepts arguments of the form "scope", "options={}"
-      # where options can be standard rails options or :expires_in. 
-      # If :expires_in is set, it caches it for expires_in seconds.
-      def find(*arguments)
-
-        # make sure we have class data before loading
-        self.load_resource_definition
-
-        scope   = arguments.slice!(0)
-        options = arguments.slice!(0) || {}
-        
-        expiry = options.delete(:expires_in) || ApiResource::Base.ttl || 0
-        ApiResource.with_ttl(expiry.to_f) do
-          case scope
-            when :all   then find_every(options)
-            when :first then find_every(options).first
-            when :last  then find_every(options).last
-            when :one   then find_one(options)
-            else             find_single(scope, options)
-          end
-        end
-      end
-
-
-      # A convenience wrapper for <tt>find(:first, *args)</tt>. You can pass
-      # in all the same arguments to this method as you can to
-      # <tt>find(:first)</tt>.
-      def first(*args)
-        find(:first, *args)
-      end
-
-      # A convenience wrapper for <tt>find(:last, *args)</tt>. You can pass
-      # in all the same arguments to this method as you can to
-      # <tt>find(:last)</tt>.
-      def last(*args)
-        find(:last, *args)
-      end
-
-      # This is an alias for find(:all).  You can pass in all the same
-      # arguments to this method as you can to <tt>find(:all)</tt>
-      def all(*args)
-        find(:all, *args)
-      end
 
 
       # Deletes the resources with the ID in the +id+ parameter.
@@ -362,24 +341,6 @@ module ApiResource
         connection.delete(element_path(id, options))
       end
 
-      def instantiate_collection(collection)
-        collection.collect{|record| 
-          instantiate_record(record)
-        }
-      end
-
-      def instantiate_record(record)
-        self.load_resource_definition
-        ret = self.allocate
-        ret.instance_variable_set(
-          :@attributes, record.with_indifferent_access
-        )
-        ret.instance_variable_set(
-          :@attributes_cache, HashWithIndifferentAccess.new
-        )
-        ret
-      end
-
       protected
         def method_missing(meth, *args, &block)
           # make one attempt to load remote attrs
@@ -390,44 +351,6 @@ module ApiResource
         end
       
       private
-        # Find every resource
-        def find_every(options)
-          begin
-            case from = options[:from]
-            when Symbol
-              instantiate_collection(get(from, options[:params]))
-            when String
-              path = "#{from}#{query_string(options[:params])}"
-              instantiate_collection(connection.get(path, headers) || [])
-            else
-              prefix_options, query_options = split_options(options[:params])
-              path = collection_path(prefix_options, query_options)
-              instantiate_collection( (connection.get(path, headers) || []))
-            end
-          rescue ApiResource::ResourceNotFound
-            # Swallowing ResourceNotFound exceptions and return nil - as per
-            # ActiveRecord.
-            nil
-          end
-        end
-
-        # Find a single resource from a one-off URL
-        def find_one(options)
-          case from = options[:from]
-          when Symbol
-            instantiate_record(get(from, options[:params]))
-          when String
-            path = "#{from}#{query_string(options[:params])}"
-            instantiate_record(connection.get(path, headers))
-          end
-        end
-
-        # Find a single resource from the default URL
-        def find_single(scope, options)
-          prefix_options, query_options = split_options(options[:params])
-          path = element_path(scope, prefix_options, query_options)
-          instantiate_record(connection.get(path, headers))
-        end
 
         # Accepts a URI and creates the site URI from that.
         def create_site_uri_from(site)
@@ -582,6 +505,10 @@ module ApiResource
       self.class.include_root_in_json ? {self.class.element_name => self.serializable_hash(options)}.to_json : self.serializable_hash(options).to_json
     end
     
+    # TODO: this method needs to change seriously to fit in with the
+    # new typecasting scheme, it should call self.outgoing_attributes which
+    # should return the converted versions after calling to_api, that should
+    # be implemented in the attributes module though
     def serializable_hash(options = {})
       
       action = options[:action]
@@ -683,6 +610,7 @@ module ApiResource
       opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
       opts[:include_extras] ||= []
       opts[:action] = "create"
+      # TODO: Remove this dependency for saving files
       body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
     end
 
@@ -706,6 +634,7 @@ module ApiResource
       opts[:include_extras] ||= []
       opts[:action] = "update"
       opts[:except] = [:id] if self.class.include_all_attributes_on_update
+      # TODO: Remove this dependency for saving files
       body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
     end
     
@@ -724,7 +653,7 @@ module ApiResource
     include AssociationActivation
     self.activate_associations
     
-    include Scopes, Callbacks, Attributes, ModelErrors
+    include Scopes, Callbacks, Observing, Attributes, ModelErrors, Conditions, Finders
     
   end
   

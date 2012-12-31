@@ -1,4 +1,3 @@
-require 'api_resource/associations/single_object_proxy'
 module ApiResource
   module Associations
     class BelongsToRemoteObjectProxy < SingleObjectProxy

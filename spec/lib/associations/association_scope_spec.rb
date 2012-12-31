@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ApiResource::Associations::AssociationScope do
+describe ApiResource::Associations::AssociationProxy do
 
   before(:all) do
     TestResource.reload_resource_definition

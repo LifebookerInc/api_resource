@@ -1,22 +1,22 @@
 require 'active_support'
 require 'active_support/string_inquirer'
-require 'api_resource/association_activation'
-require 'api_resource/associations/abstract_scope'
-require 'api_resource/associations/scope'
-require 'api_resource/associations/resource_scope'
-require 'api_resource/associations/association_scope'
-require 'api_resource/associations/single_object_proxy'
-require 'api_resource/associations/multi_object_proxy'
-require 'api_resource/associations/belongs_to_remote_object_proxy'
-require 'api_resource/associations/has_one_remote_object_proxy'
-require 'api_resource/associations/has_many_remote_object_proxy'
-require 'api_resource/associations/has_many_through_remote_object_proxy'
-require 'api_resource/associations/related_object_hash'
 
 module ApiResource
   
   module Associations
+
+    #TODO: many of these methods should also force loading of the resource definition
     extend ActiveSupport::Concern
+    extend ActiveSupport::Autoload
+
+    autoload :AssociationProxy
+    autoload :BelongsToRemoteObjectProxy
+    autoload :HasManyRemoteObjectProxy
+    autoload :HasManyThroughRemoteObjectProxy
+    autoload :HasOneRemoteObjectProxy
+    autoload :MultiObjectProxy
+    autoload :RelatedObjectHash
+    autoload :SingleObjectProxy
 
     included do
       
@@ -81,7 +81,7 @@ module ApiResource
               options = options.with_indifferent_access
               # Raise an error if we have multiple args and options
               raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
-              args.each do |arg|
+              args.each do |arg| 
                 klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
                 # add this to any descendants - the other methods etc are handled by inheritance
                 ([self] + self.descendants).each do |klass|
@@ -140,6 +140,18 @@ module ApiResource
           return self.find_namespaced_class_name(ret[1]) if ret
         end
       end
+
+      # TODO: add a special foreign_key option to associations
+      def association_foreign_key_field(assoc)
+        # for now just use the association name
+        str = assoc.to_s.singularize.foreign_key
+
+        if has_many?(assoc)
+          str = str.pluralize
+        end
+
+        str.to_sym
+      end
       
       protected
 
@@ -172,10 +184,13 @@ module ApiResource
             define_attribute_method(assoc_name)
           end
         
+          # TODO: Come up with a better implementation for the foreign key thing
+          # implement the rest of the active record methods, refactor this into something
+          # a littel bit more sensible
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{assoc_name}
               @attributes_cache[:#{assoc_name}] ||= begin
-                klass = #{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy
+                klass = Associations::#{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy
                 instance = klass.new(
                   self.association_class('#{assoc_name}'), self
                 )
@@ -195,6 +210,7 @@ module ApiResource
             def #{assoc_name}?
               self.#{assoc_name}.internal_object.present?
             end
+
           EOE
         end
         

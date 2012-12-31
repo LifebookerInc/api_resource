@@ -4,6 +4,7 @@ module ApiResource
     extend ActiveSupport::Concern
     
     module ClassMethods
+      # TODO: calling these methods should force loading of the resource definition
       def scopes
         return self.related_objects[:scopes]
       end
@@ -61,9 +62,8 @@ module ApiResource
               finder_opts[scope_name] = true
             end
 
-            ApiResource::Associations::ResourceScope.new(
-              self, finder_opts
-            )
+            ApiResource::Conditions::ScopeCondition.new(finder_opts, self)
+
           end
         end
       end

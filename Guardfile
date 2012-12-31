@@ -7,7 +7,7 @@ guard 'bundler' do
   # watch(/^.+\.gemspec/)
 end
 
-guard 'rspec', :version => 2, :cli => "--color --format nested" do
+guard 'rspec', :version => 2, :cli => "--color --format nested --drb", :all_on_start => false, :all_after_pass => false do
   watch(%r{^spec/.+_spec\.rb$})
   watch(%r{^lib/(.+)\.rb$})     { |m| "spec/lib/#{m[1]}_spec.rb" }
   watch(%r{^lib/api_resource/(.+)\.rb$})  {|m| "spec/lib/#{m[1]}_spec.rb"}
@@ -24,4 +24,10 @@ guard 'rspec', :version => 2, :cli => "--color --format nested" do
   watch('app/controllers/application_controller.rb')  { "spec/controllers" }
   # Capybara request specs
   watch(%r{^app/views/(.+)/.*\.(erb|haml)$})          { |m| "spec/requests/#{m[1]}_spec.rb" }
+end
+
+guard 'spork' do
+  watch('api_resource.gemspec')
+  watch('Gemfile.lock')
+  watch('spec/spec_helper.rb') { :rspec }
 end

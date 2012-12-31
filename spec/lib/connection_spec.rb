@@ -131,6 +131,25 @@ describe Connection do
     end
     
   end
+
+  context "headers" do
+
+    it "should include the Lifebooker-Token in its headers" do
+
+      old_token = ApiResource.token
+
+      ApiResource.with_token("a") do
+        TestResource.connection.headers["Lifebooker-Token"].should eql("a")
+        ApiResource.with_token("b") do
+          TestResource.connection.headers["Lifebooker-Token"].should eql("b")
+        end
+      end
+
+      TestResource.connection.headers["Lifebooker-Token"].should eql(old_token)
+
+    end
+
+  end
   
 
   

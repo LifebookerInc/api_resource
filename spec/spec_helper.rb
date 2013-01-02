@@ -26,7 +26,6 @@ Spork.prefork do
   # Requires supporting files with custom matchers and macros, etc,
   # in ./support/ and its subdirectories.
   Bundler.require(:default, :development)
-  Debugger.start
 
   # Requires supporting files with custom matchers and macros, etc,
   # in ./support/ and its subdirectories.

@@ -20,7 +20,6 @@ end
 # Include everything needed to run rake, tests, features, etc.
 group :development do
   gem "rspec"
-  gem "debugger"
   gem "growl"
   gem 'rspec-rails'
   gem 'factory_girl'
@@ -32,6 +31,5 @@ group :development do
   gem 'mocha'
   gem "bundler"
   gem "jeweler", "~> 1.6.4"
-  gem 'activerecord', '~> 3'
   gem "sqlite3"
 end

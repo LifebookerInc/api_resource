@@ -1,6 +1,6 @@
 # ApiResource
 
-TODO: Write a gem description
+[![Build Status](https://travis-ci.org/LifebookerInc/api_resource.png)](https://travis-ci.org/LifebookerInc/api_resource)
 
 ## Installation
 

@@ -729,6 +729,7 @@ describe "Associations" do
           TestAR.class_eval do 
             belongs_to_remote :my_favorite_thing, :class_name => "TestClassYay"
           end
+          HasManyObject.reload_resource_definition
         end
         it "should define remote association types for AR" do
           [:has_many_remote, :belongs_to_remote, :has_one_remote].each do |assoc|

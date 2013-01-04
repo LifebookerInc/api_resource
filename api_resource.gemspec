@@ -34,8 +34,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "simplecov"
   # stuff that seems like crap
   gem.add_development_dependency "sqlite3"
-  # TODO: remove this
-  gem.add_development_dependency "debugger"
 
   gem.add_dependency "rails"
   gem.add_dependency "json"

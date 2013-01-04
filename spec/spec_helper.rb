@@ -27,8 +27,6 @@ Spork.prefork do
   # in ./support/ and its subdirectories.
   Bundler.require(:default, :development)
 
-  Debugger.start
-
   # Requires supporting files with custom matchers and macros, etc,
   # in ./support/ and its subdirectories.
   #ApiResource.load_mocks_and_factories

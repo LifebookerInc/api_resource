@@ -183,10 +183,19 @@ module ApiResource
           if self.ancestors.include?(ApiResource::Base)
             define_attribute_method(assoc_name)
           end
+
+          id_method_name = assoc_name.to_s.singularize + "_id"
+
+          if assoc_type.to_s == "has_many"
+            id_method_name += "s"
+          end
         
           # TODO: Come up with a better implementation for the foreign key thing
           # implement the rest of the active record methods, refactor this into something
-          # a littel bit more sensible
+          # a little bit more sensible
+
+          # TODO: This should support saving the ids when they are modified and saving anything
+          # that is not created, associations need to be their own object
           self.class_eval <<-EOE, __FILE__, __LINE__ + 1
             def #{assoc_name}
               @attributes_cache[:#{assoc_name}] ||= begin
@@ -200,15 +209,26 @@ module ApiResource
                 instance
               end
             end
-            def #{assoc_name}=(val)
-              # get old internal object
-              unless self.#{assoc_name}.internal_object == val
-                #{assoc_name}_will_change! 
+            def #{assoc_name}=(val, force = true)
+              if !force
+                #{assoc_name}_will_change!
+              elsif self.#{assoc_name}.internal_object != val
+                #{assoc_name}_will_change!
               end
+              # This should not force a load
               self.#{assoc_name}.internal_object = val
             end
             def #{assoc_name}?
               self.#{assoc_name}.internal_object.present?
+            end
+
+            def #{id_method_name}
+              @attributes_cache[:#{id_method_name}] ||= 
+                  @attributes[:#{id_method_name}] || self.#{assoc_name}.collect(&:id)
+            end
+
+            def #{id_method_name}=(val)
+              @attributes_cache[:#{id_method_name}] = val
             end
 
           EOE

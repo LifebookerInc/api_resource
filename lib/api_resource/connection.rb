@@ -119,8 +119,7 @@ module ApiResource
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
             
             # debug logging
-            ApiResource.logger.debug("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
-            
+            ApiResource.logger.info("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
             payload[:method]      = method
             payload[:request_uri] = "#{site.scheme}://#{site.host}:#{site.port}#{path}"
             payload[:result]      = http(path).send(method, *arguments)

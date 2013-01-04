@@ -15,8 +15,7 @@ describe "With Prefixes" do
     it "should use the prefix to find a single record when given as a param" do
       PrefixModel.connection.expects(:get)
         .with(
-          "/foreign/123/prefix_models/456.json",
-          instance_of(Hash)
+          "/foreign/123/prefix_models/456.json"
         )
         .returns({})
       PrefixModel.find(456, :params => {:foreign_key_id => 123})
@@ -25,8 +24,7 @@ describe "With Prefixes" do
     it "should not use the prefix to find a single record when not given as a param to avoid automatic failure" do
       PrefixModel.connection.expects(:get)
         .with(
-          "/prefix_models/456.json",
-          instance_of(Hash)
+          "/prefix_models/456.json"
         )
         .returns({})
       PrefixModel.find(456)
@@ -52,8 +50,7 @@ describe "With Prefixes" do
     it "should use the prefix to find records" do
       prefix_model.send(:connection).expects(:get)
         .with(
-          "/foreign/123/prefix_models.json", 
-          instance_of(Hash)
+          "/foreign/123/prefix_models.json"
         )
         .returns([])
       PrefixModel.first(:params => {:foreign_key_id => 123})
@@ -62,8 +59,7 @@ describe "With Prefixes" do
     it "should not use the prefix to find records when not given as a param to avoid automatic failure" do
       prefix_model.send(:connection).expects(:get)
         .with(
-          "/prefix_models.json", 
-          instance_of(Hash)
+          "/prefix_models.json"
         )
         .returns([])
       PrefixModel.first
@@ -94,6 +90,7 @@ describe "With Prefixes" do
       prefix_model.name = "changed name"
       prefix_model.send(:connection).expects(:put)
         .with(
+
           "/foreign/123/prefix_models/456.json", 
           {"prefix_model" => {"name" => "changed name"}}.to_json,
           instance_of(Hash)

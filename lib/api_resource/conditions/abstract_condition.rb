@@ -21,6 +21,8 @@ module ApiResource
 				@klass = klass
 
 				@conditions = args.with_indifferent_access
+
+				@klass.load_resource_definition
 			end
 
 			def each(&block)
@@ -48,14 +50,31 @@ module ApiResource
 			end
 
 			def internal_object
-				@internal_object ||= begin
-					@loaded = true
-					self.instantiate_finder.find
+				return @internal_object if @loaded
+				@internal_object = self.instantiate_finder.load
+				@loaded = true
+				@internal_object
+			end
+
+			def all(*args)
+				if args.blank?
+					self.internal_object
+				else
+					self.find(*([:all] + args))
 				end
 			end
 
-			alias_method :find, :internal_object
-			alias_method :all, :internal_object
+			# implement find that accepts an optional
+			# condition object 
+			def find(*args)
+				self.klass.find(*(args + [self]))
+			end
+
+			# TODO: review the hierarchy that makes this necessary
+			# consider changing it to alias method
+			def load
+				self.internal_object
+			end
 
 			def loaded?
 				@loaded == true

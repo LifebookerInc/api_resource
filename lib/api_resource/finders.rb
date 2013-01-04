@@ -7,6 +7,7 @@ module ApiResource
 
 		autoload :AbstractFinder
 		autoload :ResourceFinder
+    autoload :SingleFinder
 		autoload :SingleObjectAssociationFinder
 		autoload :MultiObjectAssociationFinder
 
@@ -16,22 +17,54 @@ module ApiResource
       # It accepts arguments of the form "scope", "options={}"
       # where options can be standard rails options or :expires_in. 
       # If :expires_in is set, it caches it for expires_in seconds.
-      def find(*arguments)
 
+      # Need to support the following cases
+      # => 1) Klass.find(1)
+      # => 2) Klass.find(:all, :params => {a => b})
+      # => 3) Klass.find(:first, :params => {a => b})
+      # => 4) Klass.includes(:assoc).find(1)
+      # => 5) Klass.active.find(1)
+      # => 6) Klass.includes(:assoc).find(:all, a => b)
+      def find(*arguments)
         # make sure we have class data before loading
         self.load_resource_definition
 
         scope   = arguments.slice!(0)
         options = arguments.slice!(0) || {}
-        
-        expiry = options.delete(:expires_in) || ApiResource::Base.ttl || 0
+        cond    = arguments.slice!(0)
+
+        # TODO: Make this into a class attribute properly (if it isn't already)
+        # this is a little bit of a hack because options can sometimes be a Condition
+        expiry = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
         ApiResource.with_ttl(expiry.to_f) do
           case scope
-            when :all   then find_every(options)
-            when :first then find_every(options).first
-            when :last  then find_every(options).last
-            when :one   then find_one(options)
-            else             find_single(scope, options)
+          when :all, :first, :last
+            final_cond = ApiResource::Conditions::ScopeCondition.new({}, self)
+            # we need new conditions here to take into account options, which could
+            # either be a Condition object or a hash
+            if options.is_a?(Hash)
+              opts = options.with_indifferent_access.delete(:params) || options || {}
+              final_cond = ApiResource::Conditions::ScopeCondition.new(opts, self)
+              # cond may be nil
+              unless cond == nil # THIS MUST BE == NOT nil?
+                final_cond = cond.merge!(final_cond)
+              end
+            elsif options.is_a?(ApiResource::Conditions::AbstractCondition)
+              final_cond = options
+            end
+            # now final cond contains all the conditions we should need to pass to the finder
+            fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
+            fnd.send(scope)
+          else
+            # in this case scope is the id we want to find, and options should be a condition object or nil
+            final_cond = ApiResource::Conditions::ScopeCondition.new({:id => scope}, self)
+            if options.is_a?(ApiResource::Conditions::AbstractCondition)
+              final_cond = options.merge!(final_cond)
+            elsif options.is_a?(Hash)
+              opts = options.with_indifferent_access.delete(:params) || options || {}
+              final_cond = ApiResource::Conditions::ScopeCondition.new(opts, self).merge!(final_cond)
+            end
+            ApiResource::Finders::SingleFinder.new(self, final_cond).load
           end
         end
       end
@@ -74,47 +107,6 @@ module ApiResource
         )
         ret
       end
-
-      private
-
-        # Find every resource
-        def find_every(options)
-          begin
-            case from = options[:from]
-            when Symbol
-              instantiate_collection(get(from, options[:params]))
-            when String
-              path = "#{from}#{query_string(options[:params])}"
-              instantiate_collection(connection.get(path, headers) || [])
-            else
-              prefix_options, query_options = split_options(options[:params])
-              path = collection_path(prefix_options, query_options)
-              instantiate_collection( (connection.get(path, headers) || []))
-            end
-          rescue ApiResource::ResourceNotFound
-            # Swallowing ResourceNotFound exceptions and return nil - as per
-            # ActiveRecord.
-            nil
-          end
-        end
-
-        # Find a single resource from a one-off URL
-        def find_one(options)
-          case from = options[:from]
-          when Symbol
-            instantiate_record(get(from, options[:params]))
-          when String
-            path = "#{from}#{query_string(options[:params])}"
-            instantiate_record(connection.get(path, headers))
-          end
-        end
-
-        # Find a single resource from the default URL
-        def find_single(scope, options)
-          prefix_options, query_options = split_options(options[:params])
-          path = element_path(scope, prefix_options, query_options)
-          instantiate_record(connection.get(path, headers))
-        end
 
 		end 
 	end

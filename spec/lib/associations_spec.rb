@@ -788,6 +788,7 @@ describe "Associations" do
           it "should attempt to load a collection of remote objects for a has_many relationship" do
             tar = TestAR.new
             tar.stubs(:id).returns(1)
+            HasManyObject.load_resource_definition
             HasManyObject.connection.expects(:get).with("/has_many_objects.json?test_ar_id=1").once.returns([{"name" => "testing"}])
             # load the test resource
             tar.has_many_objects.first.name.should eql "testing"

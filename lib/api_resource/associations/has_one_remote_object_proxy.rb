@@ -17,8 +17,9 @@ module ApiResource
       end
       
       def load(opts = {})
+        res = Array.wrap(self.to_condition.load).first
         @loaded = true
-        Array.wrap(self.to_condition.find).first
+        res
       end
 
     end

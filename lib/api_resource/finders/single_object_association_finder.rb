@@ -4,18 +4,28 @@ module ApiResource
 
 		class SingleObjectAssociationFinder < AbstractFinder
 
+			def initialize(klass, condition, internal_object = nil)
+				super(klass, condition)
+
+				@internal_object = internal_object
+			end
+
 			# since it is only a single object we can just load from
 			# the service_uri and deal with includes
-			def find
+			def load
 				# otherwise just instantiate the record
 				unless self.condition.remote_path
 					raise "Tried to load association without a remote path"
 				end
 
-				data = self.klass.connection.get(self.build_load_path)
+				unless @internal_object
+					data = self.klass.connection.get(self.build_load_path)
+					
+					return nil if data.blank?
+					@internal_object = self.klass.instantiate_record(data)
+				end
+
 				@loaded = true
-				return nil if data.blank?
-				@internal_object = self.klass.instantiate_record(data)
 				# now that the object is loaded, resolve the includes
 				id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
 					accum[assoc] = Array.wrap(

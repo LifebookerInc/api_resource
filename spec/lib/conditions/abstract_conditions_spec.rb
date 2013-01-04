@@ -61,7 +61,7 @@ describe "Conditions" do
 	it "should create a resource finder when forced to load, and cache the result" do
 		obj = TestResource.includes(:has_many_objects)
 
-		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:find => [1]))
+		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:load => [1]))
 		obj.internal_object.should eql([1])
 		obj.all.should eql([1])
 		obj.first.should eql(1)
@@ -70,7 +70,7 @@ describe "Conditions" do
 	it "should proxy calls to enumerable and array methods to the loaded object" do
 		obj = TestResource.includes(:has_many_objects)
 
-		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:find => [1,2]))
+		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:load => [1,2]))
 
 		obj.collect{|o| o * 2}.should eql([2,4])
 	end

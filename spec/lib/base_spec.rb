@@ -7,6 +7,8 @@ describe "Base" do
   
   before(:each) do
     TestResource.reload_resource_definition
+    HasOneObject.reload_resource_definition
+    HasManyObject.reload_resource_definition
   end
 
   context ".new_element_path" do
@@ -795,6 +797,7 @@ describe "Base" do
 
     before(:all) do
       HasOneObject.reload_resource_definition
+      HasManyObject.load_resource_definition
     end
     
     it "should know if it is persisted" do

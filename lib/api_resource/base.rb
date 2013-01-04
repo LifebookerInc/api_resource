@@ -341,6 +341,18 @@ module ApiResource
         connection.delete(element_path(id, options))
       end
 
+      # split an option hash into two hashes, one containing the prefix options,
+        # and the other containing the leftovers.
+      def split_options(options = {})
+        prefix_options, query_options = {}, {}
+        (options || {}).each do |key, value|
+          next if key.blank?
+          (prefix_parameters.include?(key.to_sym) ? prefix_options : query_options)[key.to_sym] = value
+        end
+
+        [ prefix_options, query_options ]
+      end
+
       protected
         def method_missing(meth, *args, &block)
           # make one attempt to load remote attrs
@@ -370,18 +382,6 @@ module ApiResource
         # Builds the query string for the request.
         def query_string(options)
           "?#{options.to_query}" unless options.nil? || options.empty?
-        end
-
-        # split an option hash into two hashes, one containing the prefix options,
-        # and the other containing the leftovers.
-        def split_options(options = {})
-          prefix_options, query_options = {}, {}
-          (options || {}).each do |key, value|
-            next if key.blank?
-            (prefix_parameters.include?(key.to_sym) ? prefix_options : query_options)[key.to_sym] = value
-          end
-
-          [ prefix_options, query_options ]
         end
 
         def uri_parser

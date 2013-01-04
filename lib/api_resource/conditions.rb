@@ -16,6 +16,8 @@ module ApiResource
 
 			def includes(*args)
 
+				self.load_resource_definition
+
 				# everything in args must be an association
 				args.each do |arg|
 					unless self.association?(arg)

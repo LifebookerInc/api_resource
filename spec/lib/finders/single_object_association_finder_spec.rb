@@ -12,7 +12,7 @@ describe "SingleObjectAssociationFinder" do
 		ApiResource::Finders::SingleObjectAssociationFinder.new(
 			TestResource,
 			stub(:remote_path => "test_resources", :to_query => "id[]=1&id[]=2", :blank_conditions? => false)
-		).find
+		).load
 	end
 
 	it "should load a has many association properly" do
@@ -37,7 +37,7 @@ describe "SingleObjectAssociationFinder" do
 		finder.expects(:load_includes).with(:has_many_objects => [1,2]).returns(5)
 		finder.expects(:apply_includes).with(tr, 5).returns(6)
 
-		finder.find.should eql(tr)
+		finder.load.should eql(tr)
 	end
 
 end

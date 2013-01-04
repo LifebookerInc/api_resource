@@ -4,17 +4,28 @@ module ApiResource
 
 		class MultiObjectAssociationFinder < AbstractFinder
 
-			def find
+			# If they pass in the internal object just skip the first
+			# step and apply the includes
+			def initialize(klass, condition, internal_object = nil)
+				super(klass, condition)
+
+				@internal_object = internal_object
+			end
+
+			def load
 				# otherwise just instantiate the record
 				unless self.condition.remote_path
 					raise "Tried to load association without a remote path"
 				end
 
-				data = self.klass.connection.get(self.build_load_path)
-				@loaded = true
-				return [] if data.blank?
+				unless @internal_object
+					data = self.klass.connection.get(self.build_load_path)
+					return [] if data.blank?
 
-				@internal_object = self.klass.instantiate_collection(data)
+					@internal_object = self.klass.instantiate_collection(data)
+				end
+
+				@loaded = true
 
 				id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
 					accum[assoc] = @internal_object.collect do |obj|

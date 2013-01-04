@@ -9,16 +9,17 @@ module ApiResource
 			attr_reader :found, :internal_object
 
 			# TODO: Make this list longer since there are for sure more methods to delegate
-			delegate :to_s, :inspect, :reload, :present?, :blank?, :size, :to => :internal_object
+			delegate :to_s, :inspect, :reload, :present?, :blank?, :size, :count, :to => :internal_object
 
 			def initialize(klass, condition)
 				@klass = klass
 				@condition = condition
 				@found = false
-				@internal_object = nil
+
+				@klass.load_resource_definition
 			end
 
-			def find
+			def load
 				raise NotImplementedError("Must be defined in a subclass")
 			end
 
@@ -27,8 +28,16 @@ module ApiResource
 				if instance_variable_defined?(:@internal_object)
 					return instance_variable_get(:@internal_object)
 				end
-				# If we haven't tried to load then just call find
-				self.find
+				# If we haven't tried to load then just call load
+				self.load
+			end
+
+			def all(*args)
+				if args.blank?
+					self.internal_object
+				else
+					self.klass.send(:all, *args)
+				end
 			end
 
 			# proxy unknown methods to the internal_object
@@ -51,9 +60,10 @@ module ApiResource
 				id_hash = HashWithIndifferentAccess.new(id_hash)
 				# load each individually
 				self.condition.included_objects.inject(hsh) do |accum, assoc|
-					accum[assoc.to_sym] = self.klass.association_class(assoc).find(
-						:all, 
-						:id => id_hash[assoc])
+					accum[assoc.to_sym] = self.klass.association_class(assoc).all( 
+						:params => {:ids => id_hash[assoc]}
+					)
+					accum
 				end
 
 				hsh
@@ -62,9 +72,15 @@ module ApiResource
 			def apply_includes(objects, includes)
 				Array.wrap(objects).each do |obj|
 					includes.each_pair do |assoc, vals|
-						ids_to_keep = obj.send(obj.class.association_foreign_key_field(assoc))
+						ids_to_keep = Array.wrap(obj.send(obj.class.association_foreign_key_field(assoc)))
 						to_keep = vals.select{|elm| ids_to_keep.include?(elm.id)}
-						obj.send("#{assoc}=", to_keep)
+						# if this is a single association take the first
+						# TODO: subclass instead of this
+						if self.klass.has_many?(assoc)
+							obj.send("#{assoc}=", to_keep, false)
+						else
+							obj.send("#{assoc}=", to_keep.first, false)
+						end
 					end
 				end
 			end

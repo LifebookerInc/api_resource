@@ -22,8 +22,10 @@ module ApiResource
       
       def internal_object=(contents)
         if contents.is_a?(self.klass) || contents.nil?
+          @loaded = true
           return @internal_object = contents 
         elsif contents.is_a?(self.class)
+          @loaded = true
           return @internal_object = contents.internal_object
         # a Hash may be attributes and/or a service_uri
         elsif contents.is_a?(Hash) 
@@ -32,6 +34,7 @@ module ApiResource
             self.class.remote_path_element.to_sym
           )
           if contents.present?
+            @loaded = true
             return @internal_object = self.klass.instantiate_record(contents)
           end
         else
@@ -58,13 +61,17 @@ module ApiResource
       protected
 
       def to_condition
-        ApiResource::Conditions::SingleObjectAssociationCondition.new(self.klass, self.remote_path)
+        obj = nil
+        obj = self.internal_object if self.loaded?
+        ApiResource::Conditions::SingleObjectAssociationCondition.new(self.klass, self.remote_path, obj)
       end
 
       # Should make a proper conditions object and call find on it
+      # It MUST set loaded to true after calling load
       def load(opts = {})
+        res = self.to_condition.load
         @loaded = true
-        @internal_object = self.to_condition.find
+        res
       end
 
       

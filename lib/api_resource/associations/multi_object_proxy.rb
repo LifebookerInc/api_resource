@@ -32,13 +32,19 @@ module ApiResource
 
         def internal_object=(contents)
           # if we were passed in a service uri, stop here
-          return true if self.set_remote_path(contents)
+          # but if we have a service uri already then don't overwrite
+          unless self.remote_path.present?
+            return true if self.set_remote_path(contents)
+          end
 
           if contents.try(:first).is_a?(self.klass)
-            return @internal_object = contents 
+            @loaded = true
+            return @internal_object = contents
           elsif contents.instance_of?(self.class)
+            @loaded = true
             return @internal_object = contents.internal_object
           elsif contents.is_a?(Array)
+            @loaded = true
             return @internal_object = self.klass.instantiate_collection(
               contents
             )
@@ -70,12 +76,15 @@ module ApiResource
         protected
 
         def to_condition
-          ApiResource::Conditions::MultiObjectAssociationCondition.new(self.klass, self.remote_path)
+          obj = nil
+          obj = self.internal_object if self.loaded?
+          ApiResource::Conditions::MultiObjectAssociationCondition.new(self.klass, self.remote_path, obj)
         end
 
         def load(opts = {})
+          res = self.to_condition.load
           @loaded = true
-          self.to_condition.find
+          res
         end
 
         def set_remote_path(opts)

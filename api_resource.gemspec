@@ -33,14 +33,14 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rb-fsevent"
   gem.add_development_dependency "simplecov"
   # stuff that seems like crap
-  gem.add_development_dependency "differ"
-  gem.add_development_dependency "colorize"
   gem.add_development_dependency "sqlite3"
+  # TODO: remove this
+  gem.add_development_dependency "debugger"
 
   gem.add_dependency "rails"
-  gem.add_dependency "activemodel"
-  gem.add_dependency "activesupport"
   gem.add_dependency "json"
   gem.add_dependency "rest-client"
   gem.add_dependency "log4r"
+  gem.add_dependency "differ"
+  gem.add_dependency "colorize"
 end

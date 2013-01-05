@@ -75,4 +75,6 @@ describe "Conditions" do
 		obj.collect{|o| o * 2}.should eql([2,4])
 	end
 
+	it "should not typecast nil and false to true when creating condition hashes"
+
 end

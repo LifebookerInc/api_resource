@@ -536,6 +536,16 @@ module ApiResource
           !self.attribute?(key) || self.protected_attribute?(key) ? accum : accum.merge(key => val)
         end
       end
+
+      # also add in the _id fields that are changed
+      ret = self.association_names.inject(ret) do |accum, assoc_name|
+        id_method = self.class.association_foreign_key_field(assoc_name)
+        if self.changes[id_method].present?
+          accum[id_method] = self.changes[id_method].last
+        end
+        accum
+      end
+
       options[:include_associations].each do |assoc|
         if self.association?(assoc)
           ret[assoc] = self.send(assoc).serializable_hash({

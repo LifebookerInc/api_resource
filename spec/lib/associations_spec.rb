@@ -260,6 +260,21 @@ describe "Associations" do
       ap.test.should eql("testval")
 
     end
+
+    it "should include the foreign_key_id when saving" do
+      tr = TestResource.new
+      tr.belongs_to_object_id = 4
+      hsh = tr.serializable_hash
+      hsh[:belongs_to_object_id].should eql(4)
+    end
+
+    it "should serialize the foreign_key_id when saving if it is updated" do
+      TestResource.connection
+      tr = TestResource.find(1)
+      tr.belongs_to_object_id = 5
+      hsh = tr.serializable_hash
+      hsh[:belongs_to_object_id].should eql(5)
+    end
   end
 
   describe "Multi Object Associations" do
@@ -342,6 +357,21 @@ describe "Associations" do
             {:the_element => "/route"}
           )
           ap.remote_path.should eql("/route")
+        end
+
+        it "should include the foreign_key_id when saving" do
+          tr = TestResource.new
+          tr.has_many_object_ids = [4]
+          hsh = tr.serializable_hash
+          hsh[:has_many_object_ids].should eql([4])
+        end
+
+        it "should serialize the foreign_key_id when saving if it is updated" do
+          TestResource.connection
+          tr = TestResource.find(1)
+          tr.has_many_object_ids = [5]
+          hsh = tr.serializable_hash
+          hsh[:has_many_object_ids].should eql([5])
         end
       end
 

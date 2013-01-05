@@ -8,6 +8,7 @@ module ApiResource
     #TODO: many of these methods should also force loading of the resource definition
     extend ActiveSupport::Concern
     extend ActiveSupport::Autoload
+    include ActiveModel::Dirty
 
     autoload :AssociationProxy
     autoload :BelongsToRemoteObjectProxy
@@ -142,11 +143,18 @@ module ApiResource
       end
 
       # TODO: add a special foreign_key option to associations
-      def association_foreign_key_field(assoc)
+      def association_foreign_key_field(assoc, type = nil)
+
+        if type.nil? && has_many?(assoc)
+          type = :has_many
+        else
+          type = type.to_s.to_sym
+        end
+
         # for now just use the association name
         str = assoc.to_s.singularize.foreign_key
 
-        if has_many?(assoc)
+        if type == :has_many
           str = str.pluralize
         end
 
@@ -177,19 +185,15 @@ module ApiResource
         end
 
         def define_association_as_attribute(assoc_type, assoc_name)
+          id_method_name = association_foreign_key_field(assoc_name, assoc_type)
+
           # set up dirty tracking for associations, but only for ApiResource
           # these methods are also used for ActiveRecord
           # TODO: change this
           if self.ancestors.include?(ApiResource::Base)
             define_attribute_method(assoc_name)
+            define_attribute_method(id_method_name)
           end
-
-          id_method_name = assoc_name.to_s.singularize + "_id"
-
-          if assoc_type.to_s == "has_many"
-            id_method_name += "s"
-          end
-        
           # TODO: Come up with a better implementation for the foreign key thing
           # implement the rest of the active record methods, refactor this into something
           # a little bit more sensible
@@ -227,7 +231,10 @@ module ApiResource
                   @attributes[:#{id_method_name}] || self.#{assoc_name}.collect(&:id)
             end
 
-            def #{id_method_name}=(val)
+            def #{id_method_name}=(val, force = false)
+              unless @attributes_cache[:#{id_method_name}] == val
+                #{id_method_name}_will_change!
+              end
               @attributes_cache[:#{id_method_name}] = val
             end
 

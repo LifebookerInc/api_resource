@@ -35,4 +35,23 @@ describe ApiResource::Finders do
 		TestResource.includes(:has_many_objects).find(1)
 	end
 
+	it "should be able to use a scope with arguments" do
+		TestResource.connection.expects(:get)
+			.with("/test_resources.json?active=true&birthday%5Bdate%5D=5").returns([{"id" => 10}])
+
+		res = TestResource.active.birthday(5).all
+		res.should be_a(Array)
+		res.first.id.should eql(10)
+	end
+
+	it "should be able to use a scope with multiple arguments", :focus do
+		TestResource.connection.expects(:get)
+			.with("/test_resources.json?paginate%5Bcurrent_page%5D=10&paginate%5Bper_page%5D=5")
+			.returns([{:id => 20}])
+
+		res = TestResource.paginate(5, 10).all
+		res.should be_a(Array)
+		res.first.id.should eql(20)
+	end
+
 end

@@ -51,7 +51,7 @@ module ApiResource
                   args.slice(i, args.count)
               # Else we are only dealing with a single argument
               else
-                if arg_types[i] == :req || args[i].present?
+                if arg_types[i] == :req || (i < args.count)
                   finder_opts[scope_name][arg_name] = args[i]
                 end
               end

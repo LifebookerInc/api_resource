@@ -75,6 +75,11 @@ describe "Conditions" do
 		obj.collect{|o| o * 2}.should eql([2,4])
 	end
 
-	it "should not typecast nil and false to true when creating condition hashes"
+	it "should not typecast nil and false to true when creating condition hashes" do
+		obj = TestResource.paginate(false, nil)
+		hsh = obj.to_hash["paginate"]
+		hsh["per_page"].should eql(false)
+		hsh.should be_key(:current_page)
+	end
 
 end

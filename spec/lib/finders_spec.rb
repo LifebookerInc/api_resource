@@ -44,7 +44,7 @@ describe ApiResource::Finders do
 		res.first.id.should eql(10)
 	end
 
-	it "should be able to use a scope with multiple arguments", :focus do
+	it "should be able to use a scope with multiple arguments" do
 		TestResource.connection.expects(:get)
 			.with("/test_resources.json?paginate%5Bcurrent_page%5D=10&paginate%5Bper_page%5D=5")
 			.returns([{:id => 20}])

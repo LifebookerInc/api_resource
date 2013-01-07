@@ -60,9 +60,14 @@ module ApiResource
 				id_hash = HashWithIndifferentAccess.new(id_hash)
 				# load each individually
 				self.condition.included_objects.inject(hsh) do |accum, assoc|
-					accum[assoc.to_sym] = self.klass.association_class(assoc).all( 
-						:params => {:ids => id_hash[assoc]}
-					)
+					id_hash[assoc].each_slice(400).each do |ids|
+						accum[assoc.to_sym] ||= []
+						accum[assoc.to_sym].concat(
+							self.klass.association_class(assoc).all(
+								:params => {:ids => ids}
+							)
+						)
+					end
 					accum
 				end
 

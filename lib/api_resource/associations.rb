@@ -227,8 +227,13 @@ module ApiResource
             end
 
             def #{id_method_name}
-              @attributes_cache[:#{id_method_name}] ||= 
-                  @attributes[:#{id_method_name}] || self.#{assoc_name}.collect(&:id)
+              @attributes_cache[:#{id_method_name}] ||= begin
+                if @attributes.key?(:#{id_method_name})
+                  @attributes[:#{id_method_name}]
+                else
+                  self.#{assoc_name}.collect(&:id)
+                end
+              end
             end
 
             def #{id_method_name}=(val, force = false)

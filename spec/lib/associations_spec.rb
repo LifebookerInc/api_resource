@@ -367,11 +367,17 @@ describe "Associations" do
         end
 
         it "should serialize the foreign_key_id when saving if it is updated" do
-          TestResource.connection
           tr = TestResource.find(1)
           tr.has_many_object_ids = [5]
           hsh = tr.serializable_hash
           hsh[:has_many_object_ids].should eql([5])
+        end
+
+        it "should not try to load if the foreign key is nil" do
+          TestResource.connection.expects(:get).returns(:id => 1, :belongs_to_object_id => nil)
+          tr = TestResource.find(1)
+          tr.id.should eql(1)
+          tr.belongs_to_object_id.should be_nil
         end
       end
 

@@ -6,6 +6,8 @@ module ApiResource
 
       attr_reader :klass, :finder_opts
 
+      include Enumerable
+
       def initialize(klass, finder_opts = {})
 
         # the base class for our scope, e.g. ApiResource::SomeClass
@@ -29,6 +31,10 @@ module ApiResource
         @ttl || 0
       end
 
+      def each(*args, &block)
+        self.internal_object.each(*args, &block)
+      end
+
       # Use this method to access the internal data, this guarantees that loading only occurs once per object
       def internal_object
         if instance_variable_defined?(:@internal_object)
@@ -36,6 +42,7 @@ module ApiResource
         end
         instance_variable_set(:@internal_object, self.load)
       end
+      alias_method :all, :internal_object
 
       # has the scope been loaded?
       def loaded?

@@ -2,6 +2,8 @@ module ApiResource
   module Associations
     class Scope < AbstractScope
 
+      include Enumerable
+      
       def initialize(klass, opts = {})
         # see if we have a hash of options and it has a parent in it
         unless opts[:__parent].respond_to?(:load)
@@ -11,6 +13,10 @@ module ApiResource
           )
         end
         super(klass, opts)
+      end
+
+      def each(*args, &block)
+        self.internal_object.each(*args, &block)
       end
 
       def load

@@ -29,3 +29,7 @@ end
 HashDealer.define(:has_many_object) do
   name("name")
 end
+
+HashDealer.define(:belongs_to_object_response) do
+  zip "11201"
+end

@@ -40,6 +40,7 @@ HashDealer.define(:test_resource_with_proxies, :parent => :test_resource) do
   has_one_object{HashDealer.roll(:has_one_object)}
   has_many_objects{(0..4).to_a.collect{HashDealer.roll(:has_many_object)}}
   has_many_service_uri{[{:service_uri => "/test_resource/1/has_many"}]}
+  belongs_to_object({:service_uri => "/belongs_to_objects/4"})
 end
 
 HashDealer.define(:test_resource_errors) do

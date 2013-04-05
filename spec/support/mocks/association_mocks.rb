@@ -49,8 +49,17 @@ Mocks.define do
   end
   
   endpoint("/belongs_to_objects/new") do
-    get({})
+    get({
+      "attributes" => {
+        "public" => ["zip"]
+      }
+    })
   end
+
+  endpoint("/belongs_to_objects/:id") do
+    get(HashDealer.roll(:belongs_to_object_response))
+  end
+
   
   endpoint("/test_associations/new") do
     get({})

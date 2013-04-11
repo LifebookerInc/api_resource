@@ -9,6 +9,10 @@ module ApiResource
         self.internal_object.serializable_hash(options)
       end
 
+      def collection?
+        false
+      end
+
       def internal_object
         unless instance_variable_defined?(:@internal_object)
           if self.remote_path.present?

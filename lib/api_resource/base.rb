@@ -152,6 +152,9 @@ module ApiResource
       
       def load_resource_definition
         unless instance_variable_defined?(:@resource_definition)
+          # the last time we checked
+          @resource_load_time = Time.now
+        
           # set to not nil so we don't get an infinite loop
           @resource_definition = true
           self.set_class_attributes_upon_load
@@ -354,21 +357,29 @@ module ApiResource
       end
 
       protected
+
+        # do we have an invalid resource
+        def resource_definition_is_invalid?
+          # if we have a Hash, it's valid
+          return false if @resource_definition.is_a?(Hash)
+          # if we have no recheck time, it's invalid
+          return true if @resource_load_time.nil?
+          # have we checked in the last minute?
+          return @resource_load_time < Time.now - 1.minute
+        end
+
         def method_missing(meth, *args, &block)
+          ApiResource.logger.info("CALLING #{meth}")
           # make one attempt to load remote attrs
-          if self.load_resource_definition
-            tries = 0
-            begin
-              tries += 1
-              return self.send(meth, *args, &block)
-            rescue => e
-              if tries <= 3
-                self.reload_resource_definition
-                retry
-              end
-            end
+          if self.resource_definition_is_invalid?
+            self.reload_resource_definition
           end
-          super
+          # see if we respond to the method now
+          if self.response_to?(meth)
+            return self.send(meth, *args, &block)
+          else
+            super
+          end
         end
       
       private
@@ -672,7 +683,7 @@ module ApiResource
     include AssociationActivation
     self.activate_associations
     
-    include Scopes, Callbacks, Observing, Attributes, ModelErrors, Conditions, Finders
+    include Scopes, Callbacks, Observing, Attributes, ModelErrors, Conditions, Finders, Typecast
     
   end
   

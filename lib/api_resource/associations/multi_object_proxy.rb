@@ -16,6 +16,10 @@ module ApiResource
           self.internal_object
         end
 
+        def collection?
+          true
+        end
+
         def each(*args, &block)
           self.internal_object.each(*args, &block)
         end

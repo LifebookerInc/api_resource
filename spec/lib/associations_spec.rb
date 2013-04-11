@@ -804,6 +804,8 @@ describe "Associations" do
           before(:all) do
             TestAR.class_eval do
               has_one_remote :test_resource
+              has_one_remote :other_test_resource, 
+                :class_name => "TestResource"
             end
           end
           it "should attempt to load a single remote object for a has_one relationship" do
@@ -815,6 +817,17 @@ describe "Associations" do
             # load the test resource
             tar.test_resource.name.should eql "testing"
           end
+
+          it "should use its object's primary_key as the _id method" do
+            tar = TestAR.new
+            tar.stubs(:id).returns(1)
+            TestResource.connection.expects(:get)
+              .with("/test_resources.json?test_ar_id=1")
+              .returns([{"name" => "testing", "id" => 14}])
+            # load the test resource
+            tar.other_test_resource_id.should eql(14)
+          end
+
         end
         context "Has Many" do
           before(:all) do
@@ -822,13 +835,16 @@ describe "Associations" do
               has_many_remote :has_many_objects
             end
           end
-          it "should attempt to load a collection of remote objects for a has_many relationship" do
+          it "should attempt to load a collection of remote objects for a has_many relationship", :focus do
             tar = TestAR.new
             tar.stubs(:id).returns(1)
             HasManyObject.load_resource_definition
-            HasManyObject.connection.expects(:get).with("/has_many_objects.json?test_ar_id=1").once.returns([{"name" => "testing"}])
+            HasManyObject.connection.expects(:get).with("/has_many_objects.json?test_ar_id=1").once.returns(
+                [{"name" => "testing", "id" => 22}]
+              )
             # load the test resource
             tar.has_many_objects.first.name.should eql "testing"
+            tar.has_many_object_ids.should eql([22])
           end
         end
         context "Has Many Through" do

@@ -14,6 +14,9 @@ Spork.prefork do
   require 'api_resource'
   require 'simplecov'
 
+  require 'ruby-debug'
+  Debugger.start
+
 
   SimpleCov.start do
     add_filter "/spec/"

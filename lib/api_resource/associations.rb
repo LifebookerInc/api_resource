@@ -144,7 +144,7 @@ module ApiResource
 
       # TODO: add a special foreign_key option to associations
       def association_foreign_key_field(assoc, type = nil)
-
+        
         if type.nil? && has_many?(assoc)
           type = :has_many
         else
@@ -154,7 +154,7 @@ module ApiResource
         # for now just use the association name
         str = assoc.to_s.singularize.foreign_key
 
-        if type == :has_many
+        if type.to_s =~ /^has_many/
           str = str.pluralize
         end
 
@@ -227,12 +227,12 @@ module ApiResource
             end
 
             def #{id_method_name}
-              @attributes_cache[:#{id_method_name}] ||= begin
-                if @attributes.key?(:#{id_method_name})
-                  @attributes[:#{id_method_name}]
-                else
-                  self.#{assoc_name}.collect(&:id)
-                end
+              if self.attributes.has_key?("#{id_method_name}")
+                read_attribute(:#{id_method_name})
+              elsif self.#{assoc_name}.collection?
+                self.#{assoc_name}.collect(&:id)
+              else
+                self.#{assoc_name}.try(:id)
               end
             end
 

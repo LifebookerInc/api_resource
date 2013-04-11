@@ -369,13 +369,12 @@ module ApiResource
         end
 
         def method_missing(meth, *args, &block)
-          ApiResource.logger.info("CALLING #{meth}")
           # make one attempt to load remote attrs
           if self.resource_definition_is_invalid?
             self.reload_resource_definition
           end
           # see if we respond to the method now
-          if self.response_to?(meth)
+          if self.respond_to?(meth)
             return self.send(meth, *args, &block)
           else
             super

@@ -357,7 +357,16 @@ module ApiResource
         def method_missing(meth, *args, &block)
           # make one attempt to load remote attrs
           if self.load_resource_definition
-            return self.send(meth, *args, &block)
+            tries = 0
+            begin
+              tries += 1
+              return self.send(meth, *args, &block)
+            rescue => e
+              if tries <= 3
+                self.reload_resource_definition
+                retry
+              end
+            end
           end
           super
         end

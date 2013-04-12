@@ -243,6 +243,7 @@ module ApiResource
                 #{id_method_name}_will_change!
               end
               @attributes_cache[:#{id_method_name}] = val
+              write_attribute(:#{id_method_name}, val)
             end
 
           EOE

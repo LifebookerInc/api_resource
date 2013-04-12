@@ -227,12 +227,14 @@ module ApiResource
             end
 
             def #{id_method_name}
-              if self.attributes.has_key?("#{id_method_name}")
-                read_attribute(:#{id_method_name})
-              elsif self.#{assoc_name}.collection?
-                self.#{assoc_name}.collect(&:id)
-              else
-                self.#{assoc_name}.try(:id)
+              @attributes_cache[:#{id_method_name}] ||= begin
+                if @attributes.has_key?("#{id_method_name}")
+                  @attributes["#{id_method_name}"]
+                elsif self.#{assoc_name}.collection?
+                  self.#{assoc_name}.collect(&:id)
+                else
+                  self.#{assoc_name}? ? self.#{assoc_name}.id : nil
+                end
               end
             end
 

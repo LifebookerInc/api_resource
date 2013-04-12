@@ -828,6 +828,16 @@ describe "Associations" do
             tar.other_test_resource_id.should eql(14)
           end
 
+          it "should handle mising objects in its _id method" do
+            tar = TestAR.new
+            tar.stubs(:id).returns(1)
+            TestResource.connection.expects(:get)
+              .with("/test_resources.json?test_ar_id=1")
+              .returns([])
+            # load the test resource
+            tar.other_test_resource_id.should be_nil
+          end
+
         end
         context "Has Many" do
           before(:all) do
@@ -835,7 +845,7 @@ describe "Associations" do
               has_many_remote :has_many_objects
             end
           end
-          it "should attempt to load a collection of remote objects for a has_many relationship", :focus do
+          it "should attempt to load a collection of remote objects for a has_many relationship" do
             tar = TestAR.new
             tar.stubs(:id).returns(1)
             HasManyObject.load_resource_definition

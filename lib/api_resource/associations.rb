@@ -90,7 +90,7 @@ module ApiResource
                   klass.related_objects = klass.related_objects.merge(:#{assoc} => klass.related_objects[:#{assoc}].merge(arg.to_sym => klass_name))
                 end
                 # We need to define reader and writer methods here
-                define_association_as_attribute(:#{assoc}, arg)
+                define_association_as_attribute(:#{assoc}, arg, options)
               end
             end
           
@@ -184,8 +184,10 @@ module ApiResource
           self.related_objects[:scopes] = self.related_objects[:scopes].clone
         end
 
-        def define_association_as_attribute(assoc_type, assoc_name)
-          id_method_name = association_foreign_key_field(assoc_name, assoc_type)
+        def define_association_as_attribute(assoc_type, assoc_name, opts)
+          id_method_name = association_foreign_key_field(
+            assoc_name, assoc_type
+          )
 
           # set up dirty tracking for associations, but only for ApiResource
           # these methods are also used for ActiveRecord
@@ -194,59 +196,18 @@ module ApiResource
             define_attribute_method(assoc_name)
             define_attribute_method(id_method_name)
           end
-          # TODO: Come up with a better implementation for the foreign key thing
-          # implement the rest of the active record methods, refactor this into something
-          # a little bit more sensible
+          
+          # a module to contain our generated methods
+          cattr_accessor :api_resource_generated_methods
+          self.api_resource_generated_methods = Module.new
+          # include our anonymous module
+          include self.api_resource_generated_methods
 
-          # TODO: This should support saving the ids when they are modified and saving anything
-          # that is not created, associations need to be their own object
-          self.class_eval <<-EOE, __FILE__, __LINE__ + 1
-            def #{assoc_name}
-              @attributes_cache[:#{assoc_name}] ||= begin
-                klass = Associations::#{self.association_types[assoc_type.to_sym].to_s.classify}ObjectProxy
-                instance = klass.new(
-                  self.association_class('#{assoc_name}'), self
-                )
-                if @attributes[:#{assoc_name}].present?
-                  instance.internal_object = @attributes[:#{assoc_name}]
-                end
-                instance
-              end
-            end
-            def #{assoc_name}=(val, force = true)
-              if !force
-                #{assoc_name}_will_change!
-              elsif self.#{assoc_name}.internal_object != val
-                #{assoc_name}_will_change!
-              end
-              # This should not force a load
-              self.#{assoc_name}.internal_object = val
-            end
-            def #{assoc_name}?
-              self.#{assoc_name}.internal_object.present?
-            end
+          # we let our concrete classes define this behavior
+          type = self.association_types[assoc_type.to_sym].to_s.classify
+          klass = "Associations::#{type}ObjectProxy".constantize
 
-            def #{id_method_name}
-              @attributes_cache[:#{id_method_name}] ||= begin
-                if @attributes.has_key?("#{id_method_name}")
-                  @attributes["#{id_method_name}"]
-                elsif self.#{assoc_name}.collection?
-                  self.#{assoc_name}.collect(&:id)
-                else
-                  self.#{assoc_name}? ? self.#{assoc_name}.id : nil
-                end
-              end
-            end
-
-            def #{id_method_name}=(val, force = false)
-              unless @attributes_cache[:#{id_method_name}] == val
-                #{id_method_name}_will_change!
-              end
-              @attributes_cache[:#{id_method_name}] = val
-              write_attribute(:#{id_method_name}, val)
-            end
-
-          EOE
+          klass.define_association_as_attribute(self, assoc_name, opts)
         end
         
         def find_namespaced_class_name(klass)

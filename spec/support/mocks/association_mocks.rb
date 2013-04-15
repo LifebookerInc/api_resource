@@ -39,6 +39,13 @@ Mocks.define do
       }
     })
   end
+
+  endpoint("/has_one_objects.json") do
+    get(
+      [HashDealer.roll(:has_one_object)], 
+      :params => {:test_resource_id => 1}.matcher
+    )
+  end
   
   endpoint("/has_many_objects/new") do
     get({
@@ -46,6 +53,13 @@ Mocks.define do
         "public" => ["name"]
       }
     })
+  end
+
+  endpoint("/has_many_objects.json") do
+    get(
+      [HashDealer.roll(:has_many_object)], 
+      :params => {:test_resource_id => 1}.matcher
+    )
   end
   
   endpoint("/belongs_to_objects/new") do

@@ -521,8 +521,17 @@ describe "Base" do
 
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
           ApiResource::Connection.any_instance.expects(:post).with(
-            "/test_resources.json", 
-            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"is_active\":null,\"bday\":null,\"roles\":[]}}", 
+            "/test_resources.json", JSON.unparse(
+              :test_resource => {
+                :name => "Ethan",
+                :age => nil,
+                :is_active => nil,
+                :belongs_to_object_id => nil,
+                :custom_name_id => nil,
+                :bday => nil,
+                :roles => []
+              }
+            ),
             TestResource.headers
           )
 
@@ -577,16 +586,19 @@ describe "Base" do
           JSON.unparse({
             :test_resource => {
               :name => "Ethan", 
-              :has_many_objects => [{}]
+              :has_many_objects => [{:name => "Test"}]
             }
           }),  
           TestResource.headers
         )
 
-        tr = TestResource.new(:name => "Ethan")
+        tr = TestResource.new(
+          :name => "Ethan", 
+          :has_many_objects => [{:id => 12, :name => "Dan"}]
+        )
         tr.stubs(:id => 1)
 
-        tr.has_many_objects = [HasManyObject.new]
+        tr.has_many_objects = [HasManyObject.new(:name => "Test")]
         tr.save
       end
       
@@ -603,9 +615,10 @@ describe "Base" do
           TestResource.headers
         )
 
-        tr = TestResource.new(:name => "Ethan")
+        tr = TestResource.new(:name => "Ethan", :has_many_objects => [])
         tr.stubs(:id => 1)
-        tr.save(:has_many_objects)
+
+        tr.save(:include_associations => [:has_many_objects])
       end
       
 
@@ -688,8 +701,17 @@ describe "Base" do
       it "should include all attributes if include_all_attributes_on_update is true" do  
         
         ApiResource::Connection.any_instance.expects(:put).with(
-          "/test_resources/1.json", 
-          "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null,\"is_active\":null,\"bday\":null,\"roles\":[]}}", 
+          "/test_resources/1.json", JSON.unparse(
+            :test_resource => {
+              :name => "Ethan",
+              :age => nil,
+              :is_active => nil,
+              :belongs_to_object_id => nil,
+              :custom_name_id => nil,
+              :bday => nil,
+              :roles => []
+            }
+          ),
           TestResource.headers
         )
         begin

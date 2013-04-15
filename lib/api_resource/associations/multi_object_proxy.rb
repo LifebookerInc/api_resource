@@ -25,13 +25,17 @@ module ApiResource
         end
         
         def internal_object
-          @internal_object ||= begin
-            if self.remote_path.present?
-              self.load
-            else
-              []
-            end
+          
+          # if we don't have a remote path or any data
+          if self.remote_path.blank? && @internal_object.blank?
+            return [] 
           end
+
+          # if we aren't loaded and we don't have data added load here
+          if !self.loaded? && @internal_object.blank?
+            @internal_object = self.load
+          end
+          @internal_object
         end
 
         def internal_object=(contents)
@@ -52,9 +56,10 @@ module ApiResource
             return @internal_object = self.klass.instantiate_collection(
               contents
             )
-          # we have only provided the resource definition
+          # we have only provided the resource definition - that's the same
+          # as a blank array in this case
           elsif contents.nil?
-            return @internal_object = nil
+            return @internal_object = []
           else
             raise ArgumentError.new(
               "#{contents} must be a #{self.klass}, #{self.class}, " + 
@@ -82,7 +87,9 @@ module ApiResource
         def to_condition
           obj = nil
           obj = self.internal_object if self.loaded?
-          ApiResource::Conditions::MultiObjectAssociationCondition.new(self.klass, self.remote_path, obj)
+          ApiResource::Conditions::MultiObjectAssociationCondition.new(
+            self.klass, self.remote_path, obj
+          )
         end
 
         def load(opts = {})

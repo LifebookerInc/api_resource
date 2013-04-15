@@ -7,7 +7,7 @@ module ApiResource
 			def initialize(klass, service_uri, internal_object= nil)
 				super({}, klass)
 
-				@assocaiton = true
+				@association = true
 				@remote_path = service_uri
 				@internal_object = internal_object
 			end

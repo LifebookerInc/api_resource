@@ -5,7 +5,11 @@ module ApiResource
     included do
       class_attribute :association_types
       # our default association types
-      self.association_types = {:belongs_to => :single, :has_one => :single, :has_many => :multi}
+      self.association_types = {
+        :belongs_to => :belongs_to_remote, 
+        :has_one => :has_one_remote, 
+        :has_many => :has_many_remote
+      }
     end
     
     module ClassMethods

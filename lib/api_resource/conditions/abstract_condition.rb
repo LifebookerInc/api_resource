@@ -46,7 +46,7 @@ module ApiResource
 			end
 
 			def to_hash
-				self.conditions
+				self.conditions.to_hash
 			end
 
 			def internal_object

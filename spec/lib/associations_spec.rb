@@ -360,17 +360,17 @@ describe "Associations" do
         end
 
         it "should include the foreign_key_id when saving" do
-          tr = TestResource.new
+          tr = TestResource.new.tap do |tr|
+            tr.stubs(:id => 123)
+          end
           tr.has_many_object_ids = [4]
           hsh = tr.serializable_hash
           hsh[:has_many_object_ids].should eql([4])
         end
 
-        it "should serialize the foreign_key_id when saving if it is updated" do
-          tr = TestResource.find(1)
-          tr.has_many_object_ids = [5]
-          hsh = tr.serializable_hash
-          hsh[:has_many_object_ids].should eql([5])
+        it "should handle loading attributes from the remote" do
+          tr = TestResource.instantiate_record({:has_many_object_ids => [3]})
+          tr.has_many_object_ids.should eql([3])
         end
 
         it "should not try to load if the foreign key is nil" do
@@ -682,17 +682,38 @@ describe "Associations" do
         before(:all) do
           TestResource.has_one(:has_one_object)
           TestResource.belongs_to(:belongs_to_object)
+          HasManyObject.reload_class_attributes
+          BelongsToObject.reload_class_attributes
+          HasOneObject.reload_class_attributes
         end
         after(:all) do
           TestResource.reload_class_attributes
         end
 
-        it "should assign associations to the correct type on initialization" do
-          #binding.pry
-          tr = TestResource.new(:has_one_object => {:name => "Dan"}, :belongs_to_object => {:name => "Dan"})
+        it "should assign associations to the correct 
+          type on initialization" do
+          
+          tr = TestResource.new(
+            :has_one_object => {:color => "Blue"}, 
+            :belongs_to_object => {:zip => "11201"},
+            :has_many_objects => [{:name => "Dan"}]
+          )
 
-          tr.has_one_object.internal_object.should be_instance_of HasOneObject
-          tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
+          tr.has_one_object.internal_object.should be_instance_of(
+            HasOneObject
+          )
+          tr.has_one_object.color.should eql("Blue")
+
+          tr.belongs_to_object.internal_object.should be_instance_of(
+            BelongsToObject
+          )
+          tr.belongs_to_object.zip.should eql("11201")
+
+
+          tr.has_many_objects.internal_object.first.should be_instance_of(
+            HasManyObject
+          )
+          tr.has_many_objects.first.name.should eql("Dan")
 
         end
 
@@ -706,15 +727,12 @@ describe "Associations" do
         end
 
         it "should be able to reload a single-object association" do
-          ApiResource::Associations::SingleObjectProxy.any_instance.stubs(:remote_path => "/has_one_objects")
-          HasOneObject.connection.stubs(:get => nil)
-
+          
           tr = TestResource.new()
-
           tr.has_one_object = {:color => "Blue"}
 
           tr.has_one_object.reload
-          tr.has_one_object.instance_variable_get(:@internal_object).should be_blank
+          tr.has_one_object.should be_nil
         end
 
       end
@@ -740,14 +758,36 @@ describe "Associations" do
         end
 
         it "should be able to reload a multi-object association" do
-          ApiResource::Associations::MultiObjectProxy.any_instance.stubs(:remote_path => "/has_many_objects")
-          ApiResource::Connection.any_instance.stubs(:get => [])
+          
+          # do this to load the resource definition
+          TestResource.reload_resource_definition
+          HasManyObject.reload_resource_definition
 
-          tr = TestResource.new(:has_many_objects => [{:color => "blue"}])
+          tr = TestResource.new
+          tr.has_many_objects = [{:name => "Dan"}]
 
           tr.has_many_objects.reload
-
           tr.has_many_objects.should be_blank
+        end
+
+        it "should be able to override service_uri for a 
+          multi-object association" do
+
+          tr = TestResource.new
+          tr.has_many_objects = [{:service_uri => "/a/b/c"}]
+
+          tr.has_many_objects.remote_path.should eql("/a/b/c")
+
+        end
+
+        it "should be able to override service_uri for a multi-object 
+          association when loaded with instantiate_record" do
+
+          tr = TestResource.instantiate_record(
+            :has_many_objects => [{:service_uri => "/a/b/c"}]
+          )
+
+          tr.has_many_objects.remote_path.should eql("/a/b/c")
         end
 
       end
@@ -853,6 +893,7 @@ describe "Associations" do
                 [{"name" => "testing", "id" => 22}]
               )
             # load the test resource
+            tar.has_many_objects.internal_object
             tar.has_many_objects.first.name.should eql "testing"
             tar.has_many_object_ids.should eql([22])
           end

@@ -7,7 +7,9 @@ module ApiResource
 			protected
 
 			def instantiate_finder
-				ApiResource::Finders::MultiObjectAssociationFinder.new(self.klass, self, @internal_object)
+				ApiResource::Finders::MultiObjectAssociationFinder.new(
+          self.klass, self, @internal_object
+        )
 			end
 
 		end

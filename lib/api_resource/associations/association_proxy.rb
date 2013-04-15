@@ -17,6 +17,57 @@ module ApiResource
                :reject, :reject!, :reverse, :select, :select!, :size, :sort, :sort!, :uniq, :uniq!,
                :to_a, :sample, :slice, :slice!, :count, :present?, :to => :internal_object
 
+      # define association methods on the class
+      def self.define_association_as_attribute(klass, assoc_name, opts = {})
+
+        id_method_name = self.foreign_key_name(assoc_name)
+        associated_class = opts[:class_name] || assoc_name.to_s.classify
+        
+        klass.api_resource_generated_methods.module_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{assoc_name}
+            @attributes_cache[:#{assoc_name}] ||= begin
+              instance = #{self}.new(#{associated_class}, self)
+              if @attributes[:#{assoc_name}].present?
+                instance.internal_object = @attributes[:#{assoc_name}]
+              end
+              instance
+            end
+          end
+          def #{assoc_name}=(val, force = true)
+            if !force
+              #{assoc_name}_will_change!
+            elsif self.#{assoc_name}.internal_object != val
+              #{assoc_name}_will_change!
+            end
+            # This should not force a load
+            self.#{assoc_name}.internal_object = val
+          end
+
+          def #{assoc_name}?
+            self.#{assoc_name}.internal_object.present?
+          end
+
+          # writer is the same for everyone
+          def #{id_method_name}=(val, force = false)
+            unless @attributes_cache[:#{id_method_name}] == val
+              #{id_method_name}_will_change!
+            end
+            @attributes_cache[:#{id_method_name}] = val
+            write_attribute(:#{id_method_name}, val)
+          end
+
+        EOE
+      end
+
+      protected
+
+      # return a foreign key name from an association
+      def self.foreign_key_name(assoc_name)
+        assoc_name.to_s.singularize.foreign_key
+      end
+
+      public
+
       def initialize(klass, owner, opts = {})
 
         # the base class for our scope, e.g. ApiResource::SomeClass

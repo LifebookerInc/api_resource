@@ -1,6 +1,7 @@
 module ApiResource
   module Associations
     class BelongsToRemoteObjectProxy < SingleObjectProxy
+
       def initialize(klass, owner)
         super(klass, owner)
         

@@ -26,9 +26,10 @@ module ApiResource
         
         def internal_object
           
-          # if we don't have a remote path or any data
+          # if we don't have a remote path or any data so we set it to a
+          # blank array
           if self.remote_path.blank? && @internal_object.blank?
-            return [] 
+            return @internal_object ||= [] 
           end
 
           # if we aren't loaded and we don't have data added load here

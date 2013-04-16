@@ -12,10 +12,12 @@ module ApiResource
       attr_reader :owner, :klass, :finder_opts
 
       # TODO: add the other load forcing methods here for collections
-      delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?, :include?, :push, :pop,
-               :+, :concat, :flatten, :flatten!, :compact, :compact!, :empty?, :fetch, :map,
-               :reject, :reject!, :reverse, :select, :select!, :size, :sort, :sort!, :uniq, :uniq!,
-               :to_a, :sample, :slice, :slice!, :count, :present?, :to => :internal_object
+      delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?, 
+        :include?, :push, :pop, :+, :concat, :flatten, :flatten!, :compact, 
+        :compact!, :empty?, :fetch, :map, :reject, :reject!, :reverse, 
+        :select, :select!, :size, :sort, :sort!, :uniq, :uniq!, :to_a, 
+        :sample, :slice, :slice!, :count, :present?, 
+        :to => :internal_object
 
       # define association methods on the class
       def self.define_association_as_attribute(klass, assoc_name, opts = {})

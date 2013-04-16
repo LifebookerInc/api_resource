@@ -205,8 +205,14 @@ module ApiResource
 
           # we let our concrete classes define this behavior
           type = self.association_types[assoc_type.to_sym].to_s.classify
-          klass = "Associations::#{type}ObjectProxy".constantize
+          klass = "::ApiResource::Associations::#{type}ObjectProxy"
+          klass = klass.constantize
 
+          # gives us the namespaced classname
+          opts[:class_name] = self.find_namespaced_class_name(
+            opts[:class_name] || assoc_name.to_s.classify
+          )
+          
           klass.define_association_as_attribute(self, assoc_name, opts)
         end
         

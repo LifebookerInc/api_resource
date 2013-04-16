@@ -61,6 +61,40 @@ describe "Base" do
 
   end
 
+
+  context "Prefixes" do
+
+    before(:all) do
+      TestResource.prefix = "/belongs_to_objects/:belongs_to_object_id/"
+    end
+
+    after(:all) do
+      TestResource.prefix = "/"
+    end
+
+    context "#create" do
+
+      it "should place prefix data in the URL and remove it from 
+        the parameters" do
+
+        TestResource.connection.expects(:post).with(
+          "/belongs_to_objects/22/test_resources.json", JSON.unparse(
+            :test_resource => {
+              :name => "Dan"
+            }
+          ),
+          TestResource.headers
+        )
+
+        TestResource.create(:belongs_to_object_id => 22, :name => "Dan")
+
+      end
+
+    end
+
+  end
+
+
   context "Comparison" do
 
     context "&group_by" do

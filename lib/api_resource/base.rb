@@ -558,8 +558,15 @@ module ApiResource
 
       # also add in the _id fields that are changed
       ret = self.association_names.inject(ret) do |accum, assoc_name|
+        
+        # get the id method for the association
         id_method = self.class.association_foreign_key_field(assoc_name)
-        if self.changes[id_method].present?
+         
+        # only do this if they are not prefix_attribute_names
+        # and we have changes
+        if !self.prefix_attribute_names.include?(id_method.to_sym) &&
+          self.changes[id_method].present?
+          
           accum[id_method] = self.changes[id_method].last
         end
         accum

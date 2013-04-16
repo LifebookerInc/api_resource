@@ -46,6 +46,10 @@ Mocks.define do
       :params => {:test_resource_id => 1}.matcher
     )
   end
+
+  endpoint("/has_one_objects/:id.json") do
+    get(HashDealer.roll(:has_one_object))
+  end
   
   endpoint("/has_many_objects/new") do
     get({

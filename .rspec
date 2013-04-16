@@ -6,4 +6,4 @@
 -X
 --order random
 --drb
---debugger
+#--debugger

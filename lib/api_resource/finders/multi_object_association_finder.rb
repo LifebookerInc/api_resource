@@ -22,6 +22,9 @@ module ApiResource
 					data = self.klass.connection.get(self.build_load_path)
 					return [] if data.blank?
 
+					# handle non-array data for more flexibility in our endpoints
+					data = [data] unless data.is_a?(Array)
+
 					@internal_object = self.klass.instantiate_collection(data)
 				end
 

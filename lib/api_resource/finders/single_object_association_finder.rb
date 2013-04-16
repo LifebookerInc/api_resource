@@ -22,6 +22,11 @@ module ApiResource
 					data = self.klass.connection.get(self.build_load_path)
 					
 					return nil if data.blank?
+
+					# we want to handle an array if we get one back from our endpoint
+					# this allows for more flexibility
+					data = data.first if data.is_a?(Array)
+
 					@internal_object = self.klass.instantiate_record(data)
 				end
 

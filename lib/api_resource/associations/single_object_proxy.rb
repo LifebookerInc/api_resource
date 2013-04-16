@@ -14,14 +14,13 @@ module ApiResource
       end
 
       def internal_object
-        unless instance_variable_defined?(:@internal_object)
-          if self.remote_path.present?
-            instance_variable_set(:@internal_object, self.load)
+        @internal_object ||= begin
+          if self.remote_path.present? && !self.loaded?
+            self.load
           else
-            instance_variable_set(:@internal_object, nil)
+            nil
           end
         end
-        instance_variable_get(:@internal_object)
       end
       
       def internal_object=(contents)

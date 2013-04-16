@@ -30,17 +30,10 @@ module ApiResource
 
       # because of how this works we use a multi object proxy and return the first element
       def to_condition
-        ApiResource::Conditions::MultiObjectAssociationCondition.new(
+        ApiResource::Conditions::SingleObjectAssociationCondition.new(
           self.klass, self.remote_path
         )
       end
-      
-      def load(opts = {})
-        res = Array.wrap(self.to_condition.load).first
-        @loaded = true
-        res
-      end
-
     end
   end
 end

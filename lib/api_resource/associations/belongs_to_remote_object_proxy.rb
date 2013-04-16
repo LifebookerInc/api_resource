@@ -7,7 +7,7 @@ module ApiResource
 
       # sets some defaults for the foreign key name for this association
       def self.define_association_as_attribute(klass, assoc_name, opts = {})
-        opts["foreign_key"] ||= self.foreign_key_name(assoc_name)
+        opts["foreign_key"] = self.foreign_key_name(assoc_name)
         super(klass, assoc_name, opts)
       end
 

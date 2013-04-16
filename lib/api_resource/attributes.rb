@@ -264,6 +264,20 @@ module ApiResource
 
       return val
     end
+
+    private
+
+    # this is here for compatibility with ActiveModel::AttributeMethods
+    # it is the fallback called in method_missing
+    def attribute(name)
+      read_attribute(name)      
+    end
+
+    # this is here for compatibility with ActiveModel::AttributeMethods
+    # it is the fallback called in method_missing
+    def attribute=(name, val)
+      write_attribute(name, val)      
+    end
     
   end
   

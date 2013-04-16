@@ -61,6 +61,29 @@ describe "Base" do
 
   end
 
+  context "#method_missing" do
+
+    after(:all) do
+      TestResource.reload_resource_definition
+    end
+
+    it "should attempt to reload the resource definition if a method
+      is not found" do
+
+      TestResource.class_eval do
+        remove_method :bday
+      end
+
+      tr = TestResource.new
+      
+      lambda{
+        tr.bday
+      }.should_not raise_error
+
+    end
+
+  end
+
 
   context "Prefixes" do
 

@@ -6,12 +6,6 @@ module ApiResource
 
         include Enumerable
 
-        # override the constructor to set data to nil by 
-        # default
-        def initialize(klass, owner, data = nil)
-          super
-        end
-
         def all
           self.internal_object
         end

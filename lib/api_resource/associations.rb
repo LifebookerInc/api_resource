@@ -185,6 +185,8 @@ module ApiResource
         end
 
         def define_association_as_attribute(assoc_type, assoc_name, opts)
+          opts.stringify_keys!
+
           id_method_name = association_foreign_key_field(
             assoc_name, assoc_type
           )
@@ -209,10 +211,9 @@ module ApiResource
           klass = klass.constantize
 
           # gives us the namespaced classname
-          opts[:class_name] = self.find_namespaced_class_name(
-            opts[:class_name] || assoc_name.to_s.classify
+          opts["class_name"] = self.find_namespaced_class_name(
+            opts["class_name"] || assoc_name.to_s.classify
           )
-          
           klass.define_association_as_attribute(self, assoc_name, opts)
         end
         

@@ -5,6 +5,10 @@ module ApiResource
     
     describe HasManyRemoteObjectProxy do
 
+      before(:all) do
+        TestResource.reload_resource_definition
+      end
+
       context "#<<" do
         
         it "implements the shift operator" do

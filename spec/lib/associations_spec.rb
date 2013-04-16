@@ -9,12 +9,14 @@ describe "Associations" do
   end
 
   let(:ap) do
-    Associations::SingleObjectProxy.new(
+    res = Associations::SingleObjectProxy.new(
       "TestResource", 
-      HasManyObject.new, {
-        :service_uri => '/single_object_association'
-      }
+      HasManyObject.new
     )
+    res.internal_object = {
+      :service_uri => '/single_object_association'
+    }
+    res
   end
 
   context "Comparison" do
@@ -238,10 +240,11 @@ describe "Associations" do
     it "should be able to extract a service uri from the contents hash" do
       ap = Associations::SingleObjectProxy.new(
         "TestResource", 
-        HasManyObject.new, {
-          :service_uri => '/path'
-        }
+        HasManyObject.new
       )
+      ap.internal_object = {
+        :service_uri => '/path'
+      }
       ap.remote_path.should eql("/path")
     end
 
@@ -251,11 +254,13 @@ describe "Associations" do
       TestResource.define_attributes :test
       ap = Associations::SingleObjectProxy.new(
         "TestResource", 
-        HasManyObject.new, {
-          :service_uri => '/path',
-          :test => "testval"
-        }
+        HasManyObject.new
       )
+
+      ap.internal_object = {
+        :service_uri => '/path',
+        :test => "testval"
+      }
       ap.scope?("test").should be_false
       ap.test.should eql("testval")
 
@@ -302,9 +307,9 @@ describe "Associations" do
         it "should be able to recognize a settings hash if it has a service_uri" do
           ap = Associations::MultiObjectProxy.new(
             "TestResource",
-            BelongsToObject.new,
-            [{:service_uri => "/route"}]
+            BelongsToObject.new
           )
+          ap.internal_object = [{:service_uri => "/route"}]
           ap.remote_path.should eql("/route")
         end
 
@@ -312,40 +317,31 @@ describe "Associations" do
           Associations::MultiObjectProxy.remote_path_element = :the_element
           ap = Associations::MultiObjectProxy.new(
             "TestResource",
-            BelongsToObject.new,
-            [{:the_element => "/route"}]
+            BelongsToObject.new
           )
+          ap.internal_object = [{:the_element => "/route"}]
           ap.remote_path.should eql("/route")
         end
 
       end
 
       context "Loading hash contents" do
-        it "should not be able to load a hash without a 'service_uri'" do
-          lambda {
-            Associations::MultiObjectProxy.new(
-              "TestResource", 
-              BelongsToObject,
-              {:hi => 3}
-            )
-          }.should raise_error
-        end
 
         it "should be able to recognize settings from a hash" do
           ap = Associations::MultiObjectProxy.new(
             "TestResource", 
-            BelongsToObject,
-            {:service_uri => "/route"}
+            BelongsToObject
           )
+          ap.internal_object = {:service_uri => "/route"}
           ap.remote_path.should eql("/route")
         end
 
         it "should be able to recognize settings from a hash as a string" do
           ap = Associations::MultiObjectProxy.new(
             "TestResource", 
-            BelongsToObject,
-            {"service_uri" => "/route"}
+            BelongsToObject
           )
+          ap.internal_object = {"service_uri" => "/route"}
           ap.remote_path.should eql("/route")
         end
 
@@ -353,9 +349,9 @@ describe "Associations" do
           Associations::MultiObjectProxy.remote_path_element = :the_element
           ap = Associations::MultiObjectProxy.new(
             "TestResource", 
-            BelongsToObject,
-            {:the_element => "/route"}
+            BelongsToObject
           )
+          ap.internal_object = {:the_element => "/route"}
           ap.remote_path.should eql("/route")
         end
 
@@ -457,10 +453,11 @@ describe "Associations" do
       it "should proxy unknown methods to the object loading if it hasn't already" do
         ap = Associations::SingleObjectProxy.new(
           "TestResource", 
-          HasManyObject.new, {
-            :service_uri => '/single_object_association'
-          }
+          HasManyObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/single_object_association'
+        }
         ap.should_not be_loaded
         ap.id.should_not be_blank
         ap.should be_loaded
@@ -469,10 +466,11 @@ describe "Associations" do
       it "should load scopes with caching" do
         ap = Associations::SingleObjectProxy.new(
           "TestResource", 
-          HasManyObject.new, {
-            :service_uri => '/single_object_association'
-          }
+          HasManyObject.new
         )
+        ap.internal_object = {
+          :service_uri => "/single_object_association"
+        }
         ap.should_not be_loaded
         ap.active.expires_in(30).internal_object
 
@@ -484,30 +482,33 @@ describe "Associations" do
       it "should check that ttl matches the expiration parameter" do
        ap = Associations::SingleObjectProxy.new(
           "TestResource", 
-          HasManyObject.new, {
-            :service_uri => '/single_object_association'
-          }
+          HasManyObject.new
         )
+       ap.internal_object = {
+        :service_uri => "/single_object_association"
+       }
         ap.active.expires_in(10).ttl.should eql(10)
       end
 
       it "should cache scopes when caching enabled" do
         ap = Associations::SingleObjectProxy.new(
           "TestResource", 
-          HasManyObject.new, {
-            :service_uri => '/single_object_association'
-          }
+          HasManyObject.new
         )
+        ap.internal_object = {
+          :service_uri => "/single_object_association"
+        }
         ap.active(:expires_in => 10).internal_object
       end
 
       it "should be able to clear it's loading cache" do
         ap = Associations::SingleObjectProxy.new(
           "TestResource", 
-          HasManyObject.new, {
-            :service_uri => '/single_object_association'
-          }
+          HasManyObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/single_object_association'
+        }
         active = ap.active
 
         active.internal_object
@@ -523,10 +524,11 @@ describe "Associations" do
     it "should be able to reload a single-object association" do
       ap = Associations::SingleObjectProxy.new(
         "TestResource", 
-        HasManyObject.new, {
-          :service_uri => '/single_object_association'
-        }
+        HasManyObject.new
       )
+      ap.internal_object = {
+        :service_uri => '/single_object_association'
+      }
 
       old_name = ap.name
 
@@ -544,10 +546,11 @@ describe "Associations" do
       
       ap = Associations::MultiObjectProxy.new(
         "TestResource", 
-        BelongsToObject.new, {
-          :service_uri => '/multi_object_association'
-        }
+        BelongsToObject.new
       )
+      ap.internal_object = {
+        :service_uri => '/multi_object_association'
+      }
 
       old_name = ap.first.name
 
@@ -566,10 +569,11 @@ describe "Associations" do
       it "should be able to load 'all'" do
         ap = Associations::MultiObjectProxy.new(
           "TestResource", 
-          BelongsToObject.new, {
-            :service_uri => '/multi_object_association'
-          }
+          BelongsToObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/multi_object_association'
+        }
         results = ap.all
         results.size.should eql(5)
         results.first.is_active?.should be_false
@@ -578,10 +582,11 @@ describe "Associations" do
       it "should be able to load a scope" do
         ap = Associations::MultiObjectProxy.new(
           "TestResource", 
-          BelongsToObject.new, {
-            :service_uri => '/multi_object_association'
-          }
+          BelongsToObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/multi_object_association'
+        }
         results = ap.active
         results.size.should eql(5)
         record = results.first
@@ -591,10 +596,11 @@ describe "Associations" do
       it "should be able to load a chain of scopes" do
         ap = Associations::MultiObjectProxy.new(
           "TestResource", 
-          BelongsToObject.new, {
-            :service_uri => '/multi_object_association'
-          }
+          BelongsToObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/multi_object_association'
+        }
         results = ap.active.birthday(Date.today)
         results.first.is_active.should be_true
         results.first.bday.should_not be_blank
@@ -605,10 +611,11 @@ describe "Associations" do
 
         ap = Associations::MultiObjectProxy.new(
           "TestResource", 
-          BelongsToObject.new, {
-            :service_uri => '/multi_object_association'
-          }
+          BelongsToObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/multi_object_association'
+        }
         active = ap.active
 
         active.internal_object
@@ -622,10 +629,11 @@ describe "Associations" do
       it "should be enumerable" do
         ap = Associations::MultiObjectProxy.new(
           "TestResource", 
-          BelongsToObject.new, {
-            :service_uri => '/multi_object_association'
-          }
+          BelongsToObject.new
         )
+        ap.internal_object = {
+          :service_uri => '/multi_object_association'
+        }
         ap.each do |tr|
           tr.name.should_not be_blank
         end

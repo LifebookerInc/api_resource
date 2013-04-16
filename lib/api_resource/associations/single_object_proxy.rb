@@ -67,7 +67,9 @@ module ApiResource
       def to_condition
         obj = nil
         obj = self.internal_object if self.loaded?
-        ApiResource::Conditions::SingleObjectAssociationCondition.new(self.klass, self.remote_path, obj)
+        ApiResource::Conditions::SingleObjectAssociationCondition.new(
+          self.klass, self.remote_path, obj
+        )
       end
 
       # Should make a proper conditions object and call find on it

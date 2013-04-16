@@ -28,7 +28,9 @@ module ApiResource
         klass.api_resource_generated_methods.module_eval <<-EOE, __FILE__, __LINE__ + 1
           def #{assoc_name}
             @attributes_cache[:#{assoc_name}] ||= begin
-              instance = #{self}.new(#{associated_class}, self)
+              instance = #{self}.new(
+                #{associated_class}, self, #{opts}
+              )
               if @attributes[:#{assoc_name}].present?
                 instance.internal_object = @attributes[:#{assoc_name}]
               end
@@ -70,8 +72,8 @@ module ApiResource
 
       public
 
-      def initialize(klass, owner, opts = {})
-
+      def initialize(klass, owner, options = {})
+        
         # the base class for our scope, e.g. ApiResource::SomeClass
         @klass = klass.is_a?(String) ? klass.constantize : klass
 
@@ -79,8 +81,9 @@ module ApiResource
         @klass.load_resource_definition
 
         @owner = owner
-        
-        self.internal_object = opts
+
+        # store our options
+        @options = options
       end
 
       def ttl

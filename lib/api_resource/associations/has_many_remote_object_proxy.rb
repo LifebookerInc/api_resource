@@ -33,13 +33,34 @@ module ApiResource
         # if we don't have a remote path and we do have and id,
         # we set it before we call the internal object
         # this lets us dynamically generate the correct path
-        if self.remote_path.blank? && self.owner.try(:id).present?
-          self.remote_path = self.klass.collection_path(
-            self.owner.class.to_s.foreign_key => self.owner.id
+        if self.remote_path.blank?
+          # first try for a set of ids e.g. /objects.json?ids[]=1
+          associated_ids = self.owner.read_attribute(
+            self.association_id_method
           )
+          if associated_ids.is_a?(Array) && associated_ids.present?
+            self.remote_path = self.klass.collection_path(
+              :ids => associated_ids
+            )
+          # next try for a foreign key e.g. /objects.json?owner_id=1
+          elsif self.owner.try(:id).present?
+            self.remote_path = self.klass.collection_path(
+              self.owner.class.to_s.foreign_key => self.owner.id
+            )
+          end
         end
         super
       end
+
+      protected
+
+      # The method by which we get ids for the association
+      # e.g. object_ids
+      def association_id_method
+        self.class.foreign_key_name(@options["name"])
+      end
+
+
     end
   end
 end

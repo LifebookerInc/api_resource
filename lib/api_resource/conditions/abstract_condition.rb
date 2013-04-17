@@ -6,14 +6,16 @@ module ApiResource
 
 			include Enumerable
 
-			attr_reader :conditions, :klass, :included_objects, :internal_object, :association,
-									:remote_path
+			attr_reader :conditions, :klass, :included_objects, 
+				:internal_object, :association, :remote_path
 			
 			# TODO: add the other load forcing methods here for collections
-			delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?, :include?, :push, :pop,
-							 :+, :concat, :flatten, :flatten!, :compact, :compact!, :empty?, :fetch, :map,
-							 :reject, :reject!, :reverse, :select, :select!, :size, :sort, :sort!, :uniq, :uniq!,
-							 :to_a, :sample, :slice, :slice!, :count, :present?, :to => :internal_object
+			delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?, 
+				:include?, :push, :pop, :+, :concat, :flatten, :flatten!, :compact, 
+				:compact!, :empty?, :fetch, :map, :reject, :reject!, :reverse, 
+				:select, :select!, :size, :sort, :sort!, :uniq, :uniq!, :to_a, 
+				:sample, :slice, :slice!, :count, :present?, :delete_if,
+				:to => :internal_object
 
 			# need to figure out what to do with args in the subclass,
 			# parent is the set of scopes we have right now

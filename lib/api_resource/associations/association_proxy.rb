@@ -24,6 +24,9 @@ module ApiResource
 
         id_method_name = self.foreign_key_name(assoc_name)
         associated_class = opts[:class_name] || assoc_name.to_s.classify
+
+        # pass this along
+        opts[:name] = assoc_name
         
         klass.api_resource_generated_methods.module_eval <<-EOE, __FILE__, __LINE__ + 1
           def #{assoc_name}

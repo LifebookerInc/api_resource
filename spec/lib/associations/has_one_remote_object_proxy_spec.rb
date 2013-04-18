@@ -17,7 +17,6 @@ module ApiResource
           tr = TestResource.new(
             :has_one_object => {:service_uri => "/has_one_objects/1.json"} 
           )
-
           tr.has_one_object.internal_object.should be_instance_of(
             HasOneObject
           )

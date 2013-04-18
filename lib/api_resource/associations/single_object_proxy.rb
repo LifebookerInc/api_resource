@@ -14,12 +14,13 @@ module ApiResource
       end
 
       def internal_object
-        @internal_object ||= begin
-          if self.remote_path.present? && !self.loaded?
-            self.load
-          else
-            nil
-          end
+        # we are already loaded - return the internal object
+        if self.loaded?
+          return @internal_object
+        elsif self.remote_path.present?
+          @internal_object = self.load
+        else
+          nil
         end
       end
       

@@ -34,7 +34,7 @@ module ApiResource
               instance = #{self}.new(
                 #{associated_class}, self, #{opts}
               )
-              if @attributes[:#{assoc_name}].present?
+              if @attributes.key?(:#{assoc_name})
                 instance.internal_object = @attributes[:#{assoc_name}]
               end
               instance

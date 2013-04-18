@@ -11,6 +11,76 @@ describe "Base" do
     HasManyObject.reload_resource_definition
   end
 
+
+  context ".instantiate_record" do
+
+    context "should handle blank associations and not load them 
+      afterwards" do
+
+      it "belongs_to_remote" do
+        tr = TestResource.instantiate_record(
+          :name => "X",
+          :belongs_to_object => nil
+        )
+        # load our resource definition so we can say we never expect a 
+        # get
+        BelongsToObject.reload_resource_definition
+        BelongsToObject.connection.expects(:get).never
+
+        tr.belongs_to_object?.should be false
+      end
+
+      it "has_one_remote" do
+        tr = TestResource.instantiate_record(
+          :name => "X",
+          :has_one_object => nil
+        )
+        # load our resource definition so we can say we never expect a 
+        # get
+        HasOneObject.reload_resource_definition
+        HasOneObject.connection.expects(:get).never
+
+        tr.has_one_object?.should be false
+      end
+
+      it "has_many_remote" do
+        tr = TestResource.instantiate_record(
+          :name => "X",
+          :has_many_objects => []
+        )
+        # load our resource definition so we can say we never expect a 
+        # get
+        HasManyObject.reload_resource_definition
+        HasManyObject.connection.expects(:get).never
+
+        tr.has_many_objects?.should be false
+      end
+
+    end
+
+  end
+
+  context ".load_resource_definition" do
+
+    it "should not inherit from unrelated objects" do
+
+      ErrorResource.new
+      orig_public_attr_names = ErrorResource.public_attribute_names
+      orig_protected_attr_names = ErrorResource.protected_attribute_names
+      
+      TestResource.new
+
+      ErrorResource.public_attribute_names.should eql(
+        orig_public_attr_names
+      )
+      ErrorResource.protected_attribute_names.should eql(
+        orig_protected_attr_names
+      )
+      true
+    end
+
+  end
+
   context ".new_element_path" do
 
     before(:all) do
@@ -36,27 +106,6 @@ describe "Base" do
       DynamicPrefixResource.new_element_path.should eql(
         "/dynamic_prefix_resources/new.json"
       )
-    end
-
-  end
-
-  context ".load_resource_definition" do
-
-    it "should not inherit from unrelated objects" do
-
-      ErrorResource.new
-      orig_public_attr_names = ErrorResource.public_attribute_names
-      orig_protected_attr_names = ErrorResource.protected_attribute_names
-      
-      TestResource.new
-
-      ErrorResource.public_attribute_names.should eql(
-        orig_public_attr_names
-      )
-      ErrorResource.protected_attribute_names.should eql(
-        orig_protected_attr_names
-      )
-      true
     end
 
   end

@@ -6,6 +6,7 @@ module ApiResource
 
 			def load
 				data = self.klass.connection.get(self.build_load_path)
+
 				@loaded = true
 				return nil if data.blank?
 				@internal_object = self.klass.instantiate_record(data)

@@ -50,8 +50,13 @@ module ApiResource
     def timeout=(timeout)
       @timeout = timeout
     end
-    
-    def get(path, headers = self.headers)
+
+     # make a put request
+     # @return [String] response.body raises an 
+     #   ApiResource::ConnectionError if we
+     #   have a timeout, general exception, or
+     #   if result.code is not within 200..399
+     def get(path, headers = self.headers)
       # our site and headers for this request
       site = self.site.merge(path)
       headers = build_request_headers(headers, :get, site)
@@ -71,6 +76,10 @@ module ApiResource
     end
     
     # make a put request
+    # @return [String] response.body raises an 
+    #   ApiResource::ConnectionError if we
+    #   have a timeout, general exception, or
+    #   if result.code is not within 200..399
     def put(path, body = {}, headers = self.headers)
       format.decode(
         request(
@@ -82,8 +91,12 @@ module ApiResource
       )
     end
     
-    # make a post request
-    def post(path, body = {}, headers = self.headers)
+   # make a post request
+   # @return [String] response.body raises an 
+   #   ApiResource::ConnectionError if we
+   #   have a timeout, general exception, or
+   #   if result.code is not within 200..399
+   def post(path, body = {}, headers = self.headers)
       format.decode(
         request(
           :post, 
@@ -113,7 +126,11 @@ module ApiResource
     end
 
     private
-      # Makes a request to the remote service.
+      # Makes a request to the remote service
+      # @return [String] response.body raises an 
+      #   ApiResource::ConnectionError if we
+      #   have a timeout, general exception, or
+      #   if result.code is not within 200..399
       def request(method, path, *arguments)
         handle_response(path) do
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
@@ -149,7 +166,7 @@ module ApiResource
         case code.to_i
           when 301,302
             raise ApiResource::Redirection.new(response)
-          when 200..400
+          when 200..399
             response.body
           when 400
             raise ApiResource::BadRequest.new(response)

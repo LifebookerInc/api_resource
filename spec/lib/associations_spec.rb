@@ -795,10 +795,10 @@ describe "Associations" do
         before(:all) do
           require 'active_record'
           db_path = File.expand_path(File.dirname(__FILE__) + "/../tmp/api_resource_test_db.sqlite")
-          ActiveRecord::Base.establish_connection({"adapter" => "sqlite3", "database" => db_path})
-          ActiveRecord::Base.connection.create_table(:test_ars, :force => true) do |t|
-            t.integer(:test_resource_id)
-          end
+          # ActiveRecord::Base.establish_connection({"adapter" => "sqlite3", "database" => db_path})
+          # ActiveRecord::Base.connection.create_table(:test_ars, :force => true) do |t|
+          #   t.integer(:test_resource_id)
+          # end
           ApiResource::Associations.activate_active_record
           TestAR = Class.new(ActiveRecord::Base)
           TestAR.class_eval do
@@ -806,6 +806,14 @@ describe "Associations" do
           end
           HasManyObject.reload_resource_definition
         end
+
+        before(:each) do
+          TestAR.stubs(:columns).returns([])
+          TestAR.stubs(:connection).returns(
+            :schema_cache => stub(:table_exists => true)
+          )
+        end
+
         it "should define remote association types for AR" do
           [:has_many_remote, :belongs_to_remote, :has_one_remote].each do |assoc|
             ActiveRecord::Base.singleton_methods.should include assoc
@@ -826,7 +834,7 @@ describe "Associations" do
           end
         end
         context "Belongs To" do
-          before(:all) do
+          before(:all) do 
             TestAR.class_eval do
               belongs_to_remote :test_resource
             end
@@ -848,6 +856,7 @@ describe "Associations" do
             end
           end
           it "should attempt to load a single remote object for a has_one relationship" do
+
             tar = TestAR.new
             tar.stubs(:id).returns(1)
             TestResource.connection.expects(:get)

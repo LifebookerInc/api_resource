@@ -17,9 +17,7 @@ Gem::Specification.new do |gem|
 
   # Development Dependencies
   gem.add_development_dependency "rake"
-  gem.add_development_dependency "rspec"
-  gem.add_development_dependency "spork" 
-  gem.add_development_dependency "yarjuf" 
+  gem.add_development_dependency "yarjuf"
   # this latest version of mocha is not compatible with the rails
   # 3.2.9
   gem.add_development_dependency "mocha", ["=0.12.7"]
@@ -34,10 +32,9 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rb-fsevent"
   gem.add_development_dependency "byebug"
   gem.add_development_dependency "simplecov"
-  # stuff that seems like crap
-  gem.add_development_dependency "sqlite3"
 
   gem.add_dependency "rails"
+  gem.add_dependency 'activemodel'
   gem.add_dependency "json"
   gem.add_dependency "rest-client"
   gem.add_dependency "log4r"

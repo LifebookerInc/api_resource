@@ -108,11 +108,14 @@ module ApiResource
   end
 
   def self.with_ttl(new_ttl, &block)
+    id = SecureRandom.hex
     old_ttl = self.ttl
     begin
+      puts "#{id}-SETTING NEW_TTL: #{new_ttl}"
       self.ttl = new_ttl
       yield
     ensure
+      puts "#{id}-RESTORING OLD_TTL: #{old_ttl}"
       self.ttl = old_ttl
     end
   end

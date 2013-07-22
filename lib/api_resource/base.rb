@@ -51,6 +51,22 @@ module ApiResource
     self.primary_key = "id"
 
     delegate :logger, :to => ApiResource
+
+    def self.ttl_with_logging=(new_ttl)
+      puts "new_ttl: #{new_ttl}"
+      puts "old_ttl: #{self.ttl}"
+      puts caller 0
+      LifebookerClient::StockImage.lb_logger.info{
+        "new_ttl: #{new_ttl} " +
+        "old_ttl: #{self.ttl} " +
+        "class: #{self.class}"
+      }
+      ttl_without_logging=(new_ttl)
+    end
+
+    class << self
+      alias_method_chain :ttl=, :logging
+    end
     
     class << self
       

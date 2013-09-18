@@ -100,7 +100,7 @@ module ApiResource
         unless self.typecasters.keys.include?(type.to_sym)
           raise "#{type} is not a valid type" 
         end
-        self.attribute_types[field] = type.to_sym
+        self.attribute_types = self.attribute_types.merge(field => type.to_sym)
       end
       
       

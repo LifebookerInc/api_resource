@@ -72,6 +72,7 @@ module ApiResource
           :integer => IntegerTypecaster,
           :int => IntegerTypecaster,
           :string => StringTypecaster,
+          :text => StringTypecaster,
           :time => TimeTypecaster,
           :datetime => TimeTypecaster,
           :array => ArrayTypecaster,

@@ -191,7 +191,7 @@ module ApiResource
 
     def write_attribute(name, val)
       old_val = read_attribute(name)
-      new_val = self.typecast_attribute(name, val)
+      new_val = val.nil? ? nil : self.typecast_attribute(name, val)
 
       unless old_val == new_val
         self.send("#{name}_will_change!")
@@ -247,7 +247,7 @@ module ApiResource
           val = self.default_value_for_field(field)
         end
         # now we typecast
-        val = self.typecast_attribute(field, val)
+        val = val.nil? ? nil : self.typecast_attribute(field, val)
         return @attributes_cache[field.to_sym] = val
       end
     end

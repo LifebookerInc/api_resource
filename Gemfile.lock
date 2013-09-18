@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.9)
+    api_resource (0.6.10)
       colorize
       differ
       json

@@ -18,7 +18,11 @@ module ApiResource
       end
 
       def decode(json)
-        JSON.parse(json)
+        if json.strip.blank?
+          return {}
+        else
+          JSON.parse(json)
+        end
       end
     end
   end

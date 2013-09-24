@@ -5,9 +5,10 @@ module ApiResource
     module IntegerTypecaster
 
       def self.from_api(value)
+        return 0 if value == false
+        return 1 if value == true
+        return nil if value.is_a?(String) && value.blank?
         return value.to_i if value.respond_to?(:to_i)
-        # Special case so that true typecasts to 1
-        return 1 if value.class == TrueClass
         return value.to_s.to_i
       end
 

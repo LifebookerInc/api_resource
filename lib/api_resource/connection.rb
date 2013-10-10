@@ -11,7 +11,7 @@ module ApiResource
   # services.
   class Connection
 
-    HTTP_FORMAT_HEADER_NAMES = {  
+    HTTP_FORMAT_HEADER_NAMES = {
       :get => 'Accept',
       :put => 'Content-Type',
       :post => 'Content-Type',
@@ -52,7 +52,7 @@ module ApiResource
     end
 
      # make a put request
-     # @return [String] response.body raises an 
+     # @return [String] response.body raises an
      #   ApiResource::ConnectionError if we
      #   have a timeout, general exception, or
      #   if result.code is not within 200..399
@@ -65,43 +65,53 @@ module ApiResource
         format.decode(request(:get, path, headers))
       end
     end
-    
+
     def delete(path, headers = self.headers)
       request(:delete, path, build_request_headers(headers, :delete, self.site.merge(path)))
       return true
     end
-    
+
     def head(path, headers = self.headers)
       request(:head, path, build_request_headers(headers, :head, self.site.merge(path)))
     end
-    
+
     # make a put request
-    # @return [String] response.body raises an 
+    # @return [String] response.body raises an
     #   ApiResource::ConnectionError if we
     #   have a timeout, general exception, or
     #   if result.code is not within 200..399
     def put(path, body = {}, headers = self.headers)
-      format.decode(
-        request(
-          :put, 
-          path, 
-          body, 
-          build_request_headers(headers, :put, self.site.merge(path))
-        )
+      response = request(
+        :put,
+        path,
+        body,
+        build_request_headers(headers, :put, self.site.merge(path))
       )
+      # handle blank response and return true
+      if response.blank?
+        return {}
+      # we used to decode JSON in the response, but we don't want to
+      # do that anymore - we will issue a warning but keep the behavior
+      else
+        ApiResource.logger.warn(
+          "[DEPRECATION] Returning a response body from a PUT " +
+          "is deprecated. \n#{response.pretty_inspect} was returned."
+        )
+        return format.decode(response)
+      end
     end
-    
+
    # make a post request
-   # @return [String] response.body raises an 
+   # @return [String] response.body raises an
    #   ApiResource::ConnectionError if we
    #   have a timeout, general exception, or
    #   if result.code is not within 200..399
    def post(path, body = {}, headers = self.headers)
       format.decode(
         request(
-          :post, 
-          path, 
-          body, 
+          :post,
+          path,
+          body,
           build_request_headers(headers, :post, self.site.merge(path))
         )
       )
@@ -127,14 +137,14 @@ module ApiResource
 
     private
       # Makes a request to the remote service
-      # @return [String] response.body raises an 
+      # @return [String] response.body raises an
       #   ApiResource::ConnectionError if we
       #   have a timeout, general exception, or
       #   if result.code is not within 200..399
       def request(method, path, *arguments)
         handle_response(path) do
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
-            
+
             # debug logging
             ApiResource.logger.info("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
             payload[:method]      = method
@@ -161,7 +171,7 @@ module ApiResource
         end
         return propogate_response_or_error(result, result.code)
       end
-      
+
       def propogate_response_or_error(response, code)
         case code.to_i
           when 301,302
@@ -194,7 +204,7 @@ module ApiResource
             raise ApiResource::ConnectionError.new(response, :message => "Unknown response code: #{code}")
         end
       end
-      
+
       # Creates new Net::HTTP instance for communication with the
       # remote service and resources.
       def http(path)
@@ -203,11 +213,11 @@ module ApiResource
         end
         RestClient::Resource.new("#{site.scheme}://#{site.host}:#{site.port}#{path}", {:timeout => ApiResource::Base.timeout, :open_timeout => ApiResource::Base.open_timeout})
       end
-      
+
       def build_request_headers(headers, verb, uri)
         http_format_header(verb).update(headers)
       end
-      
+
       def http_format_header(verb)
         {}.tap do |ret|
           ret[HTTP_FORMAT_HEADER_NAMES[verb]] = format.mime_type

@@ -6,4 +6,5 @@
 -X
 --order random
 --drb
+--require spec_helper
 #--debugger

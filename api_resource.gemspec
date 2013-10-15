@@ -19,6 +19,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rake"
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "spork" 
+  gem.add_development_dependency "yarjuf" 
   # this latest version of mocha is not compatible with the rails
   # 3.2.9
   gem.add_development_dependency "mocha", ["=0.12.7"]

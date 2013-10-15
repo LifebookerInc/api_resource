@@ -156,6 +156,9 @@ GEM
       polyglot
       polyglot (>= 0.3.1)
     tzinfo (0.3.37)
+    yarjuf (1.0.5)
+      builder
+      rspec (>= 2.0)
 
 PLATFORMS
   ruby
@@ -177,3 +180,4 @@ DEPENDENCIES
   simplecov
   spork
   sqlite3
+  yarjuf

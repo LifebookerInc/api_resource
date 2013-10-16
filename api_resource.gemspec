@@ -32,7 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "flog"
   gem.add_development_dependency "hash_dealer"
   gem.add_development_dependency "rb-fsevent"
-  #gem.add_development_dependency "debugger"
+  gem.add_development_dependency "byebug"
   gem.add_development_dependency "simplecov"
   # stuff that seems like crap
   gem.add_development_dependency "sqlite3"

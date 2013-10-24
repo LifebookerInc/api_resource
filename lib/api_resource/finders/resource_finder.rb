@@ -12,7 +12,11 @@ module ApiResource
 					@internal_object = self.klass.connection.get(self.build_load_path)
 					return [] if @internal_object.blank?
 
-					@internal_object = self.klass.instantiate_collection(@internal_object)
+					if @internal_object.is_a?(Array)
+						@internal_object = self.klass.instantiate_collection(@internal_object)
+					else
+						@internal_object = [self.klass.instantiate_record(@internal_object)]
+					end
 
 					id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
 						accum[assoc] = @internal_object.collect do |obj|
@@ -25,6 +29,12 @@ module ApiResource
 					included_objects = self.load_includes(id_hash)
 
 					self.apply_includes(@internal_object, included_objects)
+
+					# looks hacky, but we want to return only a single
+					# object in case of a find call.
+					if @internal_object.count == 1 && self.build_load_path =~ /find/
+						@internal_object = @internal_object.first
+					end
 
 					return @internal_object
 				rescue ApiResource::ResourceNotFound

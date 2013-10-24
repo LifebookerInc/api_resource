@@ -11,6 +11,9 @@ Mocks.define do
     post(HashDealer.roll(:test_resource).merge(:id => 1), :params => {:test_resource => HashDealer.roll(:test_resource_with_roles).matcher})
     get((0..4).to_a.collect{HashDealer.roll(:test_resource)})
     get((0..4).to_a.collect{HashDealer.roll(:test_resource)}, :params => {:active => true})
+    get((0..4).to_a.collect{HashDealer.roll(:test_resource)}, :params => {:all => true})
+    get((0..4).to_a.collect{HashDealer.roll(:test_resource)}, :params => {:first => true})
+    get((0..4).to_a.collect{HashDealer.roll(:test_resource)}, :params => {:last => true})
   end
   
   endpoint("/test_resources/:id") do

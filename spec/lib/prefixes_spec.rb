@@ -59,7 +59,7 @@ describe "With Prefixes" do
     it "should not use the prefix to find records when not given as a param to avoid automatic failure" do
       prefix_model.send(:connection).expects(:get)
         .with(
-          "/prefix_models.json"
+          "/prefix_models.json?first=true"
         )
         .returns([])
       PrefixModel.first

@@ -1,46 +1,50 @@
 module ApiResource
 
-	module Finders
+  module Finders
 
-		class SingleFinder < AbstractFinder
+    class SingleFinder < AbstractFinder
 
-			def load
-				data = self.klass.connection.get(self.build_load_path)
+      def load
+        data = self.klass.connection.get(self.build_load_path)
 
-				@loaded = true
-				return nil if data.blank?
-				@internal_object = self.klass.instantiate_record(data)
-				# now that the object is loaded, resolve the includes
-				id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
-					accum[assoc] = Array.wrap(
-						@internal_object.send(
-							@internal_object.class.association_foreign_key_field(assoc)
-						)
-					)
-					accum
-				end
+        @loaded = true
+        return nil if data.blank?
 
-				included_objects = self.load_includes(id_hash)
+        @internal_object = self.klass.instantiate_record(data)
+        # now that the object is loaded, resolve the includes
+        id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
+          accum[assoc] = Array.wrap(
+            @internal_object.send(
+              @internal_object.class.association_foreign_key_field(assoc)
+            )
+          )
+          accum
+        end
 
-				self.apply_includes(@internal_object, included_objects)
+        included_objects = self.load_includes(id_hash)
 
-				return @internal_object
-			end
+        self.apply_includes(@internal_object, included_objects)
 
-			protected
+        return @internal_object
+      end
 
-			def build_load_path
-				if self.condition.to_hash["id"].nil?
-					raise "Invalid evaluation of a SingleFinder without an ID"
-				end
-				args = self.condition.to_hash
-				id = args.delete("id")
-				prefix_opts, query_opts = self.klass.split_options(args)
-	      self.klass.element_path(id, prefix_opts, query_opts)
-	    end
+      protected
 
-		end
+      def build_load_path
+        if self.condition.to_hash["id"].nil?
+          raise "Invalid evaluation of a SingleFinder without an ID"
+        end
 
-	end
+        args = self.condition.to_hash
+        id = args.delete("id")
+
+        prefix_opts, query_opts = self.klass.split_options(args)
+        self.klass.element_path(id, prefix_opts, query_opts)
+
+      end
+
+    end
+
+  end
 
 end

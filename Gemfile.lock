@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.13)
+    api_resource (0.6.16)
       colorize
       differ
       json
@@ -85,7 +85,7 @@ GEM
     hike (1.2.3)
     i18n (0.6.1)
     journey (1.0.4)
-    json (1.8.0)
+    json (1.8.1)
     listen (0.7.1)
     log4r (1.1.10)
     lumberjack (1.0.2)
@@ -160,7 +160,7 @@ GEM
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
-    tzinfo (0.3.37)
+    tzinfo (0.3.38)
     yarjuf (1.0.5)
       builder
       rspec (>= 2.0)

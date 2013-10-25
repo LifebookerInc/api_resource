@@ -1,5 +1,5 @@
 require 'active_support/core_ext/benchmark'
-require 'rest_client'
+require 'httpclient'
 require 'net/https'
 require 'date'
 require 'time'
@@ -51,7 +51,7 @@ module ApiResource
       @timeout = timeout
     end
 
-     # make a put request
+     # make a get request
      # @return [String] response.body raises an
      #   ApiResource::ConnectionError if we
      #   have a timeout, general exception, or
@@ -84,7 +84,7 @@ module ApiResource
       response = request(
         :put,
         path,
-        body,
+        format.encode(body),
         build_request_headers(headers, :put, self.site.merge(path))
       )
       # handle blank response and return true
@@ -111,7 +111,7 @@ module ApiResource
         request(
           :post,
           path,
-          body,
+          format.encode(body),
           build_request_headers(headers, :post, self.site.merge(path))
         )
       )
@@ -143,13 +143,19 @@ module ApiResource
       #   if result.code is not within 200..399
       def request(method, path, *arguments)
         handle_response(path) do
+          unless path =~ /\./
+            path += ".#{self.format.extension}"
+          end
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
 
             # debug logging
             ApiResource.logger.info("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
             payload[:method]      = method
             payload[:request_uri] = "#{site.scheme}://#{site.host}:#{site.port}#{path}"
-            payload[:result]      = http(path).send(method, *arguments)
+            payload[:result]      = http.send(
+                                      method,
+                                      "#{site.scheme}://#{site.host}:#{site.port}#{path}",
+                                      *arguments)
           end
         end
       end
@@ -158,7 +164,7 @@ module ApiResource
       def handle_response(path, &block)
         begin
           result = yield
-        rescue RestClient::RequestTimeout
+        rescue HTTPClient::TimeoutError
           raise ApiResource::RequestTimeout.new("Request Time Out - Accessing #{path}}")
         rescue Exception => error
           if error.respond_to?(:http_code)
@@ -207,11 +213,16 @@ module ApiResource
 
       # Creates new Net::HTTP instance for communication with the
       # remote service and resources.
-      def http(path)
-        unless path =~ /\./
-          path += ".#{self.format.extension}"
+      def http
+        # TODO: Deal with proxies and such
+        unless @http
+          @http = HTTPClient.new
+          # TODO: This should be on the class level
+          @http.connect_timeout = ApiResource::Base.open_timeout
+          @http.receive_timeout = ApiResource::Base.timeout
         end
-        RestClient::Resource.new("#{site.scheme}://#{site.host}:#{site.port}#{path}", {:timeout => ApiResource::Base.timeout, :open_timeout => ApiResource::Base.open_timeout})
+
+        return @http
       end
 
       def build_request_headers(headers, verb, uri)

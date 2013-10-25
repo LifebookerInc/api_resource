@@ -36,8 +36,8 @@ describe "With Prefixes" do
     it "should use the prefix to create a new record" do
       prefix_model.send(:connection).expects(:post)
         .with(
-          "/foreign/123/prefix_models.json", 
-          {"prefix_model" => {"name" => "test"}}.to_json,
+          "/foreign/123/prefix_models.json",
+          has_entry(:prefix_model, has_entry(:name, 'test')),
           instance_of(Hash)
         )
       prefix_model.save
@@ -90,9 +90,8 @@ describe "With Prefixes" do
       prefix_model.name = "changed name"
       prefix_model.send(:connection).expects(:put)
         .with(
-
-          "/foreign/123/prefix_models/456.json", 
-          {"prefix_model" => {"name" => "changed name"}}.to_json,
+          "/foreign/123/prefix_models/456.json",
+          has_entry(:prefix_model, has_entry(:name, 'changed name')),
           instance_of(Hash)
         )
       prefix_model.save

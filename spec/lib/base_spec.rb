@@ -150,11 +150,12 @@ describe "Base" do
         the parameters" do
 
         TestResource.connection.expects(:post).with(
-          "/belongs_to_objects/22/test_resources.json", JSON.unparse(
-            :test_resource => {
-              :name => "Dan"
+          "/belongs_to_objects/22/test_resources.json",
+          {
+            test_resource: {
+              name: 'Dan'
             }
-          ),
+          },
           TestResource.headers
         )
 
@@ -373,7 +374,6 @@ describe "Base" do
       TestResource.include_root_in_json = true
     end
 
-
     context "#to_json" do
 
       it "should be able to serialize itself without the root" do
@@ -468,14 +468,16 @@ describe "Base" do
 
       context("Override create to return the json") do
 
-        before(:all) do
-          RestClient::Payload.stubs(:has_file? => false)
-        end
 
         it "should be able to include associations when saving if they are specified" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":20}}",
+            {
+              test_resource: {
+                name: 'Ethan',
+                age: 20
+              }
+            },
             TestResource.headers
           )
 
@@ -487,7 +489,11 @@ describe "Base" do
         it "should not include nil attributes when creating by default" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            "{\"test_resource\":{\"name\":\"Ethan\"}}",
+            {
+              test_resource: {
+                name: 'Ethan'
+              }
+            },
             TestResource.headers
           )
 
@@ -498,7 +504,12 @@ describe "Base" do
         it "should include false attributes when creating by default" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            "{\"test_resource\":{\"name\":\"Ethan\",\"is_active\":false}}",
+            {
+              test_resource: {
+                name: 'Ethan',
+                is_active: false
+              }
+            },
             TestResource.headers
           )
 
@@ -510,7 +521,14 @@ describe "Base" do
         it "should not include nil attributes for associated objects when creating by default" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            "{\"test_resource\":{\"name\":\"Ethan\",\"has_one_object\":{\"size\":\"large\"}}}",
+            {
+              test_resource: {
+                name: 'Ethan',
+                has_one_object: {
+                  size: 'large'
+                }
+              }
+            },
             TestResource.headers
           )
 
@@ -523,7 +541,12 @@ describe "Base" do
         it "should include nil attributes if they are passed in through the include_extras" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            "{\"test_resource\":{\"name\":\"Ethan\",\"age\":null}}",
+            {
+              test_resource: {
+                name: 'Ethan',
+                age: nil
+              }
+            },
             TestResource.headers
           )
 
@@ -534,7 +557,7 @@ describe "Base" do
 
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
           ApiResource::Connection.any_instance.expects(:post).with(
-            "/test_resources.json", JSON.unparse(
+            "/test_resources.json", {
               :test_resource => {
                 :name => "Ethan",
                 :age => nil,
@@ -544,7 +567,7 @@ describe "Base" do
                 :bday => nil,
                 :roles => []
               }
-            ),
+            },
             TestResource.headers
           )
 
@@ -563,7 +586,7 @@ describe "Base" do
         TestResource.reload_resource_definition
         HasOneObject.reload_resource_definition
         TestResource.has_many :has_many_objects
-        RestClient::Payload.stubs(:has_file? => false)
+        # RestClient::Payload.stubs(:has_file? => false)
       end
 
       it "should be able to put updated data via the update method and
@@ -574,12 +597,12 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :name => "Ethan",
               :age => 6
             }
-          }),
+          },
           TestResource.headers
         )
 
@@ -596,12 +619,12 @@ describe "Base" do
       it "should include changed associations without specification" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :name => "Ethan",
               :has_many_objects => [{:name => "Test"}]
             }
-          }),
+          },
           TestResource.headers
         )
 
@@ -619,12 +642,12 @@ describe "Base" do
       it "should include unchanged associations if they are specified" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :name => "Ethan",
               :has_many_objects => []
             }
-          }),
+          },
           TestResource.headers
         )
 
@@ -642,14 +665,14 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :name => "Ethan",
               :has_one_object => {
                 :size => "large"
               }
             }
-          }),
+          },
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -661,13 +684,13 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :has_one_object => {
                 :size => nil
               }
             }
-          }),
+          },
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -683,14 +706,14 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          JSON.unparse({
+          {
             :test_resource => {
               :name => "Ethan",
               :has_one_object => {
                 :size => "large"
               }
             }
-          }),
+          },
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -702,7 +725,11 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
-          "{\"test_resource\":{\"has_one_object\":null}}",
+          {
+            test_resource: {
+              has_one_object: nil
+            }
+          },
           TestResource.headers
         ).in_sequence(correct_order)
 
@@ -714,7 +741,7 @@ describe "Base" do
       it "should include all attributes if include_all_attributes_on_update is true" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
-          "/test_resources/1.json", JSON.unparse(
+          "/test_resources/1.json",{
             :test_resource => {
               :name => "Ethan",
               :age => nil,
@@ -724,7 +751,7 @@ describe "Base" do
               :bday => nil,
               :roles => []
             }
-          ),
+          },
           TestResource.headers
         )
         begin
@@ -748,7 +775,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-             {:test_resource => {:name => "Dan"}}.to_json,
+             {:test_resource => {:name => "Dan"}},
             TestResource.headers
           ).in_sequence(correct_order)
 
@@ -772,7 +799,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {:is_active => nil}}.to_json,
+            {:test_resource => {:is_active => nil}},
             TestResource.headers
           )
           .in_sequence(correct_order)
@@ -797,7 +824,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {:is_active => false}}.to_json,
+            {:test_resource => {:is_active => false}},
             TestResource.headers
           ).in_sequence(correct_order)
 

@@ -1,49 +1,55 @@
 require 'api_resource'
 
 module ApiResource
-  
+
   module Mocks
-  
+
     @@endpoints = {}
     @@path = nil
 
-    # A simple interface class to change the new connection to look like the 
+    # A simple interface class to change the new connection to look like the
     # old activeresource connection
     class Interface
-      
-      def initialize(path)
-        @path = path
+
+
+      def get(path, *args, &block)
+        uri = URI.parse(path)
+        path = uri.path + (uri.query.present? ? "?#{uri.query}" : '')
+        Connection.get(path, *args, &block)
       end
-      
-      def get(*args, &block)
-        Connection.send(:get, @path, *args, &block)
+      def post(path, *args, &block)
+        Connection.post(process_path(path), *args, &block)
       end
-      def post(*args, &block)
-        Connection.send(:post, @path, *args, &block)
+      def put(path, *args, &block)
+        Connection.put(process_path(path), *args, &block)
       end
-      def put(*args, &block)
-        Connection.send(:put, @path, *args, &block)
+      def delete(path, *args, &block)
+        Connection.delete(process_path(path), *args, &block)
       end
-      def delete(*args, &block)
-        Connection.send(:delete, @path, *args, &block)
+      def head(path, *args, &block)
+        Connection.head(process_path(path), *args, &block)
       end
-      def head(*args, &block)
-        Connection.send(:head, @path, *args, &block)
+
+      protected
+
+      def process_path(path)
+        uri = URI.parse(path)
+        return uri.path
       end
     end
 
-    # set ApiResource's http 
+    # set ApiResource's http
     def self.init
       ::ApiResource::Connection.class_eval do
         private
         alias_method :http_without_mock, :http
-        def http(path)
-          Interface.new(path)
+        def http
+          Interface.new
         end
       end
     end
-    
-    # set ApiResource's http 
+
+    # set ApiResource's http
     def self.remove
       ::ApiResource::Connection.class_eval do
         private
@@ -114,7 +120,7 @@ module ApiResource
 
       return {:responses => nil, :params => nil}
     end
-    
+
 
     private
     def self.with_path_and_format(path, format, &block)
@@ -123,13 +129,13 @@ module ApiResource
       @@path, @@format = nil, nil
       ret
     end
-    # define the 
+    # define the
     [:post, :put, :get, :delete, :head].each do |verb|
       instance_eval <<-EOE, __FILE__, __LINE__ + 1
         def #{verb}(response_body, opts = {}, &block)
 
           raise Exception.new("Must be called from within an endpoint block") unless @@path
-          opts = opts.reverse_merge({:status_code => 200, :response_headers => {}, :params => {}})        
+          opts = opts.reverse_merge({:status_code => 200, :response_headers => {}, :params => {}})
 
           @@endpoints[@@path] << [MockRequest.new(:#{verb}, @@path, :params => opts[:params], :format => @@format), MockResponse.new(response_body, :status_code => opts[:status_code], :headers => opts[:response_headers], :format => @@format, &block)]
         end
@@ -138,7 +144,7 @@ module ApiResource
 
     class MockResponse
       attr_reader :body, :headers, :code, :format, :block
-      def initialize(body, opts = {}, &block)     
+      def initialize(body, opts = {}, &block)
         opts = opts.reverse_merge({:headers => {}, :status_code => 200})
         @body = body
         @headers = opts[:headers]
@@ -197,7 +203,7 @@ module ApiResource
         @headers["Content-Length"] = @body.blank? ? "0" : @body.size.to_s
       end
 
-      # 
+      #
       def typecast_values(data)
         if data.is_a?(Hash)
           data.each_pair do |k,v|
@@ -249,7 +255,7 @@ module ApiResource
           #   if response = LifebookerClient::Mocks.find_response(request)
           #     response
           #   else
-          #     raise InvalidRequestError.new("Could not find a response 
+          #     raise InvalidRequestError.new("Could not find a response
           #     recorded for #{request.to_s} - Responses recorded are: -
           #       #{inspect_responses}")
           #   end
@@ -261,7 +267,7 @@ module ApiResource
               request = MockRequest.new(:#{method}, path, opts)
               self.requests << request
               if response = Mocks.find_response(request)
-                response[:response].tap{|resp| 
+                response[:response].tap{|resp|
                   resp.generate_response(
                     request.params
                       .with_indifferent_access

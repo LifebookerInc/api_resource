@@ -57,6 +57,7 @@ module ApiResource
       # writers - accessors with defaults were not working
       attr_writer :element_name, :collection_name
 
+
       delegate :logger, to: ApiResource
 
       def inherited(klass)
@@ -609,7 +610,7 @@ module ApiResource
       opts[:include_extras] ||= []
       opts[:action] = "create"
       # TODO: Remove this dependency for saving files
-      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+      { self.class.element_name.to_sym => self.serializable_hash(opts) }
     end
 
 
@@ -633,7 +634,7 @@ module ApiResource
       opts[:action] = "update"
       opts[:except] = [:id] if self.class.include_all_attributes_on_update
       # TODO: Remove this dependency for saving files
-      body = RestClient::Payload.has_file?(self.attributes) ? self.serializable_hash(opts) : encode(opts)
+      { self.class.element_name.to_sym => self.serializable_hash(opts) }
     end
 
     private

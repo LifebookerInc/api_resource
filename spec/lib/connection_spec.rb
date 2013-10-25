@@ -3,12 +3,12 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 include ApiResource
 
 describe Connection do
-  
+
   it "should be able to set the token directly on ApiResource" do
     ApiResource.token = "123"
     ApiResource::Base.token.should eql "123"
   end
-  
+
   it "should be able to set a default token value, which is passed through each request" do
     ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {"Accept"=>"application/json", "Lifebooker-Token" => "abc"}).returns(ApiResource::Mocks::MockResponse.new({}))
     ApiResource::Base.token = "abc"
@@ -44,7 +44,7 @@ describe Connection do
 
   it "should set the Lifebooker-Token if one is present for POST requests" do
     token = Kernel.rand(100000).to_s
-    ApiResource::Mocks::Connection.expects(:post).with("/test_resources/1.json", {}, {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:post).with("/test_resources/1.json", '{}', {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
 
     ApiResource::Base.token = token
 
@@ -53,7 +53,7 @@ describe Connection do
 
   it "should set the Lifebooker-Token if one is present for PUT requests" do
     token = Kernel.rand(100000).to_s
-    ApiResource::Mocks::Connection.expects(:put).with("/test_resources/1.json", {}, {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:put).with("/test_resources/1.json", '{}', {"Content-Type"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
 
     ApiResource::Base.token = token
 
@@ -75,7 +75,7 @@ describe Connection do
     TestResource.connection.headers.include?("Lifebooker-Token").should eql true
     TestResource.connection.headers["Lifebooker-Token"] = token
   end
-  
+
   it "should be able to set a token for a given block" do
     ApiResource::Base.token = "123456"
     begin
@@ -88,14 +88,14 @@ describe Connection do
     end
     ApiResource::Base.token.should eql "123456"
   end
-  
+
   it "should provider a method to regenerate its connection" do
     conn = ApiResource::Base.connection
     conn.should be ApiResource::Base.connection
     ApiResource.reset_connection
     conn.should_not be ApiResource::Base.connection
   end
-  
+
   context "No Mocks" do
     before(:all) do
       ApiResource::Mocks.remove
@@ -111,25 +111,25 @@ describe Connection do
       ApiResource.open_timeout = 1
       ApiResource.open_timeout.should eql 1
 
-      ApiResource::Base.connection.send(:http, "/test").options[:timeout].should eql 1
-      ApiResource::Base.connection.send(:http, "/test").options[:open_timeout].should eql 1
-      
+      ApiResource::Base.connection.send(:http).receive_timeout.should eql 1
+      ApiResource::Base.connection.send(:http).connect_timeout.should eql 1
+
       ApiResource.timeout = 100
-      ApiResource::Base.connection.send(:http, "/test").options[:timeout].should eql 100
+      ApiResource::Base.connection.send(:http).receive_timeout.should eql 100
 
     end
-    
+
     it "should time out if RestClient takes too long" do
-      
+
       # hopefully google won't actually respond this fast :)
       ApiResource.timeout = 0.001
       ApiResource::Base.site = "http://www.google.com"
       lambda{
         ApiResource::Base.connection.get("/")
       }.should raise_error(ApiResource::RequestTimeout)
-      
+
     end
-    
+
   end
 
   context "headers" do
@@ -150,7 +150,7 @@ describe Connection do
     end
 
   end
-  
 
-  
+
+
 end

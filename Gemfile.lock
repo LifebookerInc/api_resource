@@ -5,10 +5,10 @@ PATH
       activemodel
       colorize
       differ
+      httpclient
       json
       log4r
       rails
-      rest-client
 
 GEM
   remote: https://rubygems.org/
@@ -84,6 +84,7 @@ GEM
       colorize
       i18n
     hike (1.2.3)
+    httpclient (2.3.4.1)
     i18n (0.6.1)
     journey (1.0.4)
     json (1.8.1)
@@ -131,8 +132,6 @@ GEM
     rb-fsevent (0.9.3)
     rdoc (3.12.2)
       json (~> 1.4)
-    rest-client (1.6.7)
-      mime-types (>= 1.16)
     rspec (2.12.0)
       rspec-core (~> 2.12.0)
       rspec-expectations (~> 2.12.0)

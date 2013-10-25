@@ -30,13 +30,13 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "flog"
   gem.add_development_dependency "hash_dealer"
   gem.add_development_dependency "rb-fsevent"
-  gem.add_development_dependency "byebug"
   gem.add_development_dependency "simplecov"
+  gem.add_development_dependency 'byebug'
 
+  gem.add_dependency "httpclient"
   gem.add_dependency "rails"
   gem.add_dependency 'activemodel'
   gem.add_dependency "json"
-  gem.add_dependency "rest-client"
   gem.add_dependency "log4r"
   gem.add_dependency "differ"
   gem.add_dependency "colorize"

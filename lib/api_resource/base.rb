@@ -50,6 +50,9 @@ module ApiResource
     class_attribute :primary_key
     self.primary_key = "id"
 
+    class_attribute :resource_definition_mutex
+    self.resource_definition_mutex = Mutex.new
+
     delegate :logger, to: ApiResource
 
     class << self
@@ -118,13 +121,20 @@ module ApiResource
 
       def load_resource_definition
         unless instance_variable_defined?(:@resource_definition)
-          # the last time we checked
-          @resource_load_time = Time.now
+          # Lock the mutex to make sure only one thread does
+          # this at a time
+          self.resource_definition_mutex.synchronize do
+            # once we have the lock, check to make sure the resource
+            # definition wasn't fetched while we were sleeping
+            return true if instance_variable_defined?(:@resource_definition)
+            # the last time we checked
+            @resource_load_time = Time.now
 
-          # set to not nil so we don't get an infinite loop
-          @resource_definition = true
-          self.set_class_attributes_upon_load
-          return true
+            # set to not nil so we don't get an infinite loop
+            @resource_definition = true
+            self.set_class_attributes_upon_load
+            return true
+          end
         end
         # we didn't do anything
         false

@@ -60,7 +60,6 @@ module ApiResource
     end
 
     module ClassMethods
-
       #
       # Wrapper method to define all of the attributes (public and protected)
       # for this Class

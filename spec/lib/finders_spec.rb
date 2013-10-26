@@ -79,6 +79,20 @@ describe ApiResource::Finders do
 		TestResource.includes(:has_many_objects).find(1)
 	end
 
+	it "should be able to chain find on top of an includes call and a scope" do
+		TestResource.connection.expects(:get).with("/test_resources.json?birthday%5Bdate%5D=5&find%5Bids%5D=1").returns({"id" => 1, "has_many_object_ids" => [1,2]})
+		HasManyObject.connection.expects(:get).with("/has_many_objects.json?ids%5B%5D=1&ids%5B%5D=2").returns([])
+
+		TestResource.includes(:has_many_objects).birthday(5).find(1)
+	end
+
+	it "should disregard condition order" do
+		TestResource.connection.expects(:get).with("/test_resources.json?birthday%5Bdate%5D=5&find%5Bids%5D=1").returns({"id" => 1, "has_many_object_ids" => [1,2]})
+		HasManyObject.connection.expects(:get).with("/has_many_objects.json?ids%5B%5D=1&ids%5B%5D=2").returns([])
+
+		TestResource.birthday(5).includes(:has_many_objects).find(1)
+	end
+
 	it "should be able to use a scope with arguments" do
 		TestResource.connection.expects(:get)
 			.with("/test_resources.json?active=true&birthday%5Bdate%5D=5").returns([{"id" => 10}])

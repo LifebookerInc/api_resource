@@ -36,13 +36,12 @@ module ApiResource
         expiry = @expiry
         ApiResource.with_ttl(expiry.to_f) do
           if numeric_find
-            if single_find && (@conditions.blank_conditions? || include_associations_only?)
+            if single_find && (@conditions.blank_conditions? || nested_find_only?)
               # If we have no conditions or they are only prefixes or
               # includes, and only one argument (not a word) then we 
               # only have a single item to find.
               # e.g. Class.includes(:association).find(1)
               #      Class.find(1)
-              @scope = @scope.first if @scope.is_a?(Array)
               final_cond = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
 
               ApiResource::Finders::SingleFinder.new(self, final_cond).load
@@ -51,17 +50,12 @@ module ApiResource
               #      Class.includes(:association).find(1,2)
               #      Class.find(1,2)
               #      Class.active.find(1)
-              if Array.wrap(@scope).size == 1 && @scope.is_a?(Array)
-                @scope = @scope.first
-              end
-
               fnd = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => @scope}}, self))
               fnd.send(:all)
             end
           else
             # e.g. Class.scope(1).first
             #      Class.first
-            @scope = @scope.first if @scope.is_a?(Array)
             new_condition = @scope == :all ? {} : {@scope => true}
 
             final_cond = @conditions.merge!ApiResource::Conditions::ScopeCondition.new(new_condition, self)
@@ -69,7 +63,6 @@ module ApiResource
             fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
             fnd.send(@scope)
           end
-
         end
       end
 
@@ -151,23 +144,29 @@ module ApiResource
 
         # Conditions sometimes call find, passing themselves as the last arg.
         if args.last.is_a?(ApiResource::Conditions::AbstractCondition)
-          cond  = args.slice!(args.length - 1) 
+          cond    = args.slice!(args.length - 1) 
         else
-          cond  = nil
+          cond    = nil
         end
 
         # Support options being passed in as a hash.
-        options = args.extract_options!
+        options   = args.extract_options!
         if options.blank?
           options = nil
         end
 
-        @expiry = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
+        @expiry   = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
 
         combine_conditions(options, cond)
 
         # Remaining args are the scope.
-        @scope   = args
+        @scope    = args
+
+        if Array.wrap(@scope).size == 1 && @scope.is_a?(Array)
+          @scope = @scope.first
+        end
+
+        true
       end
 
       def combine_conditions(options, condition)
@@ -192,7 +191,7 @@ module ApiResource
         @conditions = final_cond
       end
 
-      def include_associations_only?
+      def nested_find_only?
         if @conditions.blank_conditions?
           return false
         else

@@ -57,11 +57,60 @@ module ApiResource
 
     class << self
 
-      # writers - accessors with defaults were not working
-      attr_writer :element_name, :collection_name
+      # @!attribute [w] collection_name
+      #   @return [String]
+      attr_writer :collection_name
 
+      # @!attribute [w] element_name
+      #   @return [String]
+      attr_writer :element_name
 
-      delegate :logger, to: ApiResource
+      delegate :logger,
+        to: ApiResource
+
+      #
+      # Accessor for the connection
+      #
+      # @param  refresh = false [Boolean] Whether to reconnect
+      #
+      # @return [Connection]
+      def connection(refresh = false)
+        if refresh || @connection.nil?
+          @connection = Connection.new(self.site, self.format, self.headers)
+        end
+        @connection.timeout = self.timeout
+        @connection
+      end
+
+      #
+      # Handles the setting of format to a MimeType
+      #
+      # @param  mime_type_or_format [Symbol, MimeType]
+      #
+      # @return [MimeType] The new MimeType
+      def format_with_mimetype_or_format_set=(mime_type_or_format)
+        if mime_type_or_format.is_a?(Symbol)
+          format = ApiResource::Formats[mime_type_or_format]
+        else
+          format = mime_type_or_format
+        end
+        self.format_without_mimetype_or_format_set = format
+        if self.site
+          self.connection.format = format
+        end
+        format
+      end
+      alias_method_chain :format=, :mimetype_or_format_set
+
+      #
+      # Reader for headers
+      #
+      # @return [Hash] Headers for requests
+      def headers
+        {}.tap do |ret|
+          ret['Lifebooker-Token'] = self.token if self.token.present?
+        end
+      end
 
       def inherited(klass)
         # Call the methods of the superclass to make sure inheritable accessors and the like have been inherited
@@ -78,47 +127,10 @@ module ApiResource
       end
 
       #
-      # Reader for the resource_definition
+      # Explicit call to load the resource definition
       #
-      # @return [Hash, nil] Our stored resource definition
-      def resource_definition
-        @resource_definition
-      end
-
-      #
-      # This makes a request to new_element_path
-      #
-      # @return [Boolean] true
-      def set_class_attributes_upon_load
-        # this only happens in subclasses
-        return true if self == ApiResource::Base
-        begin
-          @resource_definition = self.connection.get(
-            self.new_element_path, self.headers
-          )
-          # set up methods derived from our class definition
-          self.define_all_attributes
-          self.define_all_scopes
-          self.define_all_associations
-
-        # Swallow up any loading errors because the site may be incorrect
-        rescue Exception => e
-          self.handle_resource_definition_error(e)
-        end
-        true
-      end
-
-      def reset_connection
-        remove_instance_variable(:@connection) if @connection.present?
-      end
-
-      # load our resource definition to make sure we know what this class
-      # responds to
-      def respond_to?(*args)
-        self.load_resource_definition
-        super
-      end
-
+      # @return [Boolean] True if we loaded it, false if it was already
+      # loaded
       def load_resource_definition
         unless instance_variable_defined?(:@resource_definition)
           # Lock the mutex to make sure only one thread does
@@ -140,6 +152,45 @@ module ApiResource
         false
       end
 
+      #
+      # Set the open timeout on the connection and connect
+      #
+      # @param  timeout [Fixnum] Open timeout in number of seconds
+      #
+      # @return [Fixnum] The timeout
+      def open_timeout_with_connection_reset=(timeout)
+        @connection = nil
+        self.open_timeout_without_connection_reset = timeout
+      end
+      alias_method_chain :open_timeout=, :connection_reset
+
+      #
+      # Prefix for the resource path
+      #
+      # @todo Are the options used?
+      #
+      # @param  options = {} [Hash] Options
+      #
+      # @return [String] Collection prefix
+      def prefix(options = {})
+        default = (self.site ? self.site.path : '/')
+        default << '/' unless default[-1..-1] == '/'
+        self.prefix = default
+        prefix(options)
+      end
+
+      #
+      # @todo  Not sure what this does
+      def prefix_source
+        prefix
+        prefix_source
+      end
+
+      #
+      # Clear the old resource definition and reload it from the
+      # server
+      #
+      # @return [Boolean] True if it loaded
       def reload_resource_definition
         # clear the public_attribute_names, protected_attribute_names
         if instance_variable_defined?(:@resource_definition)
@@ -152,16 +203,65 @@ module ApiResource
       # backwards compatibility
       alias_method :reload_class_attributes, :reload_resource_definition
 
-      def token_with_new_token_set=(new_token)
-        self.token_without_new_token_set = new_token
-        self.connection(true)
-        self.descendants.each do |child|
-          child.send(:token=, new_token)
-        end
+      #
+      # Reset our connection instance so that we will reconnect the
+      # next time we need it
+      #
+      # @return [Boolean] true
+      def reset_connection
+        remove_instance_variable(:@connection) if @connection.present?
+        true
       end
 
-      alias_method_chain :token=, :new_token_set
+      #
+      # Reader for the resource_definition
+      #
+      # @return [Hash, nil] Our stored resource definition
+      def resource_definition
+        @resource_definition
+      end
 
+      #
+      # Load our resource definition to make sure we know what this class
+      # responds to
+      #
+      # @return [Boolean] Whether or not it responss
+      def respond_to?(*args)
+        self.load_resource_definition
+        super
+      end
+
+      #
+      # This makes a request to new_element_path and sets up the correct
+      # attribute, scope and association methods for this class
+      #
+      # @return [Boolean] true
+      def set_class_attributes_upon_load
+        # this only happens in subclasses
+        return true if self == ApiResource::Base
+        begin
+          @resource_definition = self.connection.get(
+            self.new_element_path, self.headers
+          )
+          # set up methods derived from our class definition
+          self.define_all_attributes
+          self.define_all_scopes
+          self.define_all_associations
+
+        # Swallow up any loading errors because the site may be incorrect
+        rescue Exception => e
+          self.handle_resource_definition_error(e)
+        end
+        true
+      end
+
+      #
+      # Handles the setting of site while reloading the resource
+      # definition to ensure we have the latest definition
+      #
+      # @param  site [String] URL of the site
+      #
+      # @return [String] The newly set site
       def site_with_connection_reset=(site)
         # store so we can reload attributes if the site changed
         old_site = self.site.to_s.clone
@@ -182,55 +282,38 @@ module ApiResource
 
         return site
       end
-
       alias_method_chain :site=, :connection_reset
 
-
-      def format_with_mimetype_or_format_set=(mime_type_or_format)
-        format = mime_type_or_format.is_a?(Symbol) ? ApiResource::Formats[mime_type_or_format] : mime_type_or_format
-        self.format_without_mimetype_or_format_set = format
-        self.connection.format = format if self.site
-      end
-
-      alias_method_chain :format=, :mimetype_or_format_set
-
+      #
+      # Set the timeout on the connection and connect
+      #
+      # @param  timeout [Fixnum] Timeout in number of seconds
+      #
+      # @return [Fixnum] The timeout
       def timeout_with_connection_reset=(timeout)
         @connection = nil
         self.timeout_without_connection_reset = timeout
       end
-
       alias_method_chain :timeout=, :connection_reset
 
-      def open_timeout_with_connection_reset=(timeout)
-        @connection = nil
-        self.open_timeout_without_connection_reset = timeout
-      end
-
-      alias_method_chain :open_timeout=, :connection_reset
-
-      def connection(refresh = false)
-        @connection = Connection.new(self.site, self.format, self.headers) if refresh || @connection.nil?
-        @connection.timeout = self.timeout
-        @connection
-      end
-
-      def headers
-        {}.tap do |ret|
-          ret['Lifebooker-Token'] = self.token if self.token.present?
+      #
+      # Handles the setting of tokens on descendants
+      #
+      # @param  new_token [String] New token string
+      #
+      # @return [String] The token that was set
+      def token_with_new_token_set=(new_token)
+        self.token_without_new_token_set = new_token
+        self.connection(true)
+        self.descendants.each do |child|
+          child.send(:token=, new_token)
         end
+        new_token
       end
+      alias_method_chain :token=, :new_token_set
 
-      def prefix(options = {})
-        default = (self.site ? self.site.path : '/')
-        default << '/' unless default[-1..-1] == '/'
-        self.prefix = default
-        prefix(options)
-      end
 
-      def prefix_source
-        prefix
-        prefix_source
-      end
+
 
       def prefix=(value = '/')
         prefix_call = value.gsub(/:\w+/) { |key|
@@ -602,49 +685,81 @@ module ApiResource
       )
     end
 
+    #
+    # Create a new record
+    # @param  *args [type] [description]
+    #
+    # @return [type] [description]
     def create(*args)
-      body = setup_create_call(*args)
-      connection.post(collection_path, body, self.class.headers).tap do |response|
+      path = self.collection_path
+      body = self.setup_create_call(*args)
+      headers = self.class.headers
+      # make the post call
+      connection.post(path, body, headers).tap do |response|
         load_attributes_from_response(response)
       end
     end
 
+    #
+    # Helper method to set up a call to create
+    #
+    # @param  *args [type] [description]
+    #
+    # @return [type] [description]
     def setup_create_call(*args)
       opts = args.extract_options!
-      # When we create we should not include any blank attributes unless they are associations
-      except = self.class.include_nil_attributes_on_create ?
-        {} : self.nil_attributes
-      opts[:except] = opts[:except] ? opts[:except].concat(except.keys).uniq.symbolize_array : except.keys.symbolize_array
-      opts[:include_nil_attributes] = self.class.include_nil_attributes_on_create
-      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args) : []
-      opts[:include_extras] ||= []
-      opts[:action] = "create"
-      # TODO: Remove this dependency for saving files
-      { self.class.element_name.to_sym => self.serializable_hash(opts) }
+
+      # handle nil attributes
+      opts[:include_nil_attributes] = self.include_nil_attributes_on_create
+
+      # more generic setup_save_call
+      self.setup_save_call(args, opts)
     end
 
 
     def update(*args)
-      body = setup_update_call(*args)
+      path = self.element_path(self.id)
+      body = self.setup_update_call(*args)
+      headers = self.class.headers
       # We can just ignore the response
-      connection.put(element_path(self.id), body, self.class.headers).tap do |response|
+      connection.put(path, body, headers).tap do |response|
         load_attributes_from_response(response)
       end
     end
 
     def setup_update_call(*args)
-      opts = args.extract_options!
+      options = args.extract_options!
+
       # When we create we should not include any blank attributes
-      except = self.class.attribute_names - self.changed.symbolize_array
-      changed_associations = self.changed.symbolize_array.select{|item| self.association?(item)}
-      opts[:except] = opts[:except] ? opts[:except].concat(except).uniq.symbolize_array : except.symbolize_array
-      opts[:include_nil_attributes] = self.include_all_attributes_on_update
-      opts[:include_associations] = opts[:include_associations] ? opts[:include_associations].concat(args).concat(changed_associations).uniq : changed_associations.concat(args)
-      opts[:include_extras] ||= []
-      opts[:action] = "update"
-      opts[:except] = [:id] if self.class.include_all_attributes_on_update
-      # TODO: Remove this dependency for saving files
-      { self.class.element_name.to_sym => self.serializable_hash(opts) }
+      options[:include_nil_attributes] =
+        self.include_all_attributes_on_update
+
+      # exclude unchanged data
+      unless self.include_all_attributes_on_update
+        options[:except] ||= []
+        options[:except].concat(
+          self.attribute_names.select { |name| self.changes[name].blank? }
+        )
+      end
+
+      # more generic setup_save_call
+      self.setup_save_call(args, options)
+    end
+
+    def setup_save_call(additional_associations, options = {})
+      # We pass in associations as options and args for no good reason
+      options[:include_associations] ||= []
+      options[:include_associations].concat(additional_associations)
+
+      # get our data
+      data = self.serializable_hash(options)
+
+      # handle the root element
+      if self.include_root_in_json
+        data = { self.class.element_name.to_sym => data}
+      end
+
+      return data
     end
 
     private

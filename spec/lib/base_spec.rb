@@ -19,8 +19,8 @@ describe "Base" do
 
       it "belongs_to_remote" do
         tr = TestResource.instantiate_record(
-          :name => "X",
-          :belongs_to_object => nil
+          name: "X",
+          belongs_to_object: nil
         )
         # load our resource definition so we can say we never expect a
         # get
@@ -32,8 +32,8 @@ describe "Base" do
 
       it "has_one_remote" do
         tr = TestResource.instantiate_record(
-          :name => "X",
-          :has_one_object => nil
+          name: "X",
+          has_one_object: nil
         )
         # load our resource definition so we can say we never expect a
         # get
@@ -45,8 +45,8 @@ describe "Base" do
 
       it "has_many_remote" do
         tr = TestResource.instantiate_record(
-          :name => "X",
-          :has_many_objects => []
+          name: "X",
+          has_many_objects: []
         )
         # load our resource definition so we can say we never expect a
         # get
@@ -159,7 +159,7 @@ describe "Base" do
           TestResource.headers
         )
 
-        TestResource.create(:belongs_to_object_id => 22, :name => "Dan")
+        TestResource.create(belongs_to_object_id: 22, name: "Dan")
 
       end
 
@@ -175,10 +175,10 @@ describe "Base" do
       it "should allow grouping by resources with the same id" do
 
         test_resource_1 = TestResource.new
-        test_resource_1.stubs(:id => 1)
+        test_resource_1.stubs(id: 1)
 
         test_resource_2 = TestResource.new
-        test_resource_2.stubs(:id => 1)
+        test_resource_2.stubs(id: 1)
 
 
         ParentResource = Struct.new(:resource, :name)
@@ -204,14 +204,14 @@ describe "Base" do
 
       it "should set boolean values" do
 
-        tr = TestResource.instantiate_record(:is_active => true)
+        tr = TestResource.instantiate_record(is_active: true)
         tr.is_active.should eql(true)
 
       end
 
       it "should set boolean values" do
 
-        tr = TestResource.instantiate_record(:is_active => false)
+        tr = TestResource.instantiate_record(is_active: false)
         tr.is_active.should eql(false)
 
       end
@@ -253,25 +253,25 @@ describe "Base" do
       context "MultiObjectProxy" do
 
         it "should create a MultiObjectProxy for has_many associations" do
-          tst = TestResource.new({:has_many_objects => []})
+          tst = TestResource.new({has_many_objects: []})
           tst.has_many_objects.should be_a(Associations::MultiObjectProxy)
         end
 
         it "should throw an error if a has many association is not nil or an array or a hash" do
-          TestResource.new({:has_many_objects => nil})
+          TestResource.new({has_many_objects: nil})
           lambda {
-            TestResource.new({:has_many_objects => "invalid"})
+            TestResource.new({has_many_objects: "invalid"})
           }.should raise_error
         end
 
         it "should properly load the data from the provided array or hash" do
           tst = TestResource.new({
-            :has_many_objects => [{:service_uri => '/path'}]
+            has_many_objects: [{service_uri: '/path'}]
           })
           tst.has_many_objects.remote_path.should eql('/path')
 
           tst = TestResource.new({
-            :has_many_objects => {:service_uri => '/path'}
+            has_many_objects: {service_uri: '/path'}
           })
           tst.has_many_objects.remote_path.should eql('/path')
         end
@@ -281,7 +281,7 @@ describe "Base" do
       context "SingleObjectProxy" do
 
         it "should create a SingleObjectProxy for belongs to and has_one associations" do
-          tst = TestResource.new(:belongs_to_object => {}, :has_one_object => {})
+          tst = TestResource.new(belongs_to_object: {}, has_one_object: {})
           tst.belongs_to_object.should be_a(Associations::SingleObjectProxy)
           tst.has_one_object.should be_a(Associations::SingleObjectProxy)
         end
@@ -289,17 +289,17 @@ describe "Base" do
         it "should throw an error if a belongs_to or
           has_many association is not a hash or nil" do
           lambda {
-            TestResource.new(:belongs_to_object => [])
+            TestResource.new(belongs_to_object: [])
           }.should raise_error
           lambda {
-            TestResource.new(:has_one_object => [])
+            TestResource.new(has_one_object: [])
           }.should raise_error
         end
 
         it "should properly load data from the provided hash" do
           tst = TestResource.new(
-            :has_one_object => {
-              :service_uri => "/path"
+            has_one_object: {
+              service_uri: "/path"
             }
           )
           tst.has_one_object.remote_path.should eql('/path')
@@ -339,7 +339,7 @@ describe "Base" do
       TestResource.new_element_path.should eql("/elements/new.json")
       TestResource.collection_path.should eql("/elements.json")
       TestResource.element_path(1).should eql("/elements/1.json")
-      TestResource.element_path(1, :active => true).should eql("/elements/1.json?active=true")
+      TestResource.element_path(1, active: true).should eql("/elements/1.json?active=true")
     end
 
     it "should be able to set the format" do
@@ -461,7 +461,7 @@ describe "Base" do
       end
 
       it "should be able to post new data via the save method" do
-        tr = TestResource.build({:name => "Ethan", :age => 20})
+        tr = TestResource.build({name: "Ethan", age: 20})
         tr.save.should be_true
         tr.id.should_not be_blank
       end
@@ -481,7 +481,7 @@ describe "Base" do
             TestResource.headers
           )
 
-          tr = TestResource.build(:name => "Ethan", :age => 20)
+          tr = TestResource.build(name: "Ethan", age: 20)
           tr.save
         end
 
@@ -497,7 +497,7 @@ describe "Base" do
             TestResource.headers
           )
 
-          tr = TestResource.build(:name => "Ethan")
+          tr = TestResource.build(name: "Ethan")
           tr.save
         end
 
@@ -513,7 +513,7 @@ describe "Base" do
             TestResource.headers
           )
 
-          tr = TestResource.build(:name => "Ethan", :is_active => false)
+          tr = TestResource.build(name: "Ethan", is_active: false)
           tr.save
         end
 
@@ -532,9 +532,9 @@ describe "Base" do
             TestResource.headers
           )
 
-          tr = TestResource.build(:name => "Ethan")
-          tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
-          tr.save(:include_associations => [:has_one_object])
+          tr = TestResource.build(name: "Ethan")
+          tr.has_one_object = HasOneObject.new(size: "large", color: nil)
+          tr.save(include_associations: [:has_one_object])
         end
 
 
@@ -550,15 +550,15 @@ describe "Base" do
             TestResource.headers
           )
 
-          tr = TestResource.build(:name => "Ethan")
-          tr.save(:include_extras => [:age])
+          tr = TestResource.build(name: "Ethan")
+          tr.save(include_extras: [:age])
         end
 
 
         it "should include nil attributes when creating if include_nil_attributes_on_create is true" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", {
-              :test_resource => {
+              test_resource: {
                 'name' => "Ethan",
                 'age' => nil,
                 'is_active' => nil,
@@ -572,7 +572,7 @@ describe "Base" do
           )
 
           TestResource.include_nil_attributes_on_create = true
-          tr = TestResource.build(:name => "Ethan")
+          tr = TestResource.build(name: "Ethan")
           tr.save
 
           #hash['test_resource'].key?('age').should be_true
@@ -598,7 +598,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'age' => 6
             }
@@ -606,8 +606,8 @@ describe "Base" do
           TestResource.headers
         )
 
-        tr = TestResource.new(:name => "Ethan")
-        tr.stubs(:id => 1)
+        tr = TestResource.new(name: "Ethan")
+        tr.stubs(id: 1)
         tr.should_not be_new
 
         # Thus we know we are calling update
@@ -620,7 +620,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'has_many_objects' => [{'name' => "Test"}]
             }
@@ -629,12 +629,12 @@ describe "Base" do
         )
 
         tr = TestResource.new(
-          :name => "Ethan",
-          :has_many_objects => [{:id => 12, :name => "Dan"}]
+          name: "Ethan",
+          has_many_objects: [{id: 12, name: "Dan"}]
         )
-        tr.stubs(:id => 1)
+        tr.stubs(id: 1)
 
-        tr.has_many_objects = [HasManyObject.new(:name => "Test")]
+        tr.has_many_objects = [HasManyObject.new(name: "Test")]
         tr.save
       end
 
@@ -643,7 +643,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'has_many_objects' => []
             }
@@ -651,10 +651,10 @@ describe "Base" do
           TestResource.headers
         )
 
-        tr = TestResource.new(:name => "Ethan", :has_many_objects => [])
-        tr.stubs(:id => 1)
+        tr = TestResource.new(name: "Ethan", has_many_objects: [])
+        tr.stubs(id: 1)
 
-        tr.save(:include_associations => [:has_many_objects])
+        tr.save(include_associations: [:has_many_objects])
       end
 
 
@@ -666,7 +666,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'has_one_object' => {
                 'size' => "large"
@@ -676,16 +676,16 @@ describe "Base" do
           TestResource.headers
         ).in_sequence(correct_order)
 
-        tr = TestResource.new(:name => "Ethan")
-        tr.stubs(:id => 1)
-        tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
-        tr.save(:include_associations => [:has_one_object])
+        tr = TestResource.new(name: "Ethan")
+        tr.stubs(id: 1)
+        tr.has_one_object = HasOneObject.new(size: "large", color: nil)
+        tr.save(include_associations: [:has_one_object])
 
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'has_one_object' => {
                 'size' => nil
               }
@@ -695,19 +695,19 @@ describe "Base" do
         ).in_sequence(correct_order)
 
         tr.has_one_object.size = nil
-        tr.save(:include_associations => [:has_one_object])
+        tr.save(include_associations: [:has_one_object])
       end
 
 
-      it "should not include nil values for association objects when updating,
-        unless the association has changed to nil" do
+      it "should not include nil values for association objects
+        when updating, unless the association has changed to nil" do
 
         correct_order = sequence("ordering")
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",
           {
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'has_one_object' => {
                 'size' => "large"
@@ -717,10 +717,10 @@ describe "Base" do
           TestResource.headers
         ).in_sequence(correct_order)
 
-        tr = TestResource.new(:name => "Ethan")
-        tr.stubs(:id => 1)
-        tr.has_one_object = HasOneObject.new(:size => "large", :color => nil)
-        tr.save(:include_associations => [:has_one_object])
+        tr = TestResource.new(name: "Ethan")
+        tr.stubs(id: 1)
+        tr.has_one_object = HasOneObject.new(size: "large", color: nil)
+        tr.save(include_associations: [:has_one_object])
 
 
         ApiResource::Connection.any_instance.expects(:put).with(
@@ -734,7 +734,7 @@ describe "Base" do
         ).in_sequence(correct_order)
 
         tr.has_one_object = nil
-        tr.save(:include_associations => [:has_one_object])
+        tr.save(include_associations: [:has_one_object])
       end
 
 
@@ -742,7 +742,7 @@ describe "Base" do
 
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",{
-            :test_resource => {
+            test_resource: {
               'name' => "Ethan",
               'age' => nil,
               'is_active' => nil,
@@ -756,8 +756,8 @@ describe "Base" do
         )
         begin
           TestResource.include_all_attributes_on_update = true
-          tr = TestResource.new(:name => "Ethan")
-          tr.stubs(:id => 1)
+          tr = TestResource.new(name: "Ethan")
+          tr.stubs(id: 1)
           tr.save
         ensure
           TestResource.include_all_attributes_on_update = false
@@ -775,15 +775,15 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-             {:test_resource => {'name' => "Dan"}},
+             {test_resource: {'name' => "Dan"}},
             TestResource.headers
           ).in_sequence(correct_order)
 
-        tr = TestResource.new(:name => "Ethan")
-        tr.stubs(:id => 1)
+        tr = TestResource.new(name: "Ethan")
+        tr.stubs(id: 1)
         tr.save
 
-        tr.update_attributes(:name => "Dan")
+        tr.update_attributes(name: "Dan")
       end
 
 
@@ -799,18 +799,18 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {'is_active' => nil}},
+            {test_resource: {"is_active" => nil}},
             TestResource.headers
           )
           .in_sequence(correct_order)
 
         tr = TestResource.new(
-          :name => "Ethan", :is_active => false
+          name: "Ethan", is_active: false
         )
-        tr.stubs(:id => 1)
+        tr.stubs(id: 1)
         tr.save
 
-        tr.update_attributes(:is_active => nil)
+        tr.update_attributes(is_active: nil)
       end
 
       it "should include attributes that have changed to false by default" do
@@ -824,17 +824,17 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {'is_active' => false}},
+            {test_resource: {"is_active" => false}},
             TestResource.headers
           ).in_sequence(correct_order)
 
         tr = TestResource.new(
-          :name => "Ethan", :is_active => true
+          name: "Ethan", is_active: true
         )
-        tr.stubs(:id => 1)
+        tr.stubs(id: 1)
         tr.save
 
-        tr.update_attributes(:is_active => false)
+        tr.update_attributes(is_active: false)
 
       end
 
@@ -848,8 +848,8 @@ describe "Base" do
     end
 
     it "should be able to destroy itself as an instance" do
-      tr = TestResource.new(:name => "Ethan")
-      tr.stubs(:id => 1)
+      tr = TestResource.new(name: "Ethan")
+      tr.stubs(id: 1)
 
       tr.destroy.should be_true
     end
@@ -863,12 +863,12 @@ describe "Base" do
     end
 
     it "should know if it is persisted" do
-      tr = TestResource.new(:name => "Ethan")
-      tr.stubs(:id => 1)
+      tr = TestResource.new(name: "Ethan")
+      tr.stubs(id: 1)
 
       tr.persisted?.should be_true
 
-      tr = TestResource.new(:name => "Ethan")
+      tr = TestResource.new(name: "Ethan")
       tr.persisted?.should be_false
     end
 
@@ -942,17 +942,17 @@ describe "Base" do
       end
 
       it "should implement caching using the ttl setting" do
-        cache = mock(:fetch => {:id => 123, :name => "Dan"})
-        ApiResource.stubs(:cache => cache)
+        cache = mock(fetch: {id: 123, name: "Dan"})
+        ApiResource.stubs(cache: cache)
         TestResource.find(123)
       end
 
       it "should find with expires_in and cache" do
         ApiResource.cache.expects(:fetch)
-          .with(anything, :expires_in => 10.0)
-          .returns({:id => 2, :name => "d"})
+          .with(anything, expires_in: 10.0)
+          .returns({id: 2, name: "d"})
 
-        res = TestResource.find("adfa", :expires_in => 10)
+        res = TestResource.find("adfa", expires_in: 10)
 
         ApiResource::Base.ttl.should eql(1)
         res.id.to_i.should eql(2)

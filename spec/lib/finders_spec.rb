@@ -53,6 +53,25 @@ describe ApiResource::Finders do
 		val.should be_a(TestResource)
 	end
 
+	it "should pass first and last as params" do
+		TestResource.connection.expects(:get)
+			.with("/test_resources.json?first=true")
+
+		val = TestResource.first
+
+		TestResource.connection.expects(:get)
+			.with("/test_resources.json?last=true")
+
+		val = TestResource.last
+	end
+
+	it "should not pass all as a param, even when all records are requested" do
+		TestResource.connection.expects(:get)
+			.with("/test_resources.json")
+
+		val = TestResource.all
+	end
+
 	it "should be able to chain find on top of an includes call" do
 		TestResource.connection.expects(:get).with("/test_resources/1.json").returns({"id" => 1, "has_many_object_ids" => [1,2]})
 		HasManyObject.connection.expects(:get).with("/has_many_objects.json?ids%5B%5D=1&ids%5B%5D=2").returns([])

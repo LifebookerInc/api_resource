@@ -29,112 +29,45 @@ module ApiResource
         # make sure we have class data before loading
         self.load_resource_definition
 
-        # Conditions sometimes call find, passing themselves as the last arg.
-        if arguments.last.is_a?(ApiResource::Conditions::AbstractCondition)
-          cond  = arguments.slice!(arguments.length - 1) 
-        else
-          cond  = nil
-        end
-
-        # Support options being passed in as a hash.
-        options = arguments.extract_options! || {}
-
-        # Remaining arguments are the scope.
-        scope   = arguments
+        initialize_arguments!(arguments)
 
         # TODO: Make this into a class attribute properly (if it isn't already)
         # this is a little bit of a hack because options can sometimes be a Condition
-        expiry = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
+        expiry = @expiry
         ApiResource.with_ttl(expiry.to_f) do
-
-          # If we have a condition or options to process...
-          if cond || options.present?
-
-            # Convert options hash to scope condition.
-            if options.is_a?(Hash)
-              opts = options.with_indifferent_access.delete(:params) || options || {}
-              options = ApiResource::Conditions::ScopeCondition.new(opts, self)
-            end
-
-            # Combine all combinations of conditions and options
-            if cond
-              if options
-                final_cond = cond.merge!(options)
-              else
-                final_cond = cond
-              end
-            elsif options
-              final_cond = options
-            end
-
-            # If we have one argument, it's either a word argument
-            # like first, last, or all, or its a number.
-            if Array.wrap(scope).size == 1
-              scope = scope.first if scope.is_a?(Array)
-
-              # Create the finder with the conditions, then call the scope.
-              # e.g. Class.scope(1).first
-              if [:all, :first, :last].include?(scope)
-                fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
-                fnd.send(scope)
-
+          if numeric_find
+            if single_find && (@conditions.blank_conditions? || include_associations_only?)
               # If we have no conditions or they are only prefixes or
-              # includes,and only one argument (not a word) then we 
+              # includes, and only one argument (not a word) then we 
               # only have a single item to find.
-              # e.g. Class.includes.find(1)
-              elsif final_cond.blank_conditions? || final_cond.conditions.include?(:foreign_key_id)
-                scope = scope.first if scope.is_a?(Array)
-                final_cond = final_cond.merge!(ApiResource::Conditions::ScopeCondition.new({:id => scope}, self))
+              # e.g. Class.includes(:association).find(1)
+              #      Class.find(1)
+              @scope = @scope.first if @scope.is_a?(Array)
+              final_cond = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
 
-                ApiResource::Finders::SingleFinder.new(self, final_cond).load
-              else
-
-                # Otherwise we are chaining a find onto
-                # the end of a set of conditions.
-                # e.g. Class.scope(1).find(1)
-                fnd = final_cond.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => scope}}, self))
-                fnd.send(:all)
+              ApiResource::Finders::SingleFinder.new(self, final_cond).load
+            else
+              # e.g. Class.scope(1).find(1)
+              #      Class.includes(:association).find(1,2)
+              #      Class.find(1,2)
+              #      Class.active.find(1)
+              if Array.wrap(@scope).size == 1 && @scope.is_a?(Array)
+                @scope = @scope.first
               end
 
-            else
-
-              # We are searching for multiple ids.
-              # e.g. Class.scope(1).find(1,2)
-              fnd = final_cond.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => scope}}, self))
+              fnd = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => @scope}}, self))
               fnd.send(:all)
             end
-
           else
+            # e.g. Class.scope(1).first
+            #      Class.first
+            @scope = @scope.first if @scope.is_a?(Array)
+            new_condition = @scope == :all ? {} : {@scope => true}
 
-            # No conditions
-            if Array.wrap(scope).size == 1
-              scope = scope.first if scope.is_a?(Array)
+            final_cond = @conditions.merge!ApiResource::Conditions::ScopeCondition.new(new_condition, self)
 
-              # We are calling first, last, or all on the class itself.
-              # e.g. Class.first
-              if [:all, :first, :last].include?(scope)
-                final_cond = ApiResource::Conditions::ScopeCondition.new({scope => true}, self)
-
-                fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
-                fnd.send(scope)
-              else
-
-                # We are performing a simple find of a single object
-                # e.g. Class.find(1)
-                scope = scope.first if scope.is_a?(Array)
-                final_cond = ApiResource::Conditions::ScopeCondition.new({:id => scope}, self)
-
-                ApiResource::Finders::SingleFinder.new(self, final_cond).load
-              end
-
-            else
-              # We are performing a find on multiple objects
-              # e.g. Class.find(1,2)
-              ApiResource::Conditions::ScopeCondition.new({:find => {:ids => scope}}, self)
-              fnd.send(:all)
-
-            end
-
+            fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
+            fnd.send(@scope)
           end
 
         end
@@ -179,7 +112,97 @@ module ApiResource
         ret
       end
 
-		end 
+      protected
+
+      def arg_ary
+        if @scope.blank?
+          return :none
+        elsif Array.wrap(@scope).size == 1
+          return :single
+        else
+          return :multiple
+        end
+      end
+
+      def arg_type
+        arg = Array.wrap(@scope).first
+
+        case arg
+          when :first, :last
+            :bookend
+          when :all
+            :all_records
+          else
+            :number
+        end
+      end
+
+      def numeric_find
+        arg_type == :number
+      end
+
+      def single_find
+        return arg_ary == :single
+      end
+
+      def initialize_arguments!(args)
+
+        args = Array.wrap(args)
+
+        # Conditions sometimes call find, passing themselves as the last arg.
+        if args.last.is_a?(ApiResource::Conditions::AbstractCondition)
+          cond  = args.slice!(args.length - 1) 
+        else
+          cond  = nil
+        end
+
+        # Support options being passed in as a hash.
+        options = args.extract_options!
+        if options.blank?
+          options = nil
+        end
+
+        @expiry = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
+
+        combine_conditions(options, cond)
+
+        # Remaining args are the scope.
+        @scope   = args
+      end
+
+      def combine_conditions(options, condition)
+        # Convert options hash to scope condition.
+        if options.is_a?(Hash)
+          opts = options.with_indifferent_access.delete(:params) || options || {}
+          options = ApiResource::Conditions::ScopeCondition.new(opts, self)
+        end
+
+        final_cond = ApiResource::Conditions::ScopeCondition.new({}, self)
+        # Combine all combinations of conditions and options
+        if condition
+          if options
+            final_cond = condition.merge!(options)
+          else
+            final_cond = condition
+          end
+        elsif options
+          final_cond = options
+        end
+
+        @conditions = final_cond
+      end
+
+      def include_associations_only?
+        if @conditions.blank_conditions?
+          return false
+        else
+          return @conditions.conditions.include?(:foreign_key_id) &&
+            @conditions.conditions.size == 1
+        end
+      end
+
+    end
+
 	end
 
 end

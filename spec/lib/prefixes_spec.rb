@@ -50,7 +50,7 @@ describe "With Prefixes" do
     it "should use the prefix to find records" do
       prefix_model.send(:connection).expects(:get)
         .with(
-          "/foreign/123/prefix_models.json"
+          "/foreign/123/prefix_models.json?first=true"
         )
         .returns([])
       PrefixModel.first(:params => {:foreign_key_id => 123})

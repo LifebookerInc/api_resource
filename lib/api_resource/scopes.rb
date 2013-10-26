@@ -2,17 +2,17 @@ module ApiResource
   module Scopes
 
     extend ActiveSupport::Concern
-    
+
     module ClassMethods
       # TODO: calling these methods should force loading of the resource definition
       def scopes
         return self.related_objects[:scopes]
       end
-      
+
       def scope?(name)
         self.related_objects[:scopes].has_key?(name.to_sym)
       end
-      
+
       def scope_attributes(name)
         raise "No such scope #{name}" unless self.scope?(name)
         self.related_objects[:scopes][name.to_sym]
@@ -27,15 +27,15 @@ module ApiResource
       def scope(scope_name, scope_definition)
 
         unless scope_definition.is_a?(Hash)
-          raise ArgumentError, "Expecting an attributes hash given #{scope_definition.inspect}" 
+          raise ArgumentError, "Expecting an attributes hash given #{scope_definition.inspect}"
         end
-        
+
         self.related_objects[:scopes][scope_name.to_sym] = scope_definition
 
         self.class_eval do
 
           define_singleton_method(scope_name) do |*args|
-          
+
             arg_names = scope_definition.keys
             arg_types = scope_definition.values
 
@@ -44,10 +44,10 @@ module ApiResource
             }
 
             arg_names.each_with_index do |arg_name, i|
-              
+
               # If we are dealing with a scope with multiple args
               if arg_types[i] == :rest
-                finder_opts[scope_name][arg_name] = 
+                finder_opts[scope_name][arg_name] =
                   args.slice(i, args.count)
               # Else we are only dealing with a single argument
               else
@@ -67,19 +67,35 @@ module ApiResource
           end
         end
       end
+
+      protected
+
+      #
+      # Wrapper method to define all scopes from the resource definition
+      #
+      # @return [Boolean] true
+      def define_all_scopes
+        if self.resource_definition["scopes"]
+          self.resource_definition["scopes"].each_pair do |name, opts|
+            self.scope(name, opts)
+          end
+        end
+        true
+      end
+
     end
-    
+
     def scopes
       return self.class.scopes
     end
-    
+
     def scope?(name)
       return self.class.scope?(name)
     end
-    
+
     def scope_attributes(name)
       return self.class.scope_attributes(name)
     end
-    
+
   end
 end

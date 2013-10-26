@@ -10,7 +10,7 @@ describe "Associations" do
 
   let(:ap) do
     res = Associations::SingleObjectProxy.new(
-      "TestResource", 
+      "TestResource",
       HasManyObject.new
     )
     res.internal_object = {
@@ -130,7 +130,7 @@ describe "Associations" do
 
       it "should be able to override into the root namespace by prefixing with ::" do
         TestMod::InnerMod::InnerClass.belongs_to :test_resource, :class_name => "::TestResource"
-        TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("::TestResource")        
+        TestMod::InnerMod::InnerClass.association_class_name(:test_resource).should eql("::TestResource")
       end
 
     end
@@ -170,7 +170,7 @@ describe "Associations" do
       TestResource.scope :test_scope, {:item => "test"}
       TestResource.scope?(:test_scope).should be_true
       TestResource.scope_attributes(:test_scope).should eql({"item" => "test"})
-    end 
+    end
 
     it "should not propagate scopes from one class to another" do
 
@@ -239,7 +239,7 @@ describe "Associations" do
 
     it "should be able to extract a service uri from the contents hash" do
       ap = Associations::SingleObjectProxy.new(
-        "TestResource", 
+        "TestResource",
         HasManyObject.new
       )
       ap.internal_object = {
@@ -248,12 +248,12 @@ describe "Associations" do
       ap.remote_path.should eql("/path")
     end
 
-    it "should be able to recognize the attributes of an object 
+    it "should be able to recognize the attributes of an object
       and not make them scopes" do
-      
+
       TestResource.define_attributes :test
       ap = Associations::SingleObjectProxy.new(
-        "TestResource", 
+        "TestResource",
         HasManyObject.new
       )
 
@@ -329,7 +329,7 @@ describe "Associations" do
 
         it "should be able to recognize settings from a hash" do
           ap = Associations::MultiObjectProxy.new(
-            "TestResource", 
+            "TestResource",
             BelongsToObject
           )
           ap.internal_object = {:service_uri => "/route"}
@@ -338,7 +338,7 @@ describe "Associations" do
 
         it "should be able to recognize settings from a hash as a string" do
           ap = Associations::MultiObjectProxy.new(
-            "TestResource", 
+            "TestResource",
             BelongsToObject
           )
           ap.internal_object = {"service_uri" => "/route"}
@@ -348,20 +348,11 @@ describe "Associations" do
         it "should recognize settings with differing 'service_uri' names" do
           Associations::MultiObjectProxy.remote_path_element = :the_element
           ap = Associations::MultiObjectProxy.new(
-            "TestResource", 
+            "TestResource",
             BelongsToObject
           )
           ap.internal_object = {:the_element => "/route"}
           ap.remote_path.should eql("/route")
-        end
-
-        it "should include the foreign_key_id when saving" do
-          tr = TestResource.new.tap do |tr|
-            tr.stubs(:id => 123)
-          end
-          tr.has_many_object_ids = [4]
-          hsh = tr.serializable_hash
-          hsh[:has_many_object_ids].should eql([4])
         end
 
         it "should handle loading attributes from the remote" do
@@ -452,7 +443,7 @@ describe "Associations" do
 
       it "should proxy unknown methods to the object loading if it hasn't already" do
         ap = Associations::SingleObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           HasManyObject.new
         )
         ap.internal_object = {
@@ -465,7 +456,7 @@ describe "Associations" do
 
       it "should load scopes with caching" do
         ap = Associations::SingleObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           HasManyObject.new
         )
         ap.internal_object = {
@@ -481,7 +472,7 @@ describe "Associations" do
 
       it "should check that ttl matches the expiration parameter" do
        ap = Associations::SingleObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           HasManyObject.new
         )
        ap.internal_object = {
@@ -492,7 +483,7 @@ describe "Associations" do
 
       it "should cache scopes when caching enabled" do
         ap = Associations::SingleObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           HasManyObject.new
         )
         ap.internal_object = {
@@ -503,7 +494,7 @@ describe "Associations" do
 
       it "should be able to clear it's loading cache" do
         ap = Associations::SingleObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           HasManyObject.new
         )
         ap.internal_object = {
@@ -523,7 +514,7 @@ describe "Associations" do
 
     it "should be able to reload a single-object association" do
       ap = Associations::SingleObjectProxy.new(
-        "TestResource", 
+        "TestResource",
         HasManyObject.new
       )
       ap.internal_object = {
@@ -543,9 +534,9 @@ describe "Associations" do
     end
 
     it "should be able to reload a multi-object association" do
-      
+
       ap = Associations::MultiObjectProxy.new(
-        "TestResource", 
+        "TestResource",
         BelongsToObject.new
       )
       ap.internal_object = {
@@ -568,7 +559,7 @@ describe "Associations" do
 
       it "should be able to load 'all'" do
         ap = Associations::MultiObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           BelongsToObject.new
         )
         ap.internal_object = {
@@ -581,7 +572,7 @@ describe "Associations" do
 
       it "should be able to load a scope" do
         ap = Associations::MultiObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           BelongsToObject.new
         )
         ap.internal_object = {
@@ -595,7 +586,7 @@ describe "Associations" do
 
       it "should be able to load a chain of scopes" do
         ap = Associations::MultiObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           BelongsToObject.new
         )
         ap.internal_object = {
@@ -610,7 +601,7 @@ describe "Associations" do
       it "should be able to clear it's loading cache" do
 
         ap = Associations::MultiObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           BelongsToObject.new
         )
         ap.internal_object = {
@@ -628,7 +619,7 @@ describe "Associations" do
 
       it "should be enumerable" do
         ap = Associations::MultiObjectProxy.new(
-          "TestResource", 
+          "TestResource",
           BelongsToObject.new
         )
         ap.internal_object = {
@@ -698,11 +689,11 @@ describe "Associations" do
           TestResource.reload_class_attributes
         end
 
-        it "should assign associations to the correct 
+        it "should assign associations to the correct
           type on initialization" do
-          
+
           tr = TestResource.new(
-            :has_one_object => {:color => "Blue"}, 
+            :has_one_object => {:color => "Blue"},
             :belongs_to_object => {:zip => "11201"},
             :has_many_objects => [{:name => "Dan"}]
           )
@@ -728,14 +719,14 @@ describe "Associations" do
         it "should assign associations to the correct type when setting attributes directly" do
           tr = TestResource.new()
           tr.has_one_object = {:name => "Dan"}
-          tr.belongs_to_object = {:name => "Dan"} 
+          tr.belongs_to_object = {:name => "Dan"}
 
           tr.has_one_object.internal_object.should be_instance_of HasOneObject
           tr.belongs_to_object.internal_object.should be_instance_of BelongsToObject
         end
 
         it "should be able to reload a single-object association" do
-          
+
           tr = TestResource.new()
           tr.has_one_object = {:color => "Blue"}
 
@@ -766,7 +757,7 @@ describe "Associations" do
         end
 
         it "should be able to reload a multi-object association" do
-          
+
           # do this to load the resource definition
           TestResource.reload_resource_definition
           HasManyObject.reload_resource_definition
@@ -778,7 +769,7 @@ describe "Associations" do
           tr.has_many_objects.should be_blank
         end
 
-        it "should be able to override service_uri for a 
+        it "should be able to override service_uri for a
           multi-object association" do
 
           tr = TestResource.new
@@ -788,7 +779,7 @@ describe "Associations" do
 
         end
 
-        it "should be able to override service_uri for a multi-object 
+        it "should be able to override service_uri for a multi-object
           association when loaded with instantiate_record" do
 
           tr = TestResource.instantiate_record(
@@ -810,7 +801,7 @@ describe "Associations" do
           end
           ApiResource::Associations.activate_active_record
           TestAR = Class.new(ActiveRecord::Base)
-          TestAR.class_eval do 
+          TestAR.class_eval do
             belongs_to_remote :my_favorite_thing, :class_name => "TestClassYay"
           end
           HasManyObject.reload_resource_definition
@@ -852,7 +843,7 @@ describe "Associations" do
           before(:all) do
             TestAR.class_eval do
               has_one_remote :test_resource
-              has_one_remote :other_test_resource, 
+              has_one_remote :other_test_resource,
                 :class_name => "TestResource"
             end
           end
@@ -907,8 +898,8 @@ describe "Associations" do
           end
         end
         context "Has Many Through" do
-          before(:all) do       
-            TestAR.class_eval do 
+          before(:all) do
+            TestAR.class_eval do
               self.extend ApiResource::Associations::HasManyThroughRemoteObjectProxy
               has_many :test_throughs
               has_many_through_remote(:belongs_to_objects, :through => :test_throughs)

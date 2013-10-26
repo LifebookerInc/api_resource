@@ -1,22 +1,22 @@
 module ApiResource
 
   module Attributes
-  
+
     extend ActiveSupport::Concern
     include ActiveModel::AttributeMethods
     include ActiveModel::Dirty
-    
+
     included do
 
       # include ApiResource::Typecast if it isn't already
       include ApiResource::Typecast
-      
+
       alias_method_chain :save, :dirty_tracking
-      
+
       class_attribute(
-        :attribute_names, 
-        :public_attribute_names, 
-        :protected_attribute_names, 
+        :attribute_names,
+        :public_attribute_names,
+        :protected_attribute_names,
         :attribute_types
       )
 
@@ -24,7 +24,7 @@ module ApiResource
       self.public_attribute_names = []
       self.protected_attribute_names = []
       self.attribute_types = {}.with_indifferent_access
-      
+
 
       # This method is important for reloading an object. If the
       # object has already been loaded, its associations will trip
@@ -56,11 +56,28 @@ module ApiResource
 
         attributes
       end
-      
+
     end
-    
+
     module ClassMethods
-      
+
+      #
+      # Wrapper method to define all of the attributes (public and protected)
+      # for this Class
+      #
+      # @return [Boolean] true
+      def define_all_attributes
+        if self.resource_definition["attributes"]
+          define_attributes(
+            *(self.resource_definition["attributes"]["public"] || [])
+          )
+          define_protected_attributes(
+            *(self.resource_definition["attributes"]["protected"] || [])
+          )
+        end
+        true
+      end
+
       def define_attributes(*args)
         args.each do |arg|
           self.store_attribute_data(arg, :public)
@@ -68,7 +85,7 @@ module ApiResource
         self.attribute_names.uniq!
         self.public_attribute_names.uniq!
       end
-      
+
       def define_protected_attributes(*args)
         args.each do |arg|
           self.store_attribute_data(arg, :protected)
@@ -83,11 +100,11 @@ module ApiResource
           def #{meth}
             read_attribute(:#{meth})
           end
-        
+
           def #{meth}=(new_val)
             write_attribute(:#{meth}, new_val)
           end
-          
+
           def #{meth}?
             read_attribute(:#{meth}).present?
           end
@@ -98,27 +115,27 @@ module ApiResource
 
       def define_attribute_type(field, type)
         unless self.typecasters.keys.include?(type.to_sym)
-          raise "#{type} is not a valid type" 
+          raise "#{type} is not a valid type"
         end
         self.attribute_types = self.attribute_types.merge(field => type.to_sym)
       end
-      
-      
+
+
       def attribute?(name)
         self.attribute_names.include?(name.to_sym)
       end
-      
+
       def protected_attribute?(name)
         self.protected_attribute_names.include?(name.to_sym)
       end
-      
+
       def clear_attributes
         self.attribute_names.clear
         self.public_attribute_names.clear
         self.protected_attribute_names.clear
       end
 
-      # stores the attribute type data and the name of the 
+      # stores the attribute type data and the name of the
       # attributes we are creating
       def store_attribute_data(arg, type)
         if arg.is_a?(Array)
@@ -168,20 +185,20 @@ module ApiResource
         return false
       end
     end
-    
+
     def set_attributes_as_current(*attrs)
       @changed_attributes.clear and return if attrs.blank?
       attrs.each do |attr|
         @changed_attributes.delete(attr.to_s)
       end
     end
-    
+
     def reset_attribute_changes(*attrs)
       attrs = self.class.public_attribute_names if attrs.blank?
       attrs.each do |attr|
         self.send("reset_#{attr}!")
       end
-      
+
       set_attributes_as_current(*attrs)
     end
 
@@ -201,15 +218,15 @@ module ApiResource
       @attributes_cache.delete(name.to_sym)
       @attributes[name.to_sym] = @attributes_cache[name.to_sym] = new_val
     end
-    
+
     def attribute?(name)
       self.class.attribute?(name)
     end
-    
+
     def protected_attribute?(name)
       self.class.protected_attribute?(name)
     end
-    
+
     def respond_to?(sym, include_private_methods = false)
       if sym =~ /\?$/
         return true if self.attribute?($`)
@@ -220,9 +237,9 @@ module ApiResource
       end
       super
     end
-    
+
     protected
-    
+
     def default_value_for_field(field)
       case self.class.attribute_types[field.to_sym]
         when :array
@@ -253,7 +270,7 @@ module ApiResource
     end
 
     def typecast_attribute(field, val)
-      # if we have a valid value and we are planning to typecast go 
+      # if we have a valid value and we are planning to typecast go
       # into this case statement
       if self.class.attribute_types.include?(field.to_sym)
         caster = self.class.typecasters[self.class.attribute_types[field.to_sym]]
@@ -270,15 +287,15 @@ module ApiResource
     # this is here for compatibility with ActiveModel::AttributeMethods
     # it is the fallback called in method_missing
     def attribute(name)
-      read_attribute(name)      
+      read_attribute(name)
     end
 
     # this is here for compatibility with ActiveModel::AttributeMethods
     # it is the fallback called in method_missing
     def attribute=(name, val)
-      write_attribute(name, val)      
+      write_attribute(name, val)
     end
-    
+
   end
-  
+
 end

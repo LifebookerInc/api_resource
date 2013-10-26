@@ -26,8 +26,8 @@ guard 'rspec', :version => 2, :cli => "--color --format nested --drb", :all_on_s
   watch(%r{^app/views/(.+)/.*\.(erb|haml)$})          { |m| "spec/requests/#{m[1]}_spec.rb" }
 end
 
-guard 'spork' do
-  watch('api_resource.gemspec')
-  watch('Gemfile.lock')
-  watch('spec/spec_helper.rb') { :rspec }
-end
+#guard 'spork' do
+#  watch('api_resource.gemspec')
+#  watch('Gemfile.lock')
+#  watch('spec/spec_helper.rb') { :rspec }
+#end

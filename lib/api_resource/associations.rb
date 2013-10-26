@@ -2,7 +2,7 @@ require 'active_support'
 require 'active_support/string_inquirer'
 
 module ApiResource
-  
+
   module Associations
 
     #TODO: many of these methods should also force loading of the resource definition
@@ -20,10 +20,10 @@ module ApiResource
     autoload :SingleObjectProxy
 
     included do
-      
+
       unless self.ancestors.include?(ApiResource::AssociationActivation)
         raise Exception.new(
-          "Can't include Associations without AssociationActivation" 
+          "Can't include Associations without AssociationActivation"
         )
       end
 
@@ -42,7 +42,7 @@ module ApiResource
       extend InheritedMethod
 
       self.define_association_methods
-      
+
     end
 
     # module methods to include the proper associations in various libraries - this is usually loaded in Railties
@@ -50,8 +50,8 @@ module ApiResource
       ActiveRecord::Base.class_eval do
         include ApiResource::AssociationActivation
         self.activate_associations(
-          :has_many_remote => :has_many_remote, 
-          :belongs_to_remote => :belongs_to_remote, 
+          :has_many_remote => :has_many_remote,
+          :belongs_to_remote => :belongs_to_remote,
           :has_one_remote => :has_one_remote,
         )
       end
@@ -71,7 +71,7 @@ module ApiResource
     end
 
     module ClassMethods
-      
+
       # Define the methods for creating and testing for associations, unfortunately
       # scopes are different enough to require different methods :(
       def define_association_methods
@@ -82,7 +82,7 @@ module ApiResource
               options = options.with_indifferent_access
               # Raise an error if we have multiple args and options
               raise "Invalid arguments to #{assoc}" unless options.blank? || args.length == 1
-              args.each do |arg| 
+              args.each do |arg|
                 klass_name = (options[:class_name] ? options[:class_name].to_s.classify : arg.to_s.classify)
                 # add this to any descendants - the other methods etc are handled by inheritance
                 ([self] + self.descendants).each do |klass|
@@ -93,15 +93,15 @@ module ApiResource
                 define_association_as_attribute(:#{assoc}, arg, options)
               end
             end
-          
+
             def #{assoc}?(name)
               return self.related_objects[:#{assoc}][name.to_s.pluralize.to_sym].present? || self.related_objects[:#{assoc}][name.to_s.singularize.to_sym].present?
             end
-          
+
             def #{assoc}_class_name(name)
               raise "No such" + :#{assoc}.to_s + " association on #{name}" unless self.#{assoc}?(name)
               return self.find_namespaced_class_name(self.related_objects[:#{assoc}][name.to_sym])
-            end            
+            end
 
           EOE
           # For convenience we will define the methods for testing for the existence of an association
@@ -117,14 +117,14 @@ module ApiResource
           EOE
         end
       end
-      
+
       def association?(assoc)
         self.related_objects.any? do |key, value|
           next if key.to_s == "scopes"
           value.detect { |k,v| k.to_sym == assoc.to_sym }
         end
       end
-      
+
       def association_names
         # structure is {:has_many => {"myname" => "ClassName"}}
         self.related_objects.clone.delete_if{|k,v| k.to_s == "scopes"}.collect{|k,v| v.keys.collect(&:to_sym)}.flatten
@@ -133,7 +133,7 @@ module ApiResource
       def association_class(assoc)
         self.association_class_name(assoc).constantize
       end
-      
+
       def association_class_name(assoc)
         raise ArgumentError, "#{assoc} is not a valid association of #{self}" unless self.association?(assoc)
         result = self.related_objects.detect do |key,value|
@@ -144,7 +144,7 @@ module ApiResource
 
       # TODO: add a special foreign_key option to associations
       def association_foreign_key_field(assoc, type = nil)
-        
+
         if type.nil? && has_many?(assoc)
           type = :has_many
         else
@@ -160,7 +160,7 @@ module ApiResource
 
         str.to_sym
       end
-      
+
       protected
 
         def clear_related_objects
@@ -184,6 +184,22 @@ module ApiResource
           self.related_objects[:scopes] = self.related_objects[:scopes].clone
         end
 
+        #
+        # Wrapper method to define all associations from the
+        # resource definition
+        #
+        # @return [Boolean] true
+        def define_all_associations
+          if self.resource_definition["associations"]
+            self.resource_definition["associations"].each_pair do |key, hash|
+              hash.each_pair do |assoc_name, assoc_options|
+                self.send(key, assoc_name, assoc_options)
+              end
+            end
+          end
+          true
+        end
+
         def define_association_as_attribute(assoc_type, assoc_name, opts)
           opts.stringify_keys!
 
@@ -198,7 +214,7 @@ module ApiResource
             define_attribute_method(assoc_name)
             define_attribute_method(id_method_name)
           end
-          
+
           # a module to contain our generated methods
           cattr_accessor :api_resource_generated_methods
           self.api_resource_generated_methods = Module.new
@@ -216,7 +232,7 @@ module ApiResource
           )
           klass.define_association_as_attribute(self, assoc_name, opts)
         end
-        
+
         def find_namespaced_class_name(klass)
           # return the name if it is itself namespaced
           return klass if klass =~ /::/
@@ -233,13 +249,13 @@ module ApiResource
 
           return klass
         end
-      
+
     end
-    
+
     def association?(assoc)
       self.class.association?(assoc)
     end
-    
+
     def association_class(assoc)
       self.class.association_class(assoc)
     end
@@ -247,12 +263,12 @@ module ApiResource
     def association_class_name(assoc)
       self.class.association_class_name(assoc)
     end
-    
+
     # list of all association names
     def association_names
       self.class.association_names
     end
 
   end
-  
+
 end

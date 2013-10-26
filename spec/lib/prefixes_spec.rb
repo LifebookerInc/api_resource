@@ -37,7 +37,7 @@ describe "With Prefixes" do
       prefix_model.send(:connection).expects(:post)
         .with(
           "/foreign/123/prefix_models.json",
-          has_entry(:prefix_model, has_entry(:name, 'test')),
+          has_entry(:prefix_model, has_entry('name', 'test')),
           instance_of(Hash)
         )
       prefix_model.save
@@ -91,7 +91,7 @@ describe "With Prefixes" do
       prefix_model.send(:connection).expects(:put)
         .with(
           "/foreign/123/prefix_models/456.json",
-          has_entry(:prefix_model, has_entry(:name, 'changed name')),
+          has_entry(:prefix_model, has_entry('name', 'changed name')),
           instance_of(Hash)
         )
       prefix_model.save

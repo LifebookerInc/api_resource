@@ -153,7 +153,7 @@ describe "Base" do
           "/belongs_to_objects/22/test_resources.json",
           {
             test_resource: {
-              name: 'Dan'
+              'name' => 'Dan'
             }
           },
           TestResource.headers
@@ -474,8 +474,8 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                name: 'Ethan',
-                age: 20
+                'name' => 'Ethan',
+                'age' => 20
               }
             },
             TestResource.headers
@@ -491,7 +491,7 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                name: 'Ethan'
+                'name' => 'Ethan'
               }
             },
             TestResource.headers
@@ -506,8 +506,8 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                name: 'Ethan',
-                is_active: false
+                'name' => 'Ethan',
+                'is_active' => false
               }
             },
             TestResource.headers
@@ -523,9 +523,9 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                name: 'Ethan',
-                has_one_object: {
-                  size: 'large'
+                'name' => 'Ethan',
+                'has_one_object' => {
+                  'size' => 'large'
                 }
               }
             },
@@ -543,8 +543,8 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                name: 'Ethan',
-                age: nil
+                'name' => 'Ethan',
+                'age' => nil
               }
             },
             TestResource.headers
@@ -559,13 +559,13 @@ describe "Base" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json", {
               :test_resource => {
-                :name => "Ethan",
-                :age => nil,
-                :is_active => nil,
-                :belongs_to_object_id => nil,
-                :custom_name_id => nil,
-                :bday => nil,
-                :roles => []
+                'name' => "Ethan",
+                'age' => nil,
+                'is_active' => nil,
+                'belongs_to_object_id' => nil,
+                'custom_name_id' => nil,
+                'bday' => nil,
+                'roles' => []
               }
             },
             TestResource.headers
@@ -599,8 +599,8 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :name => "Ethan",
-              :age => 6
+              'name' => "Ethan",
+              'age' => 6
             }
           },
           TestResource.headers
@@ -621,8 +621,8 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :name => "Ethan",
-              :has_many_objects => [{:name => "Test"}]
+              'name' => "Ethan",
+              'has_many_objects' => [{'name' => "Test"}]
             }
           },
           TestResource.headers
@@ -644,8 +644,8 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :name => "Ethan",
-              :has_many_objects => []
+              'name' => "Ethan",
+              'has_many_objects' => []
             }
           },
           TestResource.headers
@@ -667,9 +667,9 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :name => "Ethan",
-              :has_one_object => {
-                :size => "large"
+              'name' => "Ethan",
+              'has_one_object' => {
+                'size' => "large"
               }
             }
           },
@@ -686,8 +686,8 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :has_one_object => {
-                :size => nil
+              'has_one_object' => {
+                'size' => nil
               }
             }
           },
@@ -708,9 +708,9 @@ describe "Base" do
           "/test_resources/1.json",
           {
             :test_resource => {
-              :name => "Ethan",
-              :has_one_object => {
-                :size => "large"
+              'name' => "Ethan",
+              'has_one_object' => {
+                'size' => "large"
               }
             }
           },
@@ -727,7 +727,7 @@ describe "Base" do
           "/test_resources/1.json",
           {
             test_resource: {
-              has_one_object: nil
+              'has_one_object' => nil
             }
           },
           TestResource.headers
@@ -743,13 +743,13 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put).with(
           "/test_resources/1.json",{
             :test_resource => {
-              :name => "Ethan",
-              :age => nil,
-              :is_active => nil,
-              :belongs_to_object_id => nil,
-              :custom_name_id => nil,
-              :bday => nil,
-              :roles => []
+              'name' => "Ethan",
+              'age' => nil,
+              'is_active' => nil,
+              'belongs_to_object_id' => nil,
+              'custom_name_id' => nil,
+              'bday' => nil,
+              'roles' => []
             }
           },
           TestResource.headers
@@ -775,7 +775,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-             {:test_resource => {:name => "Dan"}},
+             {:test_resource => {'name' => "Dan"}},
             TestResource.headers
           ).in_sequence(correct_order)
 
@@ -799,7 +799,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {:is_active => nil}},
+            {:test_resource => {'is_active' => nil}},
             TestResource.headers
           )
           .in_sequence(correct_order)
@@ -824,7 +824,7 @@ describe "Base" do
         ApiResource::Connection.any_instance.expects(:put)
           .with(
             "/test_resources/1.json",
-            {:test_resource => {:is_active => false}},
+            {:test_resource => {'is_active' => false}},
             TestResource.headers
           ).in_sequence(correct_order)
 

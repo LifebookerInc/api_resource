@@ -14,23 +14,18 @@ describe "Attributes" do
 
   context "setters" do
 
-    it "should allow setting of protected attributes individually" do
+    it "should not allow setting of protected attributes individually" do
       test_resource = TestResource.new
-      test_resource.protected_attr = 100
+      lambda{
+        test_resource.protected_attr = 100
+      }.should raise_error NoMethodError
+
+      lambda {
+        test_resource.attributes = { protected_attr: 100 }
+      }.should_not raise_error ApiResource::AttributeAccessError
+
+      test_resource = TestResource.new(protected_attr: 100)
       test_resource.protected_attr.should eql(100)
-    end
-
-    it "should not allow mass assignment of protected attributes" do
-      test_resource = TestResource.new
-      lambda{
-        test_resource.attributes = {:protected_attr => 100}
-      }.should raise_error
-    end
-
-    it "should not allow mass assignment in the constructor" do
-      lambda{
-        TestResource.new({:protected_attr => 100})
-      }.should raise_error
     end
 
   end
@@ -92,7 +87,7 @@ describe "Attributes" do
     context "Attributes" do
       before(:all) do
         TestResource.define_attributes :attr1, :attr2
-        TestResource.define_protected_attributes :attr3
+        TestResource.define_attributes :attr3, access_level: :protected
       end
 
       it "should set attributes for the data loaded from a hash" do
@@ -103,13 +98,11 @@ describe "Attributes" do
         tst.attr1.should eql("test")
       end
 
-      it "should create protected attributes for unknown attributes trying to be loaded" do
-
-        TestResource.connection.stubs(:get => {:attr1 => "attr1", :attr3 => "attr3"})
+      it "should allow access to an unknown attribute through method missing" do
+        TestResource.connection.stubs(:get => {:attr1 => "attr1", :attr5 => "attr5"})
         tst = TestResource.find(1)
 
-        tst.attr3?.should be_true
-        tst.attr3.should eql("attr3")
+        tst.attr5.should eql("attr5")
       end
     end
 
@@ -132,14 +125,14 @@ describe "Attributes" do
     end
 
     it "should be able to set multiple attributes at once" do
-      TestResource.define_attributes :attr1, :attr2, :attr3
+      TestResource.define_attributes :attr1, :attr2, :attr4
       tst = TestResource.new
-      tst.attr3 = "123"
+      tst.attr4 = "123"
 
       tst.attributes = {:attr1 => "abc", :attr2 => "test"}
       tst.attr1.should eql "abc"
       tst.attr2.should eql "test"
-      tst.attr3.should eql "123"
+      tst.attr4.should eql "123"
     end
 
   end
@@ -167,27 +160,19 @@ describe "Attributes" do
         TestResource.define_attributes :attr1, :attr2
       end
 
-      it "should be able to mark any list of attributes as current (unchanged)" do
-        tst = TestResource.new
-        tst.attr1 = "Hello"
-        tst.changed.should_not be_blank
-        tst.set_attributes_as_current :attr1, :attr2
-        tst.changed.should be_blank
-      end
-
       it "should be able to mark all the attributes as current if none are given" do
         tst = TestResource.new
         tst.attr1 = "attr1"
         tst.attr2 = "attr2"
         tst.changed.should_not be_blank
-        tst.set_attributes_as_current
+        tst.clear_changes
         tst.changed.should be_blank
       end
 
-      it "should be able to reset any list of attributes" do
+      it "should be able to reset any attribute" do
         tst = TestResource.new
         tst.attr1 = "attr1"
-        tst.reset_attribute_changes :attr1
+        tst.reset_attr1!
         tst.attr1.should be_nil
         tst.changed.should be_blank
       end
@@ -196,8 +181,7 @@ describe "Attributes" do
         tst = TestResource.new
         tst.attr1 = "attr1"
         tst.attr2 = "attr2"
-
-        tst.reset_attribute_changes
+        tst.reset_changes
         tst.attr1.should be_nil
         tst.attr2.should be_nil
         tst.changed.should be_blank

@@ -586,7 +586,6 @@ describe "Base" do
         TestResource.reload_resource_definition
         HasOneObject.reload_resource_definition
         TestResource.has_many :has_many_objects
-        # RestClient::Payload.stubs(:has_file? => false)
       end
 
       it "should be able to put updated data via the update method and

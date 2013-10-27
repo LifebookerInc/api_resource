@@ -34,7 +34,6 @@ module ApiResource
     class_attribute :site, :proxy, :user, :password, :auth_type, :format,
       :timeout, :open_timeout, :ssl_options, :token, :ttl
 
-
     class_attribute :include_root_in_json
     self.include_root_in_json = true
 
@@ -46,9 +45,6 @@ module ApiResource
 
     class_attribute :format
     self.format = ApiResource::Formats::JsonFormat
-
-    class_attribute :primary_key
-    self.primary_key = "id"
 
     class_attribute :resource_definition_mutex
     self.resource_definition_mutex = Mutex.new

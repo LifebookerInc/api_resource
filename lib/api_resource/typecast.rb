@@ -5,12 +5,22 @@ require 'api_resource/typecasters/integer_typecaster'
 require 'api_resource/typecasters/string_typecaster'
 require 'api_resource/typecasters/time_typecaster'
 require 'api_resource/typecasters/array_typecaster'
+require 'api_resource/typecasters/unknown_typecaster'
 
 # Apparently need to require the active_support class_attribute
 require 'active_support/core_ext/class/attribute'
 
 
 module ApiResource
+
+  #
+  # Error raised when unable to find a typecaster for a given
+  # attribute
+  #
+  # @author [ejlangev]
+  #
+  class TypecasterNotFound < NoMethodError
+  end
 
   module Typecast
 
@@ -64,9 +74,11 @@ module ApiResource
 
       def default_typecasters
         @default_typecasters ||= {
+          :array => ArrayTypecaster,
           :boolean => BooleanTypecaster,
           :bool => BooleanTypecaster,
           :date => DateTypecaster,
+          :datetime => TimeTypecaster,
           :decimal => FloatTypecaster,
           :float => FloatTypecaster,
           :integer => IntegerTypecaster,
@@ -74,8 +86,7 @@ module ApiResource
           :string => StringTypecaster,
           :text => StringTypecaster,
           :time => TimeTypecaster,
-          :datetime => TimeTypecaster,
-          :array => ArrayTypecaster,
+          :unknown => UnknownTypecaster
         }
       end
 

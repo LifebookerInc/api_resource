@@ -13,9 +13,9 @@ module ApiResource
 
 		module ClassMethods
 
-   	# This decides which finder method to call. 
+   	# This decides which finder method to call.
       # It accepts arguments of the form "scope", "options={}"
-      # where options can be standard rails options or :expires_in. 
+      # where options can be standard rails options or :expires_in.
       # If :expires_in is set, it caches it for expires_in seconds.
 
       # Need to support the following cases
@@ -38,7 +38,7 @@ module ApiResource
           if numeric_find
             if single_find && (@conditions.blank_conditions? || nested_find_only?)
               # If we have no conditions or they are only prefixes or
-              # includes, and only one argument (not a word) then we 
+              # includes, and only one argument (not a word) then we
               # only have a single item to find.
               # e.g. Class.includes(:association).find(1)
               #      Class.find(1)
@@ -88,7 +88,7 @@ module ApiResource
       end
 
        def instantiate_collection(collection)
-        collection.collect{|record| 
+        collection.collect{|record|
           instantiate_record(record)
         }
       end
@@ -144,9 +144,9 @@ module ApiResource
 
         # Conditions sometimes call find, passing themselves as the last arg.
         if args.last.is_a?(ApiResource::Conditions::AbstractCondition)
-          cond    = args.slice!(args.length - 1) 
+          cond = args.slice!(args.length - 1)
         else
-          cond    = nil
+          cond = nil
         end
 
         # Support options being passed in as a hash.

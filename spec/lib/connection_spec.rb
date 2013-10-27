@@ -119,7 +119,7 @@ describe Connection do
 
     end
 
-    it "should time out if RestClient takes too long" do
+    it "should time out if HttpClient takes too long" do
 
       # hopefully google won't actually respond this fast :)
       ApiResource.timeout = 0.001

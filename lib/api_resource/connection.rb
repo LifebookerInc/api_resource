@@ -62,7 +62,7 @@ module ApiResource
       headers = build_request_headers(headers, :get, site)
 
       self.with_caching(path, headers) do
-        format.decode(request(:get, path, headers))
+        format.decode(request(:get, path, {}, headers))
       end
     end
 
@@ -147,7 +147,6 @@ module ApiResource
             path += ".#{self.format.extension}"
           end
           ActiveSupport::Notifications.instrument("request.api_resource") do |payload|
-
             # debug logging
             ApiResource.logger.info("#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}")
             payload[:method]      = method

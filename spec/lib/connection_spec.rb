@@ -10,14 +10,14 @@ describe Connection do
   end
 
   it "should be able to set a default token value, which is passed through each request" do
-    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {"Accept"=>"application/json", "Lifebooker-Token" => "abc"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {}, {"Accept"=>"application/json", "Lifebooker-Token" => "abc"}).returns(ApiResource::Mocks::MockResponse.new({}))
     ApiResource::Base.token = "abc"
     TestResource.find(1)
   end
 
   it "should set the Lifebooker-Token if one is present for GET requests" do
     token = Kernel.rand(100000).to_s
-    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:get).with("/test_resources/1.json", {}, {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
 
     ApiResource::Base.token = token
 

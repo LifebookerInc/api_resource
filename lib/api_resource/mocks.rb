@@ -246,8 +246,8 @@ module ApiResource
       self.requests = []
 
       #   body?       methods
-      { true  => %w(post put),
-        false => %w(get delete head) }.each do |has_body, methods|
+      { true  => %w(post put get),
+        false => %w(delete head) }.each do |has_body, methods|
         methods.each do |method|
           # def post(path, body, headers)
           #   request = ApiResource::Request.new(:post, path, body, headers)

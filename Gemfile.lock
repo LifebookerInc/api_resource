@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.19)
-      activemodel (= 3.2.10)
+    api_resource (0.6.18)
+      activemodel
       colorize
       differ
       httpclient

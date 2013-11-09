@@ -30,16 +30,19 @@ module ApiResource
         :public_attribute_names,
         :protected_attribute_names,
         :attribute_types,
-        :primary_key
+        :primary_key,
+        :attribute_method_module
       )
       # Initialize those class attributes
       self.attribute_names = []
       self.public_attribute_names = []
       self.protected_attribute_names = []
       self.attribute_types = {}.with_indifferent_access
+
       self.primary_key = :id
+      self.attribute_method_module = Module.new
 
-
+      include self.attribute_method_module
       # This method is important for reloading an object. If the
       # object has already been loaded, its associations will trip
       # up the load method unless we pass in the internal objects.
@@ -84,6 +87,11 @@ module ApiResource
       # @return [Boolean] true
       def define_all_attributes
         if self.resource_definition["attributes"]
+          # First we need to clear out the old values and clone them
+          self.attribute_names = []
+          self.public_attribute_names = []
+          self.protected_attribute_names = []
+          self.attribute_types = {}.with_indifferent_access
           # First define all public attributes
           define_attributes(
             *self.resource_definition['attributes']['public'],
@@ -110,7 +118,6 @@ module ApiResource
       def define_attributes(*args)
         options = args.extract_options!
         options[:access_level] ||= :public
-
         # Initialize each attribute
         args.each do |arg|
           self.initialize_attribute(
@@ -174,7 +181,7 @@ module ApiResource
       #
       # @return [Boolean] Always true
       def define_attribute_methods(attrs, access_level)
-        mod = Module.new do
+        self.attribute_method_module.module_eval do
           attrs.each do |attr|
             # Normalize for attributes without types
             attr_name = Array.wrap(attr).first
@@ -198,8 +205,6 @@ module ApiResource
             end
           end
         end
-
-        include mod
 
         # Now we get all the attribute names as symbols
         # and define_attribute_methods for dirty tracking
@@ -334,6 +339,8 @@ module ApiResource
     # @return [Object] The value parameter is always returned
     def write_attribute(attr_name, value)
       attr_name = attr_name.to_sym
+      # Change a write attribute for id to the primary key
+      attr_name = self.class.primary_key if attr_name == :id && self.class.primary_key
       # The value we expect here should be typecasted for going to
       # the api
       typed_value = self.typecast_attribute_for_write(attr_name, value)
@@ -346,8 +353,6 @@ module ApiResource
         changed_attributes[attr_name] = old if old != typed_value
       end
 
-      # Change a write attribute for id to the primary key
-      attr_name = self.class.primary_key if attr_name == :id && self.class.primary_key
       # Remove this attribute from the attributes cache
       @attributes_cache.delete(attr_name)
       # Raise an error if this is not an attribute
@@ -497,14 +502,18 @@ module ApiResource
     # Override for the save method to update our dirty tracking
     # of attributes
     #
-    # @param  *args [Array] Any arguments passed into save, ignored
-    # by us right here
+    # @param  *args [Array] Used to clear changes on any associations
+    # embedded in this save provided it succeeds
     #
     # @return [Boolean] True if the save succeeded, false otherwise
     def save_with_dirty_tracking(*args)
       if save_without_dirty_tracking(*args)
-        @previously_changed = self.changes
-        @changed_attributes.clear
+        self.make_changes_current
+        if args.first.is_a?(Hash) && args.first[:include_associations]
+          args.first[:include_associations].each do |assoc|
+            Array.wrap(self.send(assoc).internal_object).each(&:make_changes_current)
+          end
+        end
         return true
       else
         return false
@@ -537,6 +546,11 @@ module ApiResource
         return @attributes[sym]
       end
       super
+    end
+
+    def make_changes_current
+      @previously_changed = self.changes
+      @changed_attributes.clear
     end
 
     def clear_changes(*attrs)
@@ -611,7 +625,7 @@ module ApiResource
         typecaster = self.class.attribute_types[attr_name]
 
         if typecaster.nil?
-          raise ApiResource::TypecasterNotFound, "No registered typecaster for #{attr_name}"
+          typecaster = ApiResource::Typecast::UnknownTypecaster
         end
 
         return typecaster

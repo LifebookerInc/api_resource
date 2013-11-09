@@ -188,6 +188,7 @@ module ApiResource
     #
     # @return [Boolean] Whether or not to include it
     def include_attribute?(attribute, val)
+      attribute = attribute.to_sym
       # explicitly included
       return true if self.included_attributes.include?(attribute)
       # explicitly excluded

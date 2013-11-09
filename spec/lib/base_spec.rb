@@ -110,30 +110,6 @@ describe "Base" do
 
   end
 
-  context "#method_missing" do
-
-    after(:all) do
-      TestResource.reload_resource_definition
-    end
-
-    it "should attempt to reload the resource definition if a method
-      is not found" do
-
-      TestResource.class_eval do
-        remove_method :bday
-      end
-
-      tr = TestResource.new
-
-      lambda{
-        tr.bday
-      }.should_not raise_error
-
-    end
-
-  end
-
-
   context "Prefixes" do
 
     before(:all) do
@@ -856,10 +832,11 @@ describe "Base" do
 
   describe "Random methods" do
 
-    before(:all) do
+    before(:each) {
+      TestResource.reload_resource_definition
       HasOneObject.reload_resource_definition
-      HasManyObject.load_resource_definition
-    end
+      HasManyObject.reload_resource_definition
+    }
 
     it "should know if it is persisted" do
       tr = TestResource.new(name: "Ethan")
@@ -873,7 +850,6 @@ describe "Base" do
 
     it "should know how to reload attributes" do
       tr = TestResource.find(1)
-
       tr.age = 47
       tr.name = "Ethan"
 
@@ -885,7 +861,6 @@ describe "Base" do
 
     it "should know how to reload associations" do
       tr = TestResource.find(1)
-
       tr.has_one_object.size = "small"
       tr.has_many_objects.first.name = "Ethan"
 

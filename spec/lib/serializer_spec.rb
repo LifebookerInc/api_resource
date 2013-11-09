@@ -61,7 +61,7 @@ module ApiResource
         are passed in via the include_extras array" do
 
         TestResource.class_eval do
-          define_protected_attributes(:attr3)
+          define_attributes :attr3, access_level: :protected
         end
 
         instance = TestResource.instantiate_record({

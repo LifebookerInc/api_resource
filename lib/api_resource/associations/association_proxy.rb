@@ -1,22 +1,22 @@
 module ApiResource
-  
+
   module Associations
-   
+
     class AssociationProxy
 
 
       class_attribute :remote_path_element
-      self.remote_path_element = :service_uri 
+      self.remote_path_element = :service_uri
 
       attr_accessor :remote_path
       attr_reader :owner, :klass, :finder_opts
 
       # TODO: add the other load forcing methods here for collections
-      delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?, 
-        :include?, :push, :pop, :+, :concat, :flatten, :flatten!, :compact, 
-        :compact!, :empty?, :fetch, :map, :reject, :reject!, :reverse, 
-        :select, :select!, :size, :sort, :sort!, :uniq, :uniq!, :to_a, 
-        :sample, :slice, :slice!, :count, :present?, 
+      delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?,
+        :include?, :push, :pop, :+, :concat, :flatten, :flatten!, :compact,
+        :compact!, :empty?, :fetch, :map, :reject, :reject!, :reverse,
+        :select, :select!, :size, :sort, :sort!, :uniq, :uniq!, :to_a,
+        :sample, :slice, :slice!, :count, :present?,
         :to => :internal_object
 
       # define association methods on the class
@@ -27,7 +27,7 @@ module ApiResource
 
         # pass this along
         opts[:name] = assoc_name
-        
+
         klass.api_resource_generated_methods.module_eval <<-EOE, __FILE__, __LINE__ + 1
           def #{assoc_name}
             @attributes_cache[:#{assoc_name}] ||= begin
@@ -60,7 +60,8 @@ module ApiResource
               #{id_method_name}_will_change!
             end
             @attributes_cache[:#{id_method_name}] = val
-            write_attribute(:#{id_method_name}, val)
+            # write_attribute(:#{id_method_name}, val)
+            @attributes[:#{id_method_name}] = val
           end
 
         EOE
@@ -76,7 +77,7 @@ module ApiResource
       public
 
       def initialize(klass, owner, options = {})
-        
+
         # the base class for our scope, e.g. ApiResource::SomeClass
         @klass = klass.is_a?(String) ? klass.constantize : klass
 
@@ -150,7 +151,7 @@ module ApiResource
         end
 
     end
-    
+
   end
-  
+
 end

@@ -640,18 +640,18 @@ module ApiResource
       response
     end
 
-    def method_missing(meth, *args, &block)
-      # make one attempt to load remote attrs
-      if self.class.resource_definition_is_invalid?
-        self.class.reload_resource_definition
-      end
-      # see if we respond to the method now
-      if self.respond_to?(meth)
-        return self.send(meth, *args, &block)
-      else
-        super
-      end
-    end
+    # def method_missing(meth, *args, &block)
+    #   # make one attempt to load remote attrs
+    #   if self.class.resource_definition_is_invalid?
+    #     self.class.reload_resource_definition
+    #   end
+    #   # see if we respond to the method now
+    #   if self.respond_to?(meth)
+    #     return self.send(meth, *args, &block)
+    #   else
+    #     super
+    #   end
+    # end
 
     def element_path(id, prefix_override_options = {}, query_options = nil)
       self.class.element_path(

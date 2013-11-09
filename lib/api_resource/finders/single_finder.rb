@@ -31,7 +31,7 @@ module ApiResource
       protected
 
       def build_load_path
-        if self.condition.to_hash["id"].nil?
+        if self.condition.to_hash["id"].blank?
           raise "Invalid evaluation of a SingleFinder without an ID"
         end
 

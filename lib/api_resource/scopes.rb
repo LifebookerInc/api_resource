@@ -93,7 +93,6 @@ module ApiResource
       def add_dynamic_scopes(params, base)
         self.dynamic_scopes.each_pair do |name, args|
           next if params[name].blank?
-          ApiResource.logger.debug { "Applying scope: #{name}" }
           caller_args = []
           args.each_pair do |subkey, type|
             if type == :req || params[name][subkey].present?

@@ -370,51 +370,6 @@ describe "Associations" do
 
     end
 
-    describe "Selecting scopes" do
-
-      before(:all) do
-        ScopeResource.class_eval do
-          scope :no_arg, {}
-          scope :one_arg, {:id => :req}
-          scope :one_array_arg, {:ids => :req}
-          scope :two_args, {:page => :req, :per_page => :req}
-          scope :opt_args, {:arg1 => :opt}
-          scope :var_args, {:ids => :rest}
-          scope :mix_args, {:id => :req, :vararg => :rest}
-        end
-      end
-
-      it "should be able to query scopes on the current model" do
-        ScopeResource.no_arg.to_query.should eql(
-          "no_arg=true"
-        )
-        ScopeResource.one_arg(5).to_query.should eql(
-          "one_arg[id]=5"
-        )
-        ScopeResource.one_array_arg([3, 5]).to_query.should eql(
-          "one_array_arg[ids][]=3&one_array_arg[ids][]=5"
-        )
-        ScopeResource.two_args(1, 20).to_query.should eql(
-          "two_args[page]=1&two_args[per_page]=20"
-        )
-        $DEB = true
-        ScopeResource.opt_args.to_query.should eql(
-          "opt_args=true"
-        )
-        ScopeResource.opt_args(3).to_query.should eql(
-          "opt_args[arg1]=3"
-        )
-        ScopeResource.var_args(1, 2).to_query.should eql(
-          "var_args[ids][]=1&var_args[ids][]=2"
-        )
-        args = ["a", {:opt1 => 1}, {:opt2 => 2}]
-        ScopeResource.mix_args(*args).to_query.should eql(
-          "mix_args[id]=a&mix_args[vararg][][opt1]=1&mix_args[vararg][][opt2]=2"
-        )
-      end
-    end
-
-
   end
 
   describe "Loading and Caching loaded data" do

@@ -68,7 +68,42 @@ module ApiResource
         end
       end
 
+      # 
+      # Apply scopes from params based on our resource
+      # definition
+      #
+      def add_scopes(params, base = self)
+        # scopes are stored as strings but we want to allow
+        params = params.with_indifferent_access
+        base = self.add_static_scopes(params, base)
+        return self.add_dynamic_scopes(params, base)
+      end
+
       protected
+
+      def add_static_scopes(params, base)
+        self.static_scopes.each do |name|
+          if params[name].present?
+            base = base.send(name)
+          end
+        end
+        return base
+      end
+
+      def add_dynamic_scopes(params, base)
+        self.dynamic_scopes.each_pair do |name, args|
+          next if params[name].blank?
+          ApiResource.logger.debug { "Applying scope: #{name}" }
+          caller_args = []
+          args.each_pair do |subkey, type|
+            if type == :req || params[name][subkey].present?
+              caller_args << params[name][subkey]
+            end
+          end
+          base = base.send(name, *caller_args)
+        end
+        return base
+      end
 
       #
       # Wrapper method to define all scopes from the resource definition
@@ -81,6 +116,14 @@ module ApiResource
           end
         end
         true
+      end
+
+      def dynamic_scopes
+        self.scopes.select { |name, args| args.present? }
+      end
+
+      def static_scopes
+        self.scopes.select { |name, args| args.blank? }.keys
       end
 
     end

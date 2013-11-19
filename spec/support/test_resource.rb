@@ -35,7 +35,7 @@ class PrefixModel < ApiResource::Base
   self.prefix = "/foreign/:foreign_key_id/"
 end
 
-class ScopeResource < ApiResource::Base
+class ScopeResource < ApiResource::Local
   
 end
 

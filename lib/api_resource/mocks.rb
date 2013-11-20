@@ -183,6 +183,10 @@ module ApiResource
         @path, @query = path.split("?")
         @path, @format = @path.split(".")
 
+        if opts[:body].present? && !opts[:body].is_a?(String)
+          raise "#{opts[:body]} must be passed as a String"
+        end
+
         # if we have params, it is a MockRequest definition
         if opts[:params]
           @params = opts[:params]

@@ -24,7 +24,13 @@ module ApiResource
 
         id_method_name = self.foreign_key_name(assoc_name)
         associated_class = opts[:class_name] || assoc_name.to_s.classify
+        remote_proxy = false
 
+        # This is a terrible hack to hold us over until
+        # we have a real association system
+        if self.name.demodulize =~ /RemoteObjectProxy$/
+          remote_proxy = true
+        end
         # pass this along
         opts[:name] = assoc_name
 
@@ -61,7 +67,14 @@ module ApiResource
             end
             @attributes_cache[:#{id_method_name}] = val
             # write_attribute(:#{id_method_name}, val)
-            @attributes[:#{id_method_name}] = val
+            # Active record uses string attributes key
+            # Here's a terrible hack for the time being
+            if #{remote_proxy}
+              @attributes['#{id_method_name}'] = val
+            else
+              # and we use symbol attribute keys
+              @attributes[:#{id_method_name}] = val
+            end
           end
 
         EOE

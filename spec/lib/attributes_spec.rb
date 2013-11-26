@@ -70,7 +70,7 @@ describe "Attributes" do
 
       it "should be able to determine scopes when the class loads" do
         tst = TestResource.new
-        tst.scope?(:paginate).should be_true
+        tst.scope?(:boolean).should be_true
         tst.scope?(:active).should be_true
       end
 

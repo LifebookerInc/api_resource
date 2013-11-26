@@ -17,7 +17,7 @@ describe "Conditions" do
 
 		obj3 = obj.paginate
 
-		obj3.to_query.should eql("active=true&paginate=true")
+		obj3.to_query.should eql("active=true&page=1&per_page=10")
 		obj3.should_not be_eager_load
 		obj3.should_not be_blank_conditions
 		# Make sure that it clones
@@ -61,25 +61,37 @@ describe "Conditions" do
 	it "should create a resource finder when forced to load, and cache the result" do
 		obj = TestResource.includes(:has_many_objects)
 
-		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:load => [1]))
-		obj.internal_object.should eql([1])
-		obj.all.should eql([1])
+		resource_finder_mock = mock(load: [1], first: 1)
+
+		ApiResource::Finders::ResourceFinder.expects(:new)
+			.with(TestResource, obj)
+			.returns(resource_finder_mock)
+
+		obj.internal_object.should eql(resource_finder_mock)
+		obj.all.should eql(resource_finder_mock)
 		obj.first.should eql(1)
 	end
 
-	it "should proxy calls to enumerable and array methods to the loaded object" do
+	it "should proxy calls to enumerable and array methods to the loaded
+		object" do
+
 		obj = TestResource.includes(:has_many_objects)
 
-		ApiResource::Finders::ResourceFinder.expects(:new).with(TestResource, obj).returns(mock(:load => [1,2]))
+		# this just needs to call each
+		resource_finder_mock = mock(load: true, each: true)
 
-		obj.collect{|o| o * 2}.should eql([2,4])
+		ApiResource::Finders::ResourceFinder.expects(:new)
+			.with(TestResource, obj)
+			.returns(resource_finder_mock)
+
+		obj.collect{|o| o * 2}.should eql([])
 	end
 
 	it "should not typecast nil and false to true when creating condition hashes" do
-		obj = TestResource.paginate(false, nil)
-		hsh = obj.to_hash["paginate"]
-		hsh["per_page"].should eql(false)
-		hsh.should be_key(:current_page)
+		obj = TestResource.boolean(false, nil)
+		hsh = obj.to_hash["boolean"]
+		hsh["a"].should eql(false)
+		hsh.should be_key(:b)
 	end
 
 end

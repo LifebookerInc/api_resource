@@ -8,14 +8,18 @@ module ApiResource
 			# not require a remote path
 			def load
 				begin
-					@loaded = true
-					@internal_object = self.klass.connection.get(self.build_load_path)
-					return [] if @internal_object.blank?
+					return [] if self.response.blank?
 
-					if @internal_object.is_a?(Array)
-						@internal_object = self.klass.instantiate_collection(@internal_object)
+					@loaded = true
+
+					if self.response.is_a?(Array)
+						@internal_object = self.klass.instantiate_collection(
+							self.response
+						)
 					else
-						@internal_object = [self.klass.instantiate_record(@internal_object)]
+						@internal_object = [
+							self.klass.instantiate_record(self.response)
+						]
 					end
 
 					id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
@@ -48,7 +52,9 @@ module ApiResource
 
         # Find every resource
         def build_load_path
-        	prefix_opts, query_opts = self.klass.split_options(self.condition.to_hash)
+        	prefix_opts, query_opts = self.klass.split_options(
+        		self.condition.to_hash
+        	)
 	        self.klass.collection_path(prefix_opts, query_opts)
         end
 

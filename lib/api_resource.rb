@@ -33,6 +33,7 @@ module ApiResource
   autoload :Mocks
   autoload :ModelErrors
   autoload :Observing
+  autoload :Response
   autoload :Scopes
   autoload :Serializer
   autoload :Typecast

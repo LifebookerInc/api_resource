@@ -1,8 +1,8 @@
 module ApiResource
   class ConnectionError < StandardError # :nodoc:
-    
+
     cattr_accessor :http_code
-    
+
     attr_reader :response
 
     def initialize(response, options = {})
@@ -15,9 +15,9 @@ module ApiResource
       message = "Failed."
 
       if response.respond_to?(:code)
-        message << "  Response code = #{response.code}." 
+        message << "  Response code = #{response.code}."
       end
-      
+
       if response.respond_to?(:body)
         begin
           body = JSON.parse(response.body).pretty_inspect
@@ -26,15 +26,15 @@ module ApiResource
         end
         message << "\nResponse message = #{body}."
       end
-      
+
       message << "\n#{@message}"
       message << "\n#{@path}"
     end
-    
+
     def http_code
       self.class.http_code
     end
-    
+
   end
 
   # Raised when a Timeout::Error occurs.
@@ -72,7 +72,7 @@ module ApiResource
 
   # 404 Not Found
   class ResourceNotFound < ClientError; self.http_code = 404; end # :nodoc:
-  
+
   # 406 Not Acceptable
   class NotAcceptable < ClientError; self.http_code = 406; end
 
@@ -81,7 +81,7 @@ module ApiResource
 
   # 410 Gone
   class ResourceGone < ClientError; self.http_code = 410; end # :nodoc:
-  
+
   class UnprocessableEntity < ClientError; self.http_code = 422; end
 
   # 5xx Server Error
@@ -89,9 +89,9 @@ module ApiResource
 
   # 405 Method Not Allowed
   class MethodNotAllowed < ClientError # :nodoc:
-    
+
     self.http_code = 405
-    
+
     def allowed_methods
       @response['Allow'].split(',').map { |verb| verb.strip.downcase.to_sym }
     end

@@ -7,9 +7,10 @@ module ApiResource
 
 		autoload :AbstractCondition
 		autoload :AssociationCondition
-		autoload :SingleObjectAssociationCondition
-		autoload :MultiObjectAssociationCondition
 		autoload :IncludeCondition
+		autoload :MultiObjectAssociationCondition
+		autoload :PaginationCondition
+		autoload :SingleObjectAssociationCondition
 		autoload :ScopeCondition
 
 		module ClassMethods
@@ -27,6 +28,14 @@ module ApiResource
 
 				# Everything looks good so just create the scope
 				ApiResource::Conditions::IncludeCondition.new(self, args)
+
+			end
+
+			def paginate(opts = {})
+				self.load_resource_definition
+
+				# Everything looks good so just create the scope
+				ApiResource::Conditions::PaginationCondition.new(self, opts)
 
 			end
 

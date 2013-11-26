@@ -7,12 +7,20 @@ describe "SingleObjectAssociationFinder" do
 	end
 
 	it "should build a proper load path and call into the connection" do
-		TestResource.connection.expects(:get).with("test_resources.json?id[]=1&id[]=2").returns(nil)
+		TestResource.connection
+			.expects(:get)
+			.with("test_resources.json?id[]=1&id[]=2")
+			.returns(nil)
 
-		ApiResource::Finders::SingleObjectAssociationFinder.new(
+		finder = ApiResource::Finders::SingleObjectAssociationFinder.new(
 			TestResource,
-			stub(:remote_path => "test_resources", :to_query => "id[]=1&id[]=2", :blank_conditions? => false)
-		).load
+			stub(
+				:remote_path => "test_resources",
+				:to_query => "id[]=1&id[]=2",
+				:blank_conditions? => false
+			)
+		)
+		finder.load
 	end
 
 	it "should load a has many association properly" do
@@ -21,9 +29,9 @@ describe "SingleObjectAssociationFinder" do
 		finder = ApiResource::Finders::SingleObjectAssociationFinder.new(
 			TestResource,
 			stub(
-				:remote_path => "test_resources", 
+				:remote_path => "test_resources",
 				:blank_conditions? => true,
-				:eager_load? => true, 
+				:eager_load? => true,
 				:included_objects => [:has_many_objects]
 			)
 		)

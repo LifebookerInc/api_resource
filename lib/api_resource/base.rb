@@ -197,12 +197,12 @@ module ApiResource
       # backwards compatibility
       alias_method :reload_class_attributes, :reload_resource_definition
 
-      # 
+      #
       # Mutex so that multiple Threads don't try to load the resource
       # definition at the same time
-      # 
+      #
       # @return [Mutex]
-      def resource_definition_mutex 
+      def resource_definition_mutex
         @resource_definition_mutex ||= Mutex.new
       end
 

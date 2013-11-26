@@ -18,15 +18,11 @@ module ApiResource
 					raise "Tried to load association without a remote path"
 				end
 
-				unless @internal_object
-					data = self.klass.connection.get(self.build_load_path)
-					return [] if data.blank?
+				return [] if self.response.blank?
 
-					# handle non-array data for more flexibility in our endpoints
-					data = [data] unless data.is_a?(Array)
-
-					@internal_object = self.klass.instantiate_collection(data)
-				end
+				@internal_object ||= self.klass.instantiate_collection(
+					Array.wrap(self.response)
+				)
 
 				@loaded = true
 

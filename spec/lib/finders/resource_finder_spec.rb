@@ -4,7 +4,6 @@ describe "ResourceFinder" do
 
 	before(:each) do
 		TestResource.reload_resource_definition
-
 	end
 
 	it "should load normally without includes using connection.get" do
@@ -20,7 +19,7 @@ describe "ResourceFinder" do
 		TestResource.connection.expects(:get).with("/test_resources.json?ids%5B%5D=1&ids%5B%5D=2&ids%5B%5D=3")
 
 		ApiResource::Finders::ResourceFinder.new(
-			TestResource, 
+			TestResource,
 			mock(:to_hash => {:ids => [1,2,3]})
 		).load
 	end
@@ -73,6 +72,31 @@ describe "ResourceFinder" do
 
 		obj.first.has_many_objects.collect(&:id).should eql([1])
 		obj.second.has_many_objects.collect(&:id).should eql([2])
+	end
+
+	context 'Headers returned from the server' do
+
+		context '#total_entries' do
+
+			it 'stores the ApiResource-Total-Entries as total_entries' do
+
+				finder = ApiResource::Finders::ResourceFinder.new(
+					TestResource,
+					ApiResource::Conditions::PaginationCondition.new(
+						TestResource,
+						{ page: 2, per_page: 10 }
+					)
+				)
+
+				finder.load
+
+				expect(finder.total_entries).to be 100
+
+
+			end
+
+		end
+
 	end
 
 end

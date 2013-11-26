@@ -604,10 +604,10 @@ describe "Associations" do
       end
 
       it "should be able to chain scopes" do
-        scp = TestResource.active.paginate(20, 1)
+        scp = TestResource.active.boolean(20, 1)
         scp.should be_a Conditions::ScopeCondition
         scp.to_query.should eql(
-          "active=true&paginate[current_page]=1&paginate[per_page]=20"
+          "active=true&boolean[a]=20&boolean[b]=1"
         )
       end
 
@@ -789,7 +789,7 @@ describe "Associations" do
           end
         end
         context "Belongs To" do
-          before(:all) do 
+          before(:all) do
             TestAR.class_eval do
               belongs_to_remote :test_resource
             end

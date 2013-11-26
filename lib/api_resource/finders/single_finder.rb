@@ -5,20 +5,19 @@ module ApiResource
     class SingleFinder < AbstractFinder
 
       def load
-        data = self.klass.connection.get(self.build_load_path)
+        return nil if self.response.blank?
 
         @loaded = true
-        return nil if data.blank?
 
-        @internal_object = self.klass.instantiate_record(data)
+        @internal_object = self.klass.instantiate_record(self.response)
         # now that the object is loaded, resolve the includes
-        id_hash = self.condition.included_objects.inject({}) do |accum, assoc|
-          accum[assoc] = Array.wrap(
+        id_hash = self.condition.included_objects.inject({}) do |hash, assoc|
+          hash[assoc] = Array.wrap(
             @internal_object.send(
               @internal_object.class.association_foreign_key_field(assoc)
             )
           )
-          accum
+          hash
         end
 
         included_objects = self.load_includes(id_hash)

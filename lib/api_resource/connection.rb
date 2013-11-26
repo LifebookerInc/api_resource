@@ -62,17 +62,28 @@ module ApiResource
       headers = build_request_headers(headers, :get, site)
 
       self.with_caching(path, headers) do
-        format.decode(request(:get, path, {}, headers))
+        request(:get, path, {}, headers)
       end
     end
 
     def delete(path, headers = self.headers)
-      request(:delete, path, {}, build_request_headers(headers, :delete, self.site.merge(path)))
+      request(
+        :delete,
+        path,
+        {},
+        build_request_headers(headers, :delete, self.site.merge(path))
+      )
       return true
     end
 
     def head(path, headers = self.headers)
-      request(:head, path, {}, build_request_headers(headers, :head, self.site.merge(path)))
+      request(
+        :head,
+        path,
+        {},
+        build_request_headers(headers, :head, self.site.merge(path))
+      )
+      return true
     end
 
     # make a put request
@@ -97,7 +108,7 @@ module ApiResource
           "[DEPRECATION] Returning a response body from a PUT " +
           "is deprecated. \n#{response.pretty_inspect} was returned."
         )
-        return format.decode(response)
+        return response
       end
     end
 
@@ -107,13 +118,11 @@ module ApiResource
    #   have a timeout, general exception, or
    #   if result.code is not within 200..399
    def post(path, body = {}, headers = self.headers)
-      format.decode(
-        request(
-          :post,
-          path,
-          format.encode(body),
-          build_request_headers(headers, :post, self.site.merge(path))
-        )
+      request(
+        :post,
+        path,
+        format.encode(body),
+        build_request_headers(headers, :post, self.site.merge(path))
       )
     end
 
@@ -182,7 +191,7 @@ module ApiResource
           when 301,302
             raise ApiResource::Redirection.new(response)
           when 200..399
-            response.body
+            return ApiResource::Response.new(response, self.format)
           when 400
             raise ApiResource::BadRequest.new(response)
           when 401

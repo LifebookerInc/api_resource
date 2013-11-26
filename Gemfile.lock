@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.20)
+    api_resource (0.6.21)
       activemodel
       colorize
       differ

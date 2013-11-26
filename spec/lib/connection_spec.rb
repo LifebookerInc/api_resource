@@ -26,7 +26,7 @@ describe Connection do
 
   it "should set the Lifebooker-Token if one is present for DELETE requests" do
     token = Kernel.rand(100000).to_s
-    ApiResource::Mocks::Connection.expects(:delete).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:delete).with("/test_resources/1.json", {}, {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
 
     ApiResource::Base.token = token
 
@@ -35,7 +35,7 @@ describe Connection do
 
   it "should set the Lifebooker-Token if one is present for :head requests" do
     token = Kernel.rand(100000).to_s
-    ApiResource::Mocks::Connection.expects(:head).with("/test_resources/1.json", {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
+    ApiResource::Mocks::Connection.expects(:head).with("/test_resources/1.json", {}, {"Accept"=>"application/json", 'Lifebooker-Token' => "#{token}"}).returns(ApiResource::Mocks::MockResponse.new({}))
 
     ApiResource::Base.token = token
 

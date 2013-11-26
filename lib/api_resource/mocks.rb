@@ -249,46 +249,42 @@ module ApiResource
       cattr_accessor :requests
       self.requests = []
 
-      #   body?       methods
-      { true  => %w(post put get),
-        false => %w(delete head) }.each do |has_body, methods|
-        methods.each do |method|
-          # def post(path, body, headers)
-          #   request = ApiResource::Request.new(:post, path, body, headers)
-          #   self.class.requests << request
-          #   if response = LifebookerClient::Mocks.find_response(request)
-          #     response
-          #   else
-          #     raise InvalidRequestError.new("Could not find a response
-          #     recorded for #{request.to_s} - Responses recorded are: -
-          #       #{inspect_responses}")
-          #   end
-          # end
-          instance_eval <<-EOE, __FILE__, __LINE__ + 1
-            def #{method}(path, #{'body, ' if has_body}headers)
-              opts = {:headers => headers}
-              #{"opts[:body] = body" if has_body}
-              request = MockRequest.new(:#{method}, path, opts)
-              self.requests << request
-              if response = Mocks.find_response(request)
-                response[:response].tap{|resp|
-                  resp.generate_response(
-                    request.params
-                      .with_indifferent_access
-                      .merge(response[:params].with_indifferent_access)
-                  )
-                }
-              else
-                raise ApiResource::ResourceNotFound.new(
-                  MockResponse.new({}, {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
-                  :message => "\nCould not find a response recorded for \#{request.pretty_inspect}\n" +
-                  "Potential Responses Are:\n" +
-                  "\#{Array.wrap(Mocks.responses_for_path(request.path)[:responses]).collect(&:first).pretty_inspect}"
+      %w(delete get head post put).each do |method|
+        # def post(path, body, headers)
+        #   request = ApiResource::Request.new(:post, path, body, headers)
+        #   self.class.requests << request
+        #   if response = LifebookerClient::Mocks.find_response(request)
+        #     response
+        #   else
+        #     raise InvalidRequestError.new("Could not find a response
+        #     recorded for #{request.to_s} - Responses recorded are: -
+        #       #{inspect_responses}")
+        #   end
+        # end
+        instance_eval <<-EOE, __FILE__, __LINE__ + 1
+          def #{method}(path, body, headers)
+            opts = {:headers => headers}
+            opts[:body] = body
+            request = MockRequest.new(:#{method}, path, opts)
+            self.requests << request
+            if response = Mocks.find_response(request)
+              response[:response].tap{|resp|
+                resp.generate_response(
+                  request.params
+                    .with_indifferent_access
+                    .merge(response[:params].with_indifferent_access)
                 )
-              end
+              }
+            else
+              raise ApiResource::ResourceNotFound.new(
+                MockResponse.new({}, {:headers => {"Content-type" => "application/json"}, :status_code => 404}),
+                :message => "\nCould not find a response recorded for \#{request.pretty_inspect}\n" +
+                "Potential Responses Are:\n" +
+                "\#{Array.wrap(Mocks.responses_for_path(request.path)[:responses]).collect(&:first).pretty_inspect}"
+              )
             end
-          EOE
-        end
+          end
+        EOE
       end
     end
   end

@@ -67,12 +67,12 @@ module ApiResource
     end
 
     def delete(path, headers = self.headers)
-      request(:delete, path, build_request_headers(headers, :delete, self.site.merge(path)))
+      request(:delete, path, {}, build_request_headers(headers, :delete, self.site.merge(path)))
       return true
     end
 
     def head(path, headers = self.headers)
-      request(:head, path, build_request_headers(headers, :head, self.site.merge(path)))
+      request(:head, path, {}, build_request_headers(headers, :head, self.site.merge(path)))
     end
 
     # make a put request

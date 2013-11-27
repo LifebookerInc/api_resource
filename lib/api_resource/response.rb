@@ -2,7 +2,7 @@ module ApiResource
   class Response
 
     attr_accessor :body
-    attr_reader :response
+    attr_reader :headers
 
     # explicit delegate for things we define
     delegate(
@@ -18,17 +18,9 @@ module ApiResource
     # @param  response [HttpClient::Response]
     # @param  format [ApiResource::Format] Decoder
     #
-    def initialize(response, format)
-      @response = response
-      @body = format.decode(response.body)
-    end
-
-    #
-    # Reader for the headers from our response
-    #
-    # @return [Hash] Headers hash
-    def headers
-      @response.try(:headers)
+    def initialize(response)
+      @body = ApiResource.format.decode(response.body)
+      @headers = response.try(:headers) || {}
     end
 
     #
@@ -42,6 +34,24 @@ module ApiResource
     # @return [Boolean]
     def is_a?(klass)
       super || @body.is_a?(klass)
+    end
+
+    #
+    # Implementation of marshal_dump
+    #
+    # @return [Array<Hash>] The data to dump
+    def marshal_dump
+      [@body, @headers]
+    end
+
+    #
+    # Implementation of marshal load
+    # @param  args [Array] Array of dumped data
+    #
+    # @return [Response] New instance
+    def marshal_load(args)
+      @body, @headers = args
+      self
     end
 
 

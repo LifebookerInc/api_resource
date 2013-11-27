@@ -79,7 +79,7 @@ module ApiResource
       #
       # @return [Fixnum]
       def offset
-        self.headers.try(:[], 'ApiResource-Offset') || 0
+        self.headers.try(:[], 'ApiResource-Offset').to_i
       end
 
       #
@@ -96,7 +96,7 @@ module ApiResource
       #
       # @return [Fixnum]
       def total_entries
-        self.headers.try(:[], 'ApiResource-Total-Entries') || 0
+        self.headers.try(:[], 'ApiResource-Total-Entries').to_i
       end
 
       #

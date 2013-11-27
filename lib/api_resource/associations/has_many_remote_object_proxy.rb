@@ -7,7 +7,7 @@ module ApiResource
         id_method_name = self.foreign_key_name(assoc_name)
 
         klass.api_resource_generated_methods.module_eval <<-EOE, __FILE__, __LINE__ + 1
-          
+
           def #{id_method_name}
             @attributes_cache[:#{id_method_name}] ||= begin
               # check our attributes first, then go to the remote
@@ -43,7 +43,7 @@ module ApiResource
               :ids => associated_ids
             )
           # next try for a foreign key e.g. /objects.json?owner_id=1
-          elsif self.owner.try(:id).present?
+          elsif self.owner.try(:id).to_i > 0
             self.remote_path = self.klass.collection_path(
               self.owner.class.to_s.foreign_key => self.owner.id
             )

@@ -180,7 +180,12 @@ module ApiResource
             ApiResource.logger.error(error.message)
             result = error.response
           else
-            raise ApiResource::ConnectionError.new(nil, :message => "Unknown error #{error}")
+            exception = ApiResource::ConnectionError.new(
+              nil,
+              :message => "Unknown error #{error}"
+            )
+            exception.set_backtrace(error.backtrace)
+            raise exception
           end
         end
         return propogate_response_or_error(result, result.code)
@@ -191,7 +196,7 @@ module ApiResource
           when 301,302
             raise ApiResource::Redirection.new(response)
           when 200..399
-            return ApiResource::Response.new(response, self.format)
+            return ApiResource::Response.new(response)
           when 400
             raise ApiResource::BadRequest.new(response)
           when 401

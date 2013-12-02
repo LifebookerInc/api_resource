@@ -7,6 +7,7 @@ module ApiResource
     # explicit delegate for things we define
     delegate(
       :as_json,
+      :blank?,
       :inspect,
       :to_s,
       to: :body
@@ -19,7 +20,7 @@ module ApiResource
     # @param  format [ApiResource::Format] Decoder
     #
     def initialize(response)
-      @body = ApiResource.format.decode(response.body)
+      @body = self.parse_body(response)
       @headers = response.try(:headers) || {}
     end
 
@@ -86,6 +87,21 @@ module ApiResource
     # @return [Mixed]
     def method_missing(meth, *args, &block)
       @body.__send__(meth, *args, &block)
+    end
+
+    #
+    # Handle parsing of the body.  Returns a blank Hash if
+    # no body is present
+    #
+    # @param  response [HttpClient::Response]
+    #
+    # @return [Hash, Array<Hash>] Parsed response
+    def parse_body(response)
+      if response.try(:body).present?
+        return ApiResource.format.decode(response.body)
+      else
+        return {}
+      end
     end
 
   end

@@ -151,7 +151,7 @@ module ApiResource
       # or if the attribute has changed to nil
       return true if self.record.changes[key].present?
       # make sure our value isn't blank
-      return val.present?
+      return !val.nil?
     end
 
     #

@@ -8,6 +8,7 @@ module ApiResource
     module BooleanTypecaster
 
       def self.from_api(value)
+        return nil if value.nil?
         TRUE_VALUES.include?(value)
       end
 

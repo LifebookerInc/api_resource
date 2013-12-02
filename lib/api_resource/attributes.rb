@@ -136,8 +136,8 @@ module ApiResource
       # Adds the attribute into some internal data structures but does
       # not define any methods for it
       #
-      # @param  arg [Array] A 1 or 2 element array holding an attribute name and
-      # optionally a type for that attribute
+      # @param  arg [Array] A 1 or 2 element array holding an
+      # attribute name and optionally a type for that attribute
       # @param  access_level [Symbol] Either :protected or :public based on
       # the access level for this attribute
       #

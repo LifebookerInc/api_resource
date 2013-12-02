@@ -1,10 +1,13 @@
 HashDealer.define(:new_test_object) do
   attributes({
-    protected: [:id, :protected_attr],
+    protected: [
+      [:id, :integer],
+      :protected_attr
+    ],
     public: [
-      :name,
+      [:name, :string],
       :age,
-      :is_active,
+      [:is_active, :boolean],
       :belongs_to_object_id,
       :custom_name_id,
       [:bday, :date],

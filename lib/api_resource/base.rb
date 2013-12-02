@@ -541,6 +541,14 @@ module ApiResource
       self.class.instantiate_record(self.attributes)
     end
 
+    #
+    # Implementation of to_key for use in Rails forms
+    #
+    # @return [Array<Fixnum>,nil] Array wrapped id or nil
+    def to_key
+      [self.id] if self.id.present?
+    end
+
     def update_attributes(attrs)
       self.attributes = attrs
       self.save

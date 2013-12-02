@@ -13,7 +13,7 @@ describe ApiResource::Typecast::BooleanTypecaster do
     end
 
     it "should return false for any other conceivable input" do
-      [Date.new, Time.new, Date.today, Time.now, nil, false, Float, 2.0, 2, "", "bad value"].each do |val|
+      [Date.new, Time.new, Date.today, Time.now, false, Float, 2.0, 2, "", "bad value"].each do |val|
         klass.from_api(val).should be_instance_of(FalseClass)
       end
     end

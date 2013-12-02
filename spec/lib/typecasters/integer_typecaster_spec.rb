@@ -22,7 +22,7 @@ describe ApiResource::Typecast::IntegerTypecaster do
     end
 
     it "should be able to typecast any value you can think of" do
-      klass.from_api(nil).should eql(0)
+      klass.from_api(nil).should eql(nil)
       klass.from_api("").should eql(nil)
       klass.from_api(BasicObject).should eql(0)
       klass.from_api("abc").should eql(0)

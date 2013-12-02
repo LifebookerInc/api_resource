@@ -110,6 +110,34 @@ describe "Base" do
 
   end
 
+  context "#id" do
+
+    it 'should have a blank id on initialize' do
+      expect(TestResource.new.id).to be_nil
+    end
+
+  end
+
+  context '#new_record?' do
+
+    it 'is a new record on initialize' do
+      expect(TestResource.new).to be_new_record
+    end
+
+  end
+
+  context '#to_key' do
+
+    it 'is the primary key of the record' do
+      expect(TestResource.find(3).to_key).to eq([3])
+    end
+
+    it 'is nil if the record is not persisted' do
+      expect(TestResource.new.to_key).to be_nil
+    end
+
+  end
+
   context "Prefixes" do
 
     before(:all) do
@@ -127,11 +155,9 @@ describe "Base" do
 
         TestResource.connection.expects(:post).with(
           "/belongs_to_objects/22/test_resources.json",
-          {
-            test_resource: {
-              'name' => 'Dan'
-            }
-          },
+          has_entries({
+            test_resource: is_a(Hash)
+          }),
           TestResource.headers
         )
 
@@ -445,19 +471,23 @@ describe "Base" do
       context("Override create to return the json") do
 
 
-        it "should be able to include associations when saving if they are specified" do
+        it "should be able to include associations when saving if
+          they are specified" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            {
-              test_resource: {
-                'name' => 'Ethan',
-                'age' => 20
-              }
-            },
+            has_entries({
+              test_resource: has_entries({
+                'has_many_objects' => [{}]
+              })
+            }),
             TestResource.headers
           )
 
-          tr = TestResource.build(name: "Ethan", age: 20)
+          tr = TestResource.build(
+            name: "Ethan",
+            age: 20,
+            has_many_objects: [HasManyObject.new]
+          )
           tr.save
         end
 
@@ -467,7 +497,8 @@ describe "Base" do
             "/test_resources.json",
             {
               test_resource: {
-                'name' => 'Ethan'
+                'name' => 'Ethan',
+                'roles' => []
               }
             },
             TestResource.headers
@@ -477,13 +508,15 @@ describe "Base" do
           tr.save
         end
 
-        it "should include false attributes when creating by default" do
+        it "should include false and empty attributes when creating
+          by default" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
             {
               test_resource: {
                 'name' => 'Ethan',
-                'is_active' => false
+                'is_active' => false,
+                'roles' => []
               }
             },
             TestResource.headers
@@ -500,6 +533,7 @@ describe "Base" do
             {
               test_resource: {
                 'name' => 'Ethan',
+                'roles' => [],
                 'has_one_object' => {
                   'size' => 'large'
                 }
@@ -514,15 +548,15 @@ describe "Base" do
         end
 
 
-        it "should include nil attributes if they are passed in through the include_extras" do
+        it "should include nil attributes if they are passed in through
+          the include_extras" do
           ApiResource::Connection.any_instance.expects(:post).with(
             "/test_resources.json",
-            {
-              test_resource: {
-                'name' => 'Ethan',
+            has_entries({
+              test_resource: has_entries({
                 'age' => nil
-              }
-            },
+              })
+            }),
             TestResource.headers
           )
 

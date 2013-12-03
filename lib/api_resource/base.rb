@@ -31,21 +31,30 @@ module ApiResource
     # => 7) Write documentation
     # => 8) Write Examples
 
-    class_attribute :site, :proxy, :user, :password, :auth_type, :format,
-      :timeout, :open_timeout, :ssl_options, :token, :ttl
-
-    class_attribute :include_root_in_json
-    self.include_root_in_json = true
-
-    class_attribute :include_nil_attributes_on_create
-    self.include_nil_attributes_on_create = false
-
-    class_attribute :include_all_attributes_on_update
-    self.include_nil_attributes_on_create = false
-
-    class_attribute :format
+    class_attribute(
+      :site,
+      :proxy,
+      :user,
+      :password,
+      :auth_type,
+      :format,
+      :timeout,
+      :open_timeout,
+      :ssl_options,
+      :token,
+      :ttl,
+      { instance_writer: false, instance_reader: false }
+    )
     self.format = ApiResource::Formats::JsonFormat
 
+    class_attribute(:include_root_in_json)
+    self.include_root_in_json = true
+
+    class_attribute(:include_nil_attributes_on_create)
+    self.include_nil_attributes_on_create = false
+
+    class_attribute(:include_all_attributes_on_update)
+    self.include_nil_attributes_on_create = false
 
     delegate :logger, to: ApiResource
 

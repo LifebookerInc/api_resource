@@ -104,6 +104,21 @@ describe "Attributes" do
 
         tst.attr5.should eql("attr5")
       end
+
+      context '#password' do
+
+        it 'is able to define password even though it is a
+          class attribute' do
+
+          TestResource.define_attributes :password
+
+          resource = TestResource.new(password: '123456')
+          expect(resource.password).to eql('123456')
+
+        end
+
+      end
+
     end
 
     it "should define methods for testing for reading and writing known attributes" do

@@ -17,8 +17,9 @@ module ApiResource
 
   extend ActiveSupport::Autoload
 
-  autoload :Associations
   autoload :AssociationActivation
+  autoload :AssociationBuilder
+  autoload :Associations
   autoload :Attributes
   autoload :Base
   autoload :Callbacks
@@ -72,6 +73,29 @@ module ApiResource
       :reset_connection, :ttl, :ttl=,
       :to => "ApiResource::Base"
 
+  end
+
+  def self.lookup_constant(base, const_name)
+    # just constantize the name if it is set to the root namespace
+    # by starting with ::
+    return const_name.constantize if const_name =~ /^::/
+
+    ancestors = base.name.split('::')
+    receiver = Object
+    # Turn the ancestor strings into modules and classes
+    namespaces = ancestors.collect do |mod|
+      receiver = receiver.const_get(mod)
+    end
+    # Search for our constant name from the inside out
+    namespace = namespaces.reverse.push(Object).detect do |ns|
+      ns.const_defined?(const_name, false)
+    end
+
+    if namespace
+      return namespace.const_get(const_name)
+    end
+
+    return nil
   end
 
   def self.cache(reset = false)

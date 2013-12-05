@@ -42,4 +42,43 @@ describe ApiResource do
 
   end
 
+  context '.lookup_constant' do
+
+    it 'finds things that are specified in the root namespace' do
+      expect(
+        ApiResource.lookup_constant(ApiResource::Base, '::TestResource')
+      ).to eql(
+        TestResource
+      )
+    end
+
+    it 'finds things in the base namespace when for a root level class' do
+      expect(
+        ApiResource.lookup_constant(BelongsToObject, 'TestResource')
+      ).to eql(
+        TestResource
+      )
+    end
+
+    it 'finds things namespaced under the base class' do
+      expect(
+        ApiResource.lookup_constant(ApiResource, 'Base')
+      ).to eql(
+        ApiResource::Base
+      )
+    end
+
+    it 'finds things in a middle namespace' do
+      expect(
+        ApiResource.lookup_constant(
+          TestMod::InnerMod::InnerClass,
+          'SecondInnerClass'
+        )
+      ).to eql(
+        TestMod::InnerMod::SecondInnerClass
+      )
+    end
+
+  end
+
 end

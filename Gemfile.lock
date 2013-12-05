@@ -160,6 +160,7 @@ GEM
       polyglot
       polyglot (>= 0.3.1)
     tzinfo (0.3.38)
+    yard (0.8.7.3)
     yarjuf (1.0.5)
       builder
       rspec (>= 2.0)
@@ -182,4 +183,5 @@ DEPENDENCIES
   rake
   rb-fsevent
   simplecov
+  yard
   yarjuf

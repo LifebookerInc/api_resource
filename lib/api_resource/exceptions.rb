@@ -1,4 +1,14 @@
 module ApiResource
+
+  #
+  # Superclass for all errors raised by ApiResource to enable
+  # them to be handled more easily
+  #
+  # @author [ejlangev]
+  #
+  class Error < StandardError
+  end
+
   class ConnectionError < StandardError # :nodoc:
 
     cattr_accessor :http_code

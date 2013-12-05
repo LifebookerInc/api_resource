@@ -32,6 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rb-fsevent"
   gem.add_development_dependency "simplecov"
   gem.add_development_dependency 'byebug'
+  gem.add_development_dependency 'yard'
 
   gem.add_dependency "httpclient"
   gem.add_dependency "rails"

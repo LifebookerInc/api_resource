@@ -15,7 +15,7 @@ class ChildTestResource < TestResource
 end
 
 class AnotherTestResource < ApiResource::Base
-  
+
 end
 
 class HasManyObject < ApiResource::Base
@@ -28,7 +28,7 @@ class HasOneObject < ApiResource::Base
 end
 
 class ErrorResource < ApiResource::Base
-  
+
 end
 
 class PrefixModel < ApiResource::Base
@@ -36,11 +36,11 @@ class PrefixModel < ApiResource::Base
 end
 
 class ScopeResource < ApiResource::Local
-  
+
 end
 
 class ErrorFullMessageResource < ApiResource::Base
-  
+
 end
 
 class TestThrough < ApiResource::Base
@@ -48,25 +48,28 @@ class TestThrough < ApiResource::Base
 end
 
 module TestMod
-  
+
   module InnerMod
-    
+
     class InnerClass < ApiResource::Base
-   
+
     end
-    
+
+    class SecondInnerClass
+    end
+
   end
-  
+
   class TestClass < ApiResource::Base
-    
+
   end
-  
+
   class TestAssociation < ApiResource::Base
-    
+
   end
-  
+
   class TestResource < ApiResource::Base
-  
+
   end
-  
+
 end

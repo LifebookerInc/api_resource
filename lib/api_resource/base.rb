@@ -56,6 +56,9 @@ module ApiResource
     class_attribute(:include_all_attributes_on_update)
     self.include_nil_attributes_on_create = false
 
+    class_attribute(:data_mapper)
+    self.data_mapper = false
+
     delegate :logger, to: ApiResource
 
     class << self
@@ -135,6 +138,7 @@ module ApiResource
       # @return [Boolean] True if we loaded it, false if it was already
       # loaded
       def load_resource_definition
+        return if self.data_mapper
         unless instance_variable_defined?(:@resource_definition)
           # Lock the mutex to make sure only one thread does
           # this at a time

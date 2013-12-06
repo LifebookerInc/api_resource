@@ -73,3 +73,13 @@ module TestMod
   end
 
 end
+
+class AssociationResource < ApiResource::Base
+  self.data_mapper = true
+end
+
+class AssociationChildResource < AssociationResource
+end
+
+class AssociationGrandChildResource < AssociationChildResource
+end

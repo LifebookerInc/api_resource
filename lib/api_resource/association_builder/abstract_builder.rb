@@ -23,6 +23,10 @@ module ApiResource
       # method base name
       attr_reader :association_name
 
+      # @!attribute association_type
+      # @return [Symbol] The type of association, has_many, belongs_to, etc.
+      attr_reader :association_type
+
       # @!attribute foreign_key
       # @return [Symbol] The foreign key field for this association
       attr_reader :foreign_key
@@ -45,6 +49,11 @@ module ApiResource
       def initialize(klass, *args)
         # Set the owner class which is provided directly
         @owner_class = klass
+        # If the owner is a subclass of ApiResource::Base then try to
+        # load the resource definition (< tests for subclass apparently)
+        if @owner_class < ApiResource::Base
+          @owner_class.load_resource_definition
+        end
         # Get out the options
         options = args.extract_options!
         options = options.with_indifferent_access
@@ -102,6 +111,20 @@ module ApiResource
         raise NotImplementedError.new(
           'Must define association_proxy in a subclass'
         )
+      end
+
+      #
+      # Returns the type of this association as a symbol.
+      # :has_many, :belongs_to, etc.
+      #
+      # @return [Symbol]
+      def association_type
+        self.class
+          .name
+          .demodulize
+          .gsub(/Builder$/, '')
+          .underscore
+          .to_sym
       end
 
       #

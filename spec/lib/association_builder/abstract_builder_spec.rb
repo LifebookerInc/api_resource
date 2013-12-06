@@ -6,6 +6,19 @@ describe ApiResource::AssociationBuilder::AbstractBuilder do
 
     subject { ApiResource::AssociationBuilder::AbstractBuilder }
 
+    it 'tries to load the resource definition for the owner class' do
+      TestResource
+        .expects(:load_resource_definition)
+        .returns(true)
+
+      subject.new(
+        TestResource,
+        :has_many_objects,
+        class_name: 'BelongsToObject',
+        foreign_key: 'made_up_foreign_key'
+      )
+    end
+
     it 'sets its attributes based on the arguments' do
       record = subject.new(
         TestResource,

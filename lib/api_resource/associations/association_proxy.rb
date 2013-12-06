@@ -2,8 +2,44 @@ module ApiResource
 
   module Associations
 
-    class AssociationProxy
+    class AssociationProxy < ApiResource::BlankSlate
 
+      #
+      # Constructor
+      #
+      # @param  klass [Class] The class to instantiate
+      # @param  owner [Object] The object that owns this association
+      # @param  options = {} [Hash]
+      def initialize(klass, owner, options = {})
+      end
+
+      #
+      # Sets the value of the internal object of this
+      # @param  val [type] [description]
+      #
+      # @return [type] [description]
+      def assign(val)
+      end
+
+      def read_foreign_key
+      end
+
+      def write_foreign_key(val)
+      end
+
+      def method_missing(sym, *args, &block)
+        # Call the load method
+        load
+        # Proxy the method call down to the internal
+        # object instance variable.  Don't use attr_readers
+        # because they
+        @internal_object.__send__(sym, *args, &block)
+      end
+
+      private
+
+        def load
+        end
 
       class_attribute :remote_path_element
       self.remote_path_element = :service_uri

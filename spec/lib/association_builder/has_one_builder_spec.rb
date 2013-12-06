@@ -32,4 +32,12 @@ describe ApiResource::AssociationBuilder::HasOneBuilder do
 
   end
 
+  context '#association_type' do
+
+    it 'returns the proper association type' do
+      expect(subject.association_type).to eql(:has_one)
+    end
+
+  end
+
 end

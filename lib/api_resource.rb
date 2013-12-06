@@ -22,6 +22,7 @@ module ApiResource
   autoload :Associations
   autoload :Attributes
   autoload :Base
+  autoload :BlankSlate
   autoload :Callbacks
   autoload :Conditions
   autoload :Connection

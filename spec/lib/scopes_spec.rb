@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe ApiResource::Scopes do
-  
+
   before(:all) do
     ScopeResource.class_eval do
       scope :no_arg, {}
@@ -12,6 +12,7 @@ describe ApiResource::Scopes do
       scope :req_and_opt_args, {arg1: :req, arg2: :opt}
       scope :var_args, {ids: :rest}
       scope :mix_args, {id: :req, vararg: :rest}
+      scope :date_scope, {start_date: :req, end_date: :req}
     end
   end
 
@@ -59,6 +60,18 @@ describe ApiResource::Scopes do
       ScopeResource.add_scopes(one_arg: {id: 5})
     end
 
+    it 'does not apply scopes with a blank argument' do
+      ScopeResource.expects(:one_arg).never
+      ScopeResource.add_scopes(one_arg: {id: ""})
+      ScopeResource.add_scopes(one_arg: {id: nil})
+    end
+
+    it 'does not apply scopes when a parameter is missing' do
+      ScopeResource.expects(:two_args).never
+      ScopeResource.add_scopes(two_args: { page: 1 })
+      ScopeResource.add_scopes(two_args: { per_page: 1 })
+    end
+
     it 'applies scopes with an array argument' do
       ScopeResource.expects(:one_array_arg).with([5]).returns(ScopeResource)
       ScopeResource.add_scopes(one_array_arg: {ids: [5]})
@@ -93,6 +106,17 @@ describe ApiResource::Scopes do
       ScopeResource.expects(:mix_args).with(4,[5,6,7]).returns(ScopeResource)
       ScopeResource.add_scopes(mix_args: {id: 4, vararg: [5,6,7]})
     end
+
+    it 'parses dates if the parameters are correctly named' do
+      ScopeResource.expects(:date_scope)
+        .with(instance_of(Date), instance_of(Date))
+        .returns(ScopeResource)
+
+      ScopeResource.add_scopes({
+        date_scope: { start_date: 'May 6, 2013', end_date: 'June 8, 2014' }
+      })
+    end
+
   end
 
 end

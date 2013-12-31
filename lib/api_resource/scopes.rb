@@ -68,7 +68,7 @@ module ApiResource
         end
       end
 
-      # 
+      #
       # Apply scopes from params based on our resource
       # definition
       #
@@ -90,18 +90,51 @@ module ApiResource
         return base
       end
 
+      #
+      # Add our dynamic scopes based on a set of params
+      #
+      # @param  params [Hash] User-supplied params
+      # @param  base [ApiResource::Conditions::AbstractCondition, Class] Base
+      # Scope
+      #
+      # @return [ApiResource::Conditions::AbstractCondition] [description]
       def add_dynamic_scopes(params, base)
         self.dynamic_scopes.each_pair do |name, args|
-          next if params[name].blank?
+          # make sure we have all required arguments
+          next unless self.check_required_scope_args(args, params[name])
+
+          # the args we will apply
           caller_args = []
-          args.each_pair do |subkey, type|
-            if type == :req || params[name][subkey].present?
-              caller_args << params[name][subkey]
+
+          # iterate through our args and add them to an array to send to our
+          # scope
+          args.keys.each do |subkey|
+            # we only apply things that are present or explicitly false
+            if val = self.get_scope_arg_value(subkey, params[name][subkey])
+              caller_args << val
             end
           end
+          # call our scope with the supplied args
           base = base.send(name, *caller_args)
         end
         return base
+      end
+
+      #
+      # Check if we have supplied all of the necessary
+      # @param  scope [Hash] [Scope Definition
+      # @param  params [Hash] [Supplied params]
+      #
+      # @return [Boolean] Validity
+      def check_required_scope_args(scope, params)
+        # make sure we have a hash and it has values
+        return false unless params.is_a?(Hash) && params.present?
+        # find required values
+        required = scope.select{ |k,v| v.to_sym == :req }.keys
+        # make sure we have all of the required values, we allow false
+        required.all? { |key|
+          params[key].present? || params[key] == false
+        }
       end
 
       #
@@ -117,8 +150,31 @@ module ApiResource
         true
       end
 
+      #
+      # Scopes that require arguments
+      #
+      # @return [Hash]
       def dynamic_scopes
         self.scopes.select { |name, args| args.present? }
+      end
+
+      #
+      # Get the parsed/formatted arguments to send to the server
+      #
+      # @param  key [String, Symbol] Key name for the scope value
+      # @param  value [String, Integer, Symbol] Value for the scope
+      #
+      # @return [String, Integer, Symbol, Date] Parsed/formatted value
+      def get_scope_arg_value(key, value)
+        # cast to string to avoid incorred blank? behavior for us
+        return "false" if value == false
+        # if we havea date field, try to parse, falling back to the original
+        # value
+        if key.to_s =~ /date/
+          value = Date.parse(value) rescue value
+        end
+        # return the final value
+        value
       end
 
       def static_scopes

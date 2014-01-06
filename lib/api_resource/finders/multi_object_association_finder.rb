@@ -4,12 +4,17 @@ module ApiResource
 
 		class MultiObjectAssociationFinder < AbstractFinder
 
+			delegate :select,
+				to: :internal_object
+
 			# If they pass in the internal object just skip the first
 			# step and apply the includes
 			def initialize(klass, condition, internal_object = nil)
 				super(klass, condition)
 
-				@internal_object = internal_object
+				if internal_object
+					@internal_object = internal_object
+				end
 			end
 
 			def load

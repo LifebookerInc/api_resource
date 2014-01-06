@@ -12,6 +12,7 @@ module ApiResource
 		autoload :PaginationCondition
 		autoload :SingleObjectAssociationCondition
 		autoload :ScopeCondition
+		autoload :WhereCondition
 
 		module ClassMethods
 
@@ -37,6 +38,12 @@ module ApiResource
 				# Everything looks good so just create the scope
 				ApiResource::Conditions::PaginationCondition.new(self, opts)
 
+			end
+
+			def where(opts = {})
+				self.load_resource_definition
+
+				ApiResource::Conditions::WhereCondition.new(self, opts)
 			end
 
 		end

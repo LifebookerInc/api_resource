@@ -4,6 +4,7 @@ Mocks.define do
 
   endpoint("/test_resources/new") do
     get(HashDealer.roll(:new_test_object))
+    get(HashDealer.roll(:new_test_object), params: {type: 'X'}.matcher)
   end
 
   endpoint("/test_resources") do

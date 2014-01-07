@@ -374,11 +374,15 @@ module ApiResource
 
       # path to find
       def new_element_path(prefix_options = {})
-        File.join(
+        url = File.join(
           self.prefix(prefix_options),
           self.collection_name,
           "new.#{format.extension}"
         )
+        if self.superclass != ApiResource::Base && self.name.present?
+          url = "#{url}?type=#{self.name.demodulize}" 
+        end
+        return url
       end
 
       def collection_path(prefix_options = {}, query_options = nil)

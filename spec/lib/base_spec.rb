@@ -93,6 +93,8 @@ describe "Base" do
         self.prefix = "/path/to/nested/:id/"
       end
 
+      ChildResource = Class.new(PrefixResource)
+
     end
 
 
@@ -106,6 +108,15 @@ describe "Base" do
       DynamicPrefixResource.new_element_path.should eql(
         "/dynamic_prefix_resources/new.json"
       )
+    end
+
+    it "appends its type in the query string if it is not a direct
+      descendant of ApiResource::Base" do
+
+      expect(ChildResource.new_element_path).to eql(
+        "/path/to/project/prefix_resources/new.json?type=ChildResource"
+      )
+
     end
 
   end

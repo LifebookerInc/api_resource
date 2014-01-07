@@ -77,16 +77,15 @@ describe "Observing" do
   end
 
   it "should run callbacks before observers" do
-    klass = Class.new(TestResource)
-    klass.class_eval <<-EOE, __FILE__, __LINE__ + 1
+    class ChildObserverResource < TestResource
       before_save :abort_save
 
       def abort_save
         return false
       end
-    EOE
+    end
 
-    tr = klass.new
+    tr = ChildObserverResource.new
     tr.expects(:abort_save).returns(false)
     tr.expects(:notify_observers).never
     tr.expects(:save_without_callbacks).never

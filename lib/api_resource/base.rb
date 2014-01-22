@@ -380,7 +380,7 @@ module ApiResource
           "new.#{format.extension}"
         )
         if self.superclass != ApiResource::Base && self.name.present?
-          url = "#{url}?type=#{self.name.demodulize}" 
+          url = "#{url}?type=#{self.name.demodulize}"
         end
         return url
       end
@@ -718,9 +718,14 @@ module ApiResource
       path = self.collection_path
       body = self.setup_create_call(*args)
       headers = self.class.headers
-      # make the post call
-      connection.post(path, body, headers).tap do |response|
-        load_attributes_from_response(response)
+
+      # this checks to see if we have uploaded a file
+      # and sets headers accordingly
+      self.with_uploaded_file_format do
+        # make the post call
+        connection.post(path, body, headers).tap do |response|
+          load_attributes_from_response(response)
+        end
       end
     end
 
@@ -745,9 +750,14 @@ module ApiResource
       path = self.element_path(self.id)
       body = self.setup_update_call(*args)
       headers = self.class.headers
-      # We can just ignore the response
-      connection.put(path, body, headers).tap do |response|
-        load_attributes_from_response(response)
+
+      # this checks to see if we have uploaded a file
+      # and sets headers accordingly
+      self.with_uploaded_file_format do
+        # We can just ignore the response
+        connection.put(path, body, headers).tap do |response|
+          load_attributes_from_response(response)
+        end
       end
     end
 
@@ -784,6 +794,54 @@ module ApiResource
       end
 
       return data
+    end
+
+    protected
+
+    #
+    # Are any of our attributes of type File?
+    #
+    # @return [Boolean]
+    def has_file_attribute?
+      self.attributes.values.any?{|val|
+        HTTP::Message.file?(val) ||
+          val.is_a?(ActionDispatch::Http::UploadedFile)
+      }
+    end
+
+    #
+    # Run a block with a given format
+    #
+    # @param  new_format [Module] Format module
+    # @param  &block [Proc] Block to run
+    #
+    # @return [Mixed]
+    def with_format(new_format, &block)
+
+      old_format = self.class.format
+
+      begin
+        self.class.format = new_format
+        yield
+      ensure
+        self.class.format = old_format
+      end
+    end
+
+    #
+    # Wrapper to add the FileUpload format
+    #
+    # @param  &block [Proc] Block to run
+    #
+    # @return [Mixed]
+    def with_uploaded_file_format(&block)
+      if self.has_file_attribute?
+        self.with_format(Formats::FileUploadFormat) do
+          yield
+        end
+      else
+        yield
+      end
     end
 
     private

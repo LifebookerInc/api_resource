@@ -1,7 +1,10 @@
 module ApiResource
   module Formats
-    autoload :XmlFormat, 'api_resource/formats/xml_format'
+
+    autoload :FileUploadFormat, 'api_resource/formats/file_upload_format'
     autoload :JsonFormat, 'api_resource/formats/json_format'
+    autoload :XmlFormat, 'api_resource/formats/xml_format'
+
 
     # Lookup the format class from a mime type reference symbol. Example:
     #

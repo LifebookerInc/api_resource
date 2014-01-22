@@ -209,6 +209,53 @@ describe "Base" do
 
   end
 
+  context "Saving with file upload", :focus do
+
+    before(:all) do
+      TestResource.reload_resource_definition
+    end
+
+    after(:all) do
+      TestResource.reload_resource_definition
+    end
+
+    let(:uploaded_file){
+      ActionDispatch::Http::UploadedFile.new(
+        tempfile: File.new(
+          File.expand_path("../../support/files/bg-awesome.jpg", __FILE__)
+        )
+      )
+    }
+
+    context "#save" do
+
+      it 'sends the file to HTTPClient' do
+
+        TestResource.define_attributes :image_file
+
+        TestResource.connection.expects(:request)
+          .with(
+            :post,
+            instance_of(String),
+            has_entries(
+              test_resource: has_entries(
+                'image_file' => instance_of(File)
+              )
+            ),
+            instance_of(Hash)
+          )
+
+        test_resource = TestResource.new(
+          image_file: uploaded_file
+        )
+        test_resource.save
+
+      end
+
+    end
+
+  end
+
 
   describe "Loading data from a hash" do
 

@@ -6,6 +6,7 @@ module ApiResource
     module ClassMethods
       # TODO: calling these methods should force loading of the resource definition
       def scopes
+        self.reload_resource_definition
         return self.related_objects[:scopes]
       end
 

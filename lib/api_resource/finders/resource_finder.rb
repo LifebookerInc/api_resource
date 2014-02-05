@@ -36,7 +36,7 @@ module ApiResource
 
 					# looks hacky, but we want to return only a single
 					# object in case of a find call.
-					if @internal_object.count == 1 && self.build_load_path =~ /find/
+					if @internal_object.count == 1 && self.build_load_path =~ /(&|\?)find/
 						@internal_object = @internal_object.first
 					end
 

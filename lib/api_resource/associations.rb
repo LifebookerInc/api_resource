@@ -9,6 +9,13 @@ module ApiResource
     extend ActiveSupport::Autoload
 
     autoload :AssociationProxy
+    autoload :BelongsToProxy
+    autoload :HasManyProxy
+    autoload :HasOneProxy
+    autoload :SingleObjectProxy
+    autoload :MultiObjectProxy
+
+
     autoload :BelongsToRemoteObjectProxy
     autoload :HasManyRemoteObjectProxy
     autoload :HasManyThroughRemoteObjectProxy

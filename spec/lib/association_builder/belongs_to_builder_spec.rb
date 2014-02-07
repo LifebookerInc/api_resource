@@ -19,12 +19,12 @@ describe ApiResource::AssociationBuilder::BelongsToBuilder do
 
   context '#association_proxy' do
 
-    it 'instantiates a multi object proxy' do
+    it 'instantiates a single object proxy' do
       object = TestResource.new
 
       result = subject.association_proxy(object)
       expect(result).to be_instance_of(
-        ApiResource::Associations::SingleObjectProxy
+        ApiResource::Associations::BelongsToProxy
       )
       expect(result.klass).to eql(BelongsToObject)
       expect(result.owner).to eql(object)

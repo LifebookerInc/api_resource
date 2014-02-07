@@ -24,7 +24,7 @@ describe ApiResource::AssociationBuilder::HasOneBuilder do
 
       result = subject.association_proxy(object)
       expect(result).to be_instance_of(
-        ApiResource::Associations::SingleObjectProxy
+        ApiResource::Associations::HasOneProxy
       )
       expect(result.klass).to eql(HasOneObject)
       expect(result.owner).to eql(object)

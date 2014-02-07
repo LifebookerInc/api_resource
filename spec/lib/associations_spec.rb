@@ -4,24 +4,24 @@ include ApiResource
 
 describe "Associations" do
 
-  context 'Defining and Querying Associations' do
-
-    before(:all) do
-      AssociationResource.class_eval do
-        has_many :has_many_objects
-        has_one :superclass_has_one
-        has_one :to_override
-      end
-
-      AssociationChildResource.class_eval do
-        belongs_to :belongs_to_object
-        belongs_to :to_override
-      end
-
-      AssociationGrandChildResource.class_eval do
-        has_one :has_one_object
-      end
+  before(:all) do
+    AssociationResource.class_eval do
+      has_many :has_many_objects
+      has_one :superclass_has_one
+      has_one :to_override
     end
+
+    AssociationChildResource.class_eval do
+      belongs_to :belongs_to_object
+      belongs_to :to_override
+    end
+
+    AssociationGrandChildResource.class_eval do
+      has_one :has_one_object
+    end
+  end
+
+  context 'Defining and Querying Associations' do
 
     it 'finds associations defined on its parent' do
       expect(
@@ -295,7 +295,7 @@ describe "Associations" do
             # __send__ is the way to access the underlying
             # methods.  Everything else proxies to the internal object
             subject.has_many_objects.__send__(:class)
-          ).to eql(ApiResource::Associations::MultiObjectProxy)
+          ).to eql(ApiResource::Associations::HasManyProxy)
         end
 
         it 'caches the association proxy' do

@@ -12,9 +12,9 @@ module ApiResource
       #
       # @return [ApiResource::Associations::SingleObjectProxy]
       def association_proxy(object)
-        return ApiResource::Associations::SingleObjectProxy.new(
-          self.association_class,
-          object
+        return ApiResource::Associations::HasOneProxy.new(
+          object,
+          self
         )
       end
 

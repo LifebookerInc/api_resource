@@ -24,7 +24,7 @@ describe ApiResource::AssociationBuilder::HasManyBuilder do
 
       result = subject.association_proxy(object)
       expect(result).to be_instance_of(
-        ApiResource::Associations::MultiObjectProxy
+        ApiResource::Associations::HasManyProxy
       )
       expect(result.klass).to eql(HasManyObject)
       expect(result.owner).to eql(object)

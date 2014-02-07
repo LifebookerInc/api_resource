@@ -24,6 +24,9 @@ end
 class BelongsToObject < ApiResource::Base
 end
 
+class BelongsToChild < BelongsToObject
+end
+
 class HasOneObject < ApiResource::Base
 end
 

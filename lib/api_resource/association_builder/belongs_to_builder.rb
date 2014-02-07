@@ -2,6 +2,12 @@ module ApiResource
 
   module AssociationBuilder
 
+    #
+    # Responsible for building the necessary objects to manage a
+    # belongs to association
+    #
+    # @author [ejlangev]
+    #
     class BelongsToBuilder < AbstractBuilder
 
       #
@@ -12,9 +18,9 @@ module ApiResource
       #
       # @return [ApiResource::Associations::SingleObjectProxy]
       def association_proxy(owner)
-        return ApiResource::Associations::SingleObjectProxy.new(
-          self.association_class,
-          owner
+        return ApiResource::Associations::BelongsToProxy.new(
+          owner,
+          self
         )
       end
 

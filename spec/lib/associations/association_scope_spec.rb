@@ -18,7 +18,7 @@ describe ApiResource::Associations::AssociationProxy do
 
   context "#remote_path" do
 
-    it "should provide access to its remote path when 
+    it "should provide access to its remote path when
       instantiated through a parent" do
 
       test_resource = TestResource.find(1)

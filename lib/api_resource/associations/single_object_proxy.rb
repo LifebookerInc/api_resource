@@ -1,88 +1,114 @@
 module ApiResource
-  
+
   module Associations
-    
+
     class SingleObjectProxy < AssociationProxy
-
-      def serializable_hash(options = {})
-        return if self.internal_object.nil?
-        self.internal_object.serializable_hash(options)
-      end
-
-      def collection?
-        false
-      end
-
-      def internal_object
-        # we are already loaded - return the internal object
-        if self.loaded?
-          return @internal_object
-        elsif self.remote_path.present?
-          @internal_object = self.load
-        else
-          nil
-        end
-      end
-      
-      def internal_object=(contents)
-        if contents.is_a?(self.klass) || contents.nil?
-          @loaded = true
-          return @internal_object = contents 
-        elsif contents.is_a?(self.class)
-          @loaded = true
-          return @internal_object = contents.internal_object
-        # a Hash may be attributes and/or a service_uri
-        elsif contents.is_a?(Hash) 
-          contents = contents.symbolize_keys
-          @remote_path = contents.delete(
-            self.class.remote_path_element.to_sym
-          )
-          if contents.present?
-            @loaded = true
-            return @internal_object = self.klass.instantiate_record(contents)
-          end
-        else
-          raise ArgumentError.new(
-            "#{contents} must be a #{self.klass}, a #{self.class} or a Hash"
+      #
+      # Handles type checking and assigning value to nil when
+      # setting the value of this association
+      #
+      # @param  val [ApiResource::Base]
+      # @raise [ApiResource::Associations::AssociationTypeMismatch]
+      #
+      # @return [ApiResource::Base]
+      def assign(val)
+        unless val.is_a?(self.builder.association_class) || val.nil?
+          raise ApiResource::Associations::AssociationTypeMismatch.new(
+            "Expected an instance of #{self.builder.association_class}, " +
+            "got an instance of #{val.class}."
           )
         end
-      end
-      
-      def ==(other)
-        return false if self.class != other.class
-        return false if other.internal_object.attributes != self.internal_object.attributes
-        return true
+
+        self.write_foreign_key(val.try(:id))
+
+        super(val)
       end
 
-      def hash
-        self.id.hash
-      end
+      private
 
-      def eql?(other)
-        return self == other
-      end
+        def load
 
-      protected
+        end
 
-      def to_condition
-        obj = nil
-        obj = self.internal_object if self.loaded?
-        ApiResource::Conditions::SingleObjectAssociationCondition.new(
-          self.klass, self.remote_path, obj
-        )
-      end
+      # def serializable_hash(options = {})
+      #   return if self.internal_object.nil?
+      #   self.internal_object.serializable_hash(options)
+      # end
 
-      # Should make a proper conditions object and call find on it
-      # It MUST set loaded to true after calling load
-      def load(opts = {})
-        res = self.to_condition.load
-        @loaded = true
-        res
-      end
+      # def collection?
+      #   false
+      # end
 
-      
+      # def internal_object
+      #   # we are already loaded - return the internal object
+      #   if self.loaded?
+      #     return @internal_object
+      #   elsif self.remote_path.present?
+      #     @internal_object = self.load
+      #   else
+      #     nil
+      #   end
+      # end
+
+      # def internal_object=(contents)
+      #   if contents.is_a?(self.klass) || contents.nil?
+      #     @loaded = true
+      #     return @internal_object = contents
+      #   elsif contents.is_a?(self.class)
+      #     @loaded = true
+      #     return @internal_object = contents.internal_object
+      #   # a Hash may be attributes and/or a service_uri
+      #   elsif contents.is_a?(Hash)
+      #     contents = contents.symbolize_keys
+      #     @remote_path = contents.delete(
+      #       self.class.remote_path_element.to_sym
+      #     )
+      #     if contents.present?
+      #       @loaded = true
+      #       return @internal_object = self.klass.instantiate_record(contents)
+      #     end
+      #   else
+      #     raise ArgumentError.new(
+      #       "#{contents} must be a #{self.klass}, a #{self.class} or a Hash"
+      #     )
+      #   end
+      # end
+
+      # def ==(other)
+      #   return false if self.class != other.class
+      #   return false if other.internal_object.attributes != self.internal_object.attributes
+      #   return true
+      # end
+
+      # def hash
+      #   self.id.hash
+      # end
+
+      # def eql?(other)
+      #   return self == other
+      # end
+
+      # protected
+
+      # def to_condition
+      #   obj = nil
+      #   obj = self.internal_object if self.loaded?
+      #   ApiResource::Conditions::SingleObjectAssociationCondition.new(
+      #     self.klass, self.remote_path, obj
+      #   )
+      # end
+
+      # # Should make a proper conditions object and call find on it
+      # # It MUST set loaded to true after calling load
+      # def load(opts = {})
+      #   res = self.to_condition.load
+      #   @loaded = true
+      #   res
+      # end
+
+
     end
-    
+
   end
-  
+
 end

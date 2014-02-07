@@ -11,9 +11,9 @@ module ApiResource
       #
       # @return [ApiResource::Associations::MultiObjectProxy]
       def association_proxy(owner)
-        ApiResource::Associations::MultiObjectProxy.new(
-          self.association_class,
-          owner
+        ApiResource::Associations::HasManyProxy.new(
+          owner,
+          self
         )
       end
 

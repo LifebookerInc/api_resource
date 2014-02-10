@@ -5,6 +5,9 @@ module ApiResource
 		extend ActiveSupport::Concern
 		extend ActiveSupport::Autoload
 
+    autoload :AbstractFinder
+    autoload :MultiObjectFinder
+
 		autoload :AbstractFinder
 		autoload :ResourceFinder
     autoload :SingleFinder

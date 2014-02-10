@@ -101,7 +101,19 @@ module ApiResource
 
       private
 
-        def load
+        #
+        # Handles the instantiating and delegating loading to the proper
+        # type of finder object
+        # @param  condition [ApiResource::Conditions::BlankCondition] The
+        # default condition is blank
+        #
+        # @return [Object] The result of fetching the necessary objects
+        def load(condition = ApiResource::Conditions::BlankCondition.new)
+          finder = construct_finder(condition)
+
+          @internal_object = finder.internal_object
+          @is_loaded = true
+          @internal_object
         end
 
       # class_attribute :remote_path_element

@@ -4,6 +4,15 @@ module ApiResource
 
       class MultiObjectProxy < AssociationProxy
 
+        private
+
+          def construct_finder(condition)
+            ApiResource::Finders::MultiObjectFinder.new(
+              self.builder.association_class,
+              condition
+            )
+          end
+
       #   include Enumerable
 
       #   def all

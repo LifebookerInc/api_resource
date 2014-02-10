@@ -19,15 +19,18 @@ module ApiResource
           )
         end
 
-        self.write_foreign_key(val.try(:id))
-
         super(val)
+        self.write_foreign_key(val.try(:id))
+        val
       end
 
       private
 
-        def load
-
+        def construct_finder(condition)
+          ApiResource::Finders::SingleObjectFinder.new(
+            self.builder.association_class,
+            condition
+          )
         end
 
       # def serializable_hash(options = {})

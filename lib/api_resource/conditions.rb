@@ -6,6 +6,8 @@ module ApiResource
 		extend ActiveSupport::Concern
 
 		autoload :AbstractCondition
+		autoload :BlankCondition
+
 		autoload :AssociationCondition
 		autoload :IncludeCondition
 		autoload :MultiObjectAssociationCondition

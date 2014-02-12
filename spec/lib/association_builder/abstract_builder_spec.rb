@@ -31,6 +31,7 @@ describe ApiResource::AssociationBuilder::AbstractBuilder do
       expect(record.association_name).to eql(:has_many_objects)
       expect(record.association_class_name).to eql('BelongsToObject')
       expect(record.foreign_key).to eql(:made_up_foreign_key)
+      expect(record.foreign_key_method).to eql(:has_many_objects_id)
     end
 
     it 'sets defaults for unspecified arguments' do
@@ -117,8 +118,8 @@ describe ApiResource::AssociationBuilder::AbstractBuilder do
 
       expect(record).to be_respond_to(:has_many_objects)
       expect(record).to be_respond_to(:has_many_objects=)
-      expect(record).to be_respond_to(subject.foreign_key)
-      expect(record).to be_respond_to("#{subject.foreign_key}=")
+      expect(record).to be_respond_to(subject.foreign_key_method)
+      expect(record).to be_respond_to("#{subject.foreign_key_method}=")
     end
 
   end

@@ -1,6 +1,7 @@
 # ApiResource
 
 [![Build Status](https://travis-ci.org/LifebookerInc/api_resource.png)](https://travis-ci.org/LifebookerInc/api_resource)
+[![Code Climate](https://codeclimate.com/repos/4e6ecf916fc9585bc8000021/badges/ffc7b6401db137ffbd2d/gpa.png)](https://codeclimate.com/repos/4e6ecf916fc9585bc8000021/feed)
 
 ## Installation
 

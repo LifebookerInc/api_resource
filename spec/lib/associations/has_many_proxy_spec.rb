@@ -39,7 +39,7 @@ describe ApiResource::Associations::HasManyProxy do
   end
 
   context '#write_foreign_key' do
-    it 'forces loading and sets the proper attribute on the results' do
+    xit 'forces loading and sets the proper attribute on the results' do
       HasManyObject
         .expects(:find)
         .with(1,2)

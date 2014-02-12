@@ -25,13 +25,12 @@ module ApiResource
             *vals
           )
         )
-        byebug
         @is_loaded = true
         @internal_object.each do |result|
           result.send(
             :write_attribute,
             self.builder.foreign_key,
-            self.owner.id
+            self.owner.read_attribute(:id)
           )
         end
 

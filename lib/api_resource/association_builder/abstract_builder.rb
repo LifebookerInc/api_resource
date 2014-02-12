@@ -31,6 +31,11 @@ module ApiResource
       # @return [Symbol] The foreign key field for this association
       attr_reader :foreign_key
 
+      # @!attribute foreign_key_method
+      # @return [Symbol] The name of the foreign key method that
+      # will be defined on the owner class
+      attr_reader :foreign_key_method
+
       # @!attribute generated_methods_module
       # @return [Module] Module containing the instance methods
       # to add to the class
@@ -76,6 +81,10 @@ module ApiResource
           @association_name, @association_class_name
         )
         @foreign_key = (options[:foreign_key] || key).to_sym
+        # Set the foreign key method based on the association name
+        @foreign_key_method = self.construct_foreign_key_method(
+          @association_name
+        )
       end
 
       #
@@ -138,7 +147,7 @@ module ApiResource
         mod = Module.new
         # Need local variables for scope reasons
         association_name = self.association_name
-        foreign_key = self.foreign_key
+        foreign_key = self.foreign_key_method
         # The context of these methods will be an instance of
         # owner_class, they just need to deal with caching the proxy
         # objects somewhere
@@ -184,6 +193,18 @@ module ApiResource
         # @return [Symbol] The name of the foreign key
         def construct_foreign_key(assoc_name, assoc_class_name)
           assoc_class_name.foreign_key.to_sym
+        end
+
+        #
+        # Builds the name of the foreign key method that will
+        # be defined on the owner clas
+        #
+        # @param  assoc_name [Symbol]
+        #
+        # @return [Symbol] The name of the foreign key method
+        # for the owner class
+        def construct_foreign_key_method(assoc_name)
+          assoc_name.to_s.foreign_key.to_sym
         end
 
     end

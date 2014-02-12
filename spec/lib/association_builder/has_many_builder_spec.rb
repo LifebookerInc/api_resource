@@ -12,7 +12,8 @@ describe ApiResource::AssociationBuilder::HasManyBuilder do
   context '#foreign_key' do
 
     it 'correctly pluralizes the foreign key' do
-      expect(subject.foreign_key).to eql(:has_many_object_ids)
+      expect(subject.foreign_key).to eql(:test_resource_id)
+      expect(subject.foreign_key_method).to eql(:has_many_object_ids)
     end
 
   end

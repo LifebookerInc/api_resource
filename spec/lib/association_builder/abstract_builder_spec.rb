@@ -43,7 +43,8 @@ describe ApiResource::AssociationBuilder::AbstractBuilder do
       expect(record.owner_class).to eql(TestResource)
       expect(record.association_name).to eql(:has_many_objects)
       expect(record.association_class_name).to eql('HasManyObject')
-      expect(record.foreign_key).to eql(:has_many_object_id)
+      expect(record.foreign_key).to eql(:test_resource_id)
+      expect(record.foreign_key_method).to eql(:has_many_objects_id)
     end
 
     it 'raises InvalidAssociationArguments if it gets bad arguments' do

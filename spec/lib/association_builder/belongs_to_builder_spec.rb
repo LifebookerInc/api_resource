@@ -13,6 +13,7 @@ describe ApiResource::AssociationBuilder::BelongsToBuilder do
 
     it 'has the correct foreign key by default' do
       expect(subject.foreign_key).to eql(:belongs_to_object_id)
+      expect(subject.foreign_key_method).to eql(:belongs_to_object_id)
     end
 
   end

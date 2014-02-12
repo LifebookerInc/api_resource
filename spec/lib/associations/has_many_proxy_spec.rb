@@ -39,13 +39,13 @@ describe ApiResource::Associations::HasManyProxy do
   end
 
   context '#write_foreign_key' do
-    xit 'forces loading and sets the proper attribute on the results' do
+    it 'forces loading and sets the proper attribute on the results' do
       HasManyObject
         .expects(:find)
         .with(1,2)
         .returns([
-          mock(:test_resource_id= => 2),
-          mock(:test_resource_id= => 2)
+          mock(:write_attribute),
+          mock(:write_attribute)
         ])
 
       test_resource
@@ -59,6 +59,60 @@ describe ApiResource::Associations::HasManyProxy do
     end
   end
 
-  context '#assign'
+  context '#assign' do
+
+    let(:has_many_objects) { [ HasManyObject.new ] }
+
+    it 'allows setting the association to an array of the proper class' do
+      expect(
+        subject.assign(has_many_objects)
+      ).to eql(has_many_objects)
+
+      expect(
+        subject.internal_object
+      ).to eql(has_many_objects)
+    end
+
+    it 'allows setting the association to an array of a subclass' do
+      children = [ HasManyChild.new ]
+      expect(
+        subject.assign(children)
+      ).to eql(children)
+
+      expect(subject.internal_object).to eql(children)
+    end
+
+    it 'does not allow setting to an array of the wrong class' do
+      expect {
+        subject.assign( [ TestResource.new ] )
+      }.to raise_error ApiResource::Associations::AssociationTypeMismatch
+    end
+
+    it 'typecasts nil to a blank array and clears the foreign key' do
+      expect(
+        subject.assign(nil)
+      ).to eql([])
+
+      expect(
+        subject.internal_object
+      ).to eql([])
+    end
+
+    it 'sets the foreign keys of the new objects' do
+      test_resource.stubs(:read_attribute).with(:id).returns(10)
+
+      expect(
+        subject.assign(has_many_objects)
+      ).to eql(has_many_objects)
+
+      expect(
+        subject.internal_object.all? { |o|
+          o.read_attribute(:test_resource_id) == 10
+        }
+      ).to be_true
+    end
+
+
+  end
 
 end

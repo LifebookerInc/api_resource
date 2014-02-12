@@ -52,6 +52,15 @@ module ApiResource
       end
 
       #
+      # Test if thie proxy wraps a collection, the
+      # default is no
+      #
+      # @return [Boolean]
+      def collection?
+        false
+      end
+
+      #
       # Wrapper method that loads the internal object
       # if it hasn't been already
       #

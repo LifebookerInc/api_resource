@@ -21,6 +21,9 @@ end
 class HasManyObject < ApiResource::Base
 end
 
+class HasManyChild < HasManyObject
+end
+
 class BelongsToObject < ApiResource::Base
 end
 
@@ -39,7 +42,9 @@ class PrefixModel < ApiResource::Base
 end
 
 class ScopeResource < ApiResource::Local
+end
 
+class ChildScopeResource < ScopeResource
 end
 
 class ErrorFullMessageResource < ApiResource::Base

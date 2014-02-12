@@ -4,6 +4,49 @@ module ApiResource
 
       class MultiObjectProxy < AssociationProxy
 
+        # All multi object proxies are enumerable
+        include Enumerable
+
+        #
+        # Test if this proxy object wraps a collection
+        #
+        # @return [Boolean]
+        def collection?
+          true
+        end
+
+        #
+        # Sets this association to an array of objects of the proper
+        # type.  Sets the foreign keys on the new objects but does _NOT_
+        # call save on them
+        #
+        # @param  vals [Array<ApiResource::Base>] The new association
+        #
+        # @return [Array<ApiResource::Base>] Returns whatever was passed in as
+        # an array if it wasn't one already
+        def assign(vals)
+          vals = Array.wrap(vals)
+
+          unless vals.all? { |v| v.is_a?(self.builder.association_class) }
+            raise AssociationTypeMismatch.new(
+              "Expected all instances of #{self.builder.association_class}, " +
+              "got instance of other classes."
+            )
+          end
+
+          super(vals)
+          # Set the foreign keys properly
+          @internal_object.each do |obj|
+            obj.send(
+              :write_attribute,
+              self.builder.foreign_key,
+              self.owner.read_attribute(:id)
+            )
+          end
+
+          vals
+        end
+
         private
 
           def construct_finder(condition)

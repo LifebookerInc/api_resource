@@ -24,6 +24,19 @@ module ApiResource
         )
       end
 
+      protected
+
+        #
+        # Builds the foreign key field name for this association
+        #
+        # @param  owner_class_name [String]
+        # @param  assoc_class_name [String]
+        #
+        # @return [Symbol] The name of the foreign key
+        def construct_foreign_key(owner_class_name, assoc_class_name)
+          assoc_class_name.foreign_key.to_sym
+        end
+
     end
 
   end

@@ -12,7 +12,8 @@ describe ApiResource::AssociationBuilder::HasOneBuilder do
   context '#foreign_key' do
 
     it 'has the correct foreign key by default' do
-      expect(subject.foreign_key).to eql(:has_one_object_id)
+      expect(subject.foreign_key).to eql(:test_resource_id)
+      expect(subject.foreign_key_method).to eql(:has_one_object_id)
     end
 
   end

@@ -20,17 +20,6 @@ module ApiResource
       protected
 
         #
-        # Creates a pluralized foreign key
-        #
-        # @param  assoc_name [Symbol] Name of the association
-        # @param  assoc_class_name [String] Class name of associated objects
-        #
-        # @return [Symbol] The foreign key name
-        def construct_foreign_key(assoc_name, assoc_class_name)
-          assoc_class_name.foreign_key.pluralize.to_sym
-        end
-
-        #
         # Builds the name of the foreign key method that will
         # be defined on the owner clas
         #

@@ -295,6 +295,12 @@ module ApiResource
 
     private
 
+      #
+      # Builds and caches an association proxy for this object
+      #
+      # @param  assoc_name [Symbol] The name of the association
+      #
+      # @return [ApiResource::Associations::AssociationProxy]
       def fetch_or_build_association_proxy(assoc_name)
         self.associations[assoc_name] ||= begin
           builder = self.class.lookup_association(assoc_name)

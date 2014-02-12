@@ -10,3 +10,7 @@ branches:
   only:
     - master
     - association-refactor
+
+addons:
+  code_climate:
+    repo_token: ad6ebf3d8d1951c60aabbbb1211c8279ea7bcd2020fbb721577142a49afed6b1

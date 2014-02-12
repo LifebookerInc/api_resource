@@ -78,7 +78,7 @@ module ApiResource
         @association_class_name = (options[:class_name] || name).to_s
         # Use the foreign key if it is provided
         key = self.construct_foreign_key(
-          @association_name, @association_class_name
+          @owner_class.name, @association_class_name
         )
         @foreign_key = (options[:foreign_key] || key).to_sym
         # Set the foreign key method based on the association name
@@ -187,12 +187,12 @@ module ApiResource
         #
         # Builds the foreign key field name for this association
         #
-        # @param  assoc_name [Symbol]
+        # @param  owner_class_name [String]
         # @param  assoc_class_name [String]
         #
         # @return [Symbol] The name of the foreign key
-        def construct_foreign_key(assoc_name, assoc_class_name)
-          assoc_class_name.foreign_key.to_sym
+        def construct_foreign_key(owner_class_name, assoc_class_name)
+          owner_class_name.foreign_key.to_sym
         end
 
         #

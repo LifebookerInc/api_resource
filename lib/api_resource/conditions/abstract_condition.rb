@@ -40,7 +40,7 @@ module ApiResource
 
       # need to figure out what to do with args in the subclass,
       # parent is the set of scopes we have right now
-      def initialize(args, klass)
+      def initialize(klass, args)
         @klass = klass
         @conditions = args.with_indifferent_access
         @klass.load_resource_definition

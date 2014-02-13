@@ -64,7 +64,37 @@ describe ApiResource::Scopes do
 
   end
 
+  context 'Instance methods' do
+
+    context '#scope?' do
+      it 'delegates to the class method' do
+        subject.expects(:scope?)
+          .with(:no_arg)
+          .returns(true)
+
+        expect(
+          subject.new.scope?(:no_arg)
+        ).to be_true
+      end
+    end
+
+    context '#scope_definition' do
+      it 'delegates to the class method' do
+        subject.expects(:scope_definition)
+          .with(:no_arg)
+          .returns(true)
+
+        expect(
+          subject.new.scope_definition(:no_arg)
+        ).to be_true
+      end
+    end
+
+  end
+
   context 'Using Scopes' do
+
+    context 'proper class methods'
 
     context '.add_scopes' do
 

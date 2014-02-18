@@ -6,16 +6,22 @@ module ApiResource
 
     describe PaginationCondition do
 
+      before(:all) do
+        TestResource.class_eval do
+          scope :pc_scope, {}
+        end
+      end
+
       context '.paginate' do
 
         it 'returns an object that knows it is paginated from the base
           class' do
-          paginated = TestResource.paginate(page: 1, per_page: 10).active
+          paginated = TestResource.paginate(page: 1, per_page: 10).pc_scope
           expect(paginated).to be_paginated
         end
 
         it 'returns an object that knows it is paginated from a scope' do
-          paginated = TestResource.active.paginate(
+          paginated = TestResource.pc_scope.paginate(
             page: 1,
             per_page: 10
           )
@@ -27,8 +33,8 @@ module ApiResource
       context '#current_page' do
 
         it 'knows its page number' do
-          paginated = TestResource.paginate(page: 1, per_page: 10).active
-          expect(paginated.current_page).to be 1
+          paginated = TestResource.paginate(page: 2, per_page: 10).pc_scope
+          expect(paginated.current_page).to be 2
         end
 
       end
@@ -60,6 +66,7 @@ module ApiResource
       context '#total_entries' do
 
         it 'passes along the headers for the total number of entries' do
+          pending('Need finders working to finish this spec')
           paginated = TestResource.paginate(
             page: 1,
             per_page: 10
@@ -76,6 +83,8 @@ module ApiResource
             page: 1,
             per_page: 12
           )
+          paginated.expects(:total_entries).returns(106)
+
           expect(paginated.total_pages).to be 9
         end
 

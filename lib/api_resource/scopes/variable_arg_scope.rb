@@ -67,7 +67,7 @@ module ApiResource
           self.name => Hash[final_args]
         }
 
-        return ApiResource::Conditions::ScopeCondition.new(
+        return ApiResource::Conditions::WhereCondition.new(
           klass,
           condition_arg
         )

@@ -2,7 +2,13 @@ module ApiResource
 
 	module Conditions
 
-		class ScopeCondition < AbstractCondition
+    #
+    # Class that holds onto a hash of conditions for passing
+    # into the load of a scope chain
+    #
+    # @author [ejlangev]
+    #
+		class WhereCondition < AbstractCondition
 
       attr_reader :klass
 

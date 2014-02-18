@@ -48,7 +48,7 @@ describe ApiResource::Scopes::OptionalArgScope do
 
     it 'creates a scope condition with the proper args' do
       result = subject.apply(TestResource, 1, 2, 3)
-      expect(result).to be_a(ApiResource::Conditions::ScopeCondition)
+      expect(result).to be_a(ApiResource::Conditions::WhereCondition)
       expect(result.klass).to eql(TestResource)
       expect(result.conditions['optional_scope']['arg1']).to eql(1)
       expect(result.conditions['optional_scope']['arg3']).to eql(3)

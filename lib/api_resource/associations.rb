@@ -54,6 +54,14 @@ module ApiResource
     class AssociationTypeMismatch < ApiResource::Error
     end
 
+    #
+    # Class to raise when trying to eager load an unknown association
+    #
+    # @author [ejlangev]
+    #
+    class UnknownEagerLoadAssociation < ApiResource::Error
+    end
+
     # module methods to include the proper associations in various libraries - this is usually loaded in Railties
     def self.activate_active_record
       ActiveRecord::Base.class_eval do

@@ -8,7 +8,7 @@ module ApiResource
     #
     # @author [ejlangev]
     #
-    class BlankCondition < AbstractCondition
+    class BlankCondition < WhereCondition
 
       def initialize
       end

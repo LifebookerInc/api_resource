@@ -54,7 +54,7 @@ module ApiResource
           self.name => Hash[self.arg_names.zip(args)]
         }
 
-        return ApiResource::Conditions::ScopeCondition.new(
+        return ApiResource::Conditions::WhereCondition.new(
           klass,
           condition_arg
         )

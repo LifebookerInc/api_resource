@@ -2,6 +2,12 @@ module ApiResource
 
   module Conditions
 
+    #
+    # Superclass for all conditions, implements passing most properties
+    # up to the owner if it is set and deals with returning defaults
+    #
+    # @author [ejlangev]
+    #
     class AbstractCondition
 
       # All conditions are collections and are therefore
@@ -54,6 +60,15 @@ module ApiResource
       end
 
       #
+      # Returns the current_page that this condition is on
+      # in the pagination.  The default is 1
+      #
+      # @return [Integer]
+      def current_page
+        self.owner.try(:current_page) || 1
+      end
+
+      #
       # Implements enumerable for conditions
       #
       # @param  &block [Block] The block to pass to each
@@ -102,8 +117,21 @@ module ApiResource
       #
       # @return [Array<Symbol>] List of symbols of associations
       # to include
-      def includes
-        self.owner.try(:includes) || []
+      def included_associations
+        self.owner.try(:included_associations) || []
+      end
+
+      #
+      # Implements the includes method for chaining with
+      # associations and scopes
+      #
+      # @param  associations [Array<Symbol>]
+      #
+      # @return [ApiResource::Conditions::IncludeCondition]
+      def includes(associations)
+        result = self.basis.includes(associations)
+        result.set_owner(self)
+        result
       end
 
       #
@@ -146,6 +174,18 @@ module ApiResource
       end
 
       #
+      # Implements pagination on scopes so it can be chained
+      #
+      # @param  opts = {} [Hash] The arguments to paginate
+      #
+      # @return [ApiResource::Conditions::PaginationCondition]
+      def paginate(opts = {})
+        result = self.basis.paginate(opts)
+        result.set_owner(self)
+        result
+      end
+
+      #
       # Reader for if this condition is paginated
       #
       # @return [Boolean]
@@ -160,6 +200,20 @@ module ApiResource
       # @return [Fixnum]
       def per_page
         self.owner.try(:per_page) || 1
+      end
+
+      #
+      # Removes the data associated with this condition
+      # and marks it as not loaded.  It will be loaded the next time
+      # it is needed.
+      #
+      # @return [Boolean] Always true
+      def reload
+        if instance_variable_defined?(:@internal_object)
+          remove_instance_variable(:@internal_object)
+        end
+        @is_loaded = false
+        true
       end
 
       #
@@ -185,6 +239,15 @@ module ApiResource
       def set_owner(owner)
         @owner = owner
         true
+      end
+
+      #
+      # Total number of records found in the collection
+      # if it is paginated
+      #
+      # @return [Integer]
+      def total_entries
+        self.internal_object.total_entries
       end
 
       #

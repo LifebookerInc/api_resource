@@ -4,6 +4,7 @@ require 'active_support/core_ext'
 require 'api_resource/core_extensions'
 
 require 'active_model'
+require 'celluloid'
 
 require 'log4r'
 require 'log4r/outputter/consoleoutputters'

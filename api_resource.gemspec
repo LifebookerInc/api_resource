@@ -39,6 +39,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'activemodel'
   gem.add_dependency "json"
   gem.add_dependency "log4r"
+  gem.add_dependency "celluloid"
   gem.add_dependency "differ"
   gem.add_dependency "colorize"
 end

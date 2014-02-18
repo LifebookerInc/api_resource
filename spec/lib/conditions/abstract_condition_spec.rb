@@ -1,97 +1,132 @@
 require 'spec_helper'
 
-describe "Conditions" do
+describe ApiResource::Conditions::AbstractCondition do
 
-	before(:each) do
-		TestResource.reload_resource_definition
+	subject {
+		ApiResource::Conditions::AbstractCondition.new(
+			TestResource
+		)
+	}
+
+	context 'Proxying methods' do
+
+		it 'returns defaults if it the owner is not set' do
+			expect(subject.conditions).to eql({})
+			expect(subject).to_not be_paginated
+			expect(subject).to_not be_eager_load
+			expect(subject.per_page).to eql(1)
+		end
+
+		it 'proxies methods to the owner if it is set' do
+			subject.set_owner(mock(
+				conditions: { a: :b},
+				paginated?: true,
+				per_page: 2
+			))
+			expect(subject.conditions).to eql({ a: :b })
+			expect(subject).to be_paginated
+			expect(subject.per_page).to eql(2)
+		end
+
 	end
 
-	it "should chain scopes onto the base class" do
+	context 'Responding to scopes' do
 
-		obj = TestResource.active
-		obj.should be_a ApiResource::Conditions::ScopeCondition
+		before(:all) do
+			TestResource.class_eval do
+				scope :ac_scope1, { arg1: :req, arg2: :req }
+				scope :ac_scope2, { arg3: :req }
+			end
+		end
 
-		obj2 = TestResource.paginate
+		it 'responds to the scope methods of the basis class' do
+			expect(subject).to respond_to(:ac_scope1)
+			expect(subject).to respond_to(:ac_scope2)
+		end
 
-		TestResource.expects(:paginate).returns(obj2)
+		it 'returns a new scope object with the owner set when chaining' do
+			result = subject.ac_scope1(1, 2)
+			expect(result.owner).to eql(subject)
+			expect(result.conditions).to eql(
+				{ 'ac_scope1'=> { 'arg1' => 1, 'arg2' => 2 } }
+			)
+		end
 
-		obj3 = obj.paginate
+		it 'allows chaining with multiple scopes' do
+			result = subject.ac_scope1(1,2).ac_scope2(3)
+			expect(result.owner.owner).to eql(subject)
+			expect(result.conditions).to eql(
+				{
+					'ac_scope1' => { 'arg1' => 1, 'arg2' => 2 },
+					'ac_scope2' => { 'arg3' => 3 }
+				}
+			)
+		end
 
-		obj3.to_query.should eql("active=true&page=1&per_page=10")
-		obj3.should_not be_eager_load
-		obj3.should_not be_blank_conditions
-		# Make sure that it clones
-
-		obj3.object_id.should_not eql(obj.object_id)
-		obj3.object_id.should_not eql(obj2.object_id)
 	end
 
-	it "should properly deal with calling includes" do
-		obj = TestResource.includes(:has_many_objects).active
+	context 'Loading data' do
 
-		obj.should be_eager_load
-		obj.should_not be_blank_conditions
-		obj.association.should be_nil
-		obj.to_query.should eql("active=true")
-		obj.included_objects.should eql([:has_many_objects])
+		it 'loads via a finder object when calling internal_object' do
+			ApiResource::Finders::MultiObjectFinder
+				.any_instance
+				.expects(:internal_object)
+				.returns([1, 2, 3])
+
+			expect(subject.internal_object).to eql([1,2,3])
+		end
+
+		it 'loads via a finder object when calling an unknown method' do
+			ApiResource::Finders::MultiObjectFinder
+				.any_instance
+				.expects(:internal_object)
+				.returns([1, 2, 3])
+
+			expect(subject.push(4)).to eql([1, 2, 3, 4])
+		end
+
+		it 'delegates loading to the basis when calling find' do
+			TestResource.expects(:find_with_condition)
+				.with(subject, 1, 2, 3)
+				.returns([1,2,3])
+
+			expect(subject.find(1,2,3)).to eql([1,2,3])
+		end
+
 	end
 
-	it "should be able to chain includes and scopes" do
-		obj = TestResource.includes(:has_many_objects).active.includes(:belongs_to_object)
+	context 'Decorators' do
 
-		obj.should be_eager_load
-		obj.should_not be_blank_conditions
-		obj.included_objects.should eql([:has_many_objects, :belongs_to_object])
-	end
+		it 'returns a caching decorator object' do
+			result = subject.expires_in(5.minutes)
+			expect(result).to be_a(ApiResource::Decorators::CachingDecorator)
+			expect(result.ttl).to eql(5.minutes)
+		end
 
-	it "should be able to include multiple includes in the same call" do
-		obj = TestResource.includes(:has_many_objects, :belongs_to_object)
+		it 'returns an async decorator and loads in the background' do
+			ApiResource::Finders::MultiObjectFinder
+				.any_instance
+				.expects(:internal_object)
+				.returns([1, 2, 3])
 
-		obj.should be_eager_load
-		obj.should be_blank_conditions
-		obj.included_objects.should eql([:has_many_objects, :belongs_to_object])
-	end
+			result = subject.async do |results|
+				results.map { |i| i + 1 }
+			end
 
-	it "should raise an error if given an include that isn't a valid association" do
-		lambda {
-			TestResource.includes(:fake_assoc)
-		}.should raise_error
-	end
+			expect(result.value).to eql([2, 3, 4])
+		end
 
-	it "should create a resource finder when forced to load, and cache the result" do
-		obj = TestResource.includes(:has_many_objects)
+		it 'can chain async onto caching' do
+			ApiResource::Finders::MultiObjectFinder
+				.any_instance
+				.expects(:internal_object)
+				.returns([1, 2, 3])
 
-		resource_finder_mock = mock(load: [1], first: 1)
+			result = subject.expires_in(5.minutes).async
 
-		ApiResource::Finders::ResourceFinder.expects(:new)
-			.with(TestResource, obj)
-			.returns(resource_finder_mock)
+			expect(result.value).to eql([1,2,3])
+		end
 
-		obj.internal_object.should eql(resource_finder_mock)
-		obj.all.should eql(resource_finder_mock)
-		obj.first.should eql(1)
-	end
-
-	it "should proxy calls to enumerable and array methods to the loaded
-		object" do
-
-		obj = TestResource.includes(:has_many_objects)
-
-		# this just needs to call each
-		resource_finder_mock = mock(load: true, each: true)
-
-		ApiResource::Finders::ResourceFinder.expects(:new)
-			.with(TestResource, obj)
-			.returns(resource_finder_mock)
-
-		obj.collect{|o| o * 2}.should eql([])
-	end
-
-	it "should not typecast nil and false to true when creating condition hashes" do
-		obj = TestResource.boolean(false, nil)
-		hsh = obj.to_hash["boolean"]
-		hsh["a"].should eql(false)
-		hsh.should be_key(:b)
 	end
 
 end

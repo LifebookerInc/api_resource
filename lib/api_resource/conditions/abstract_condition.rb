@@ -4,142 +4,116 @@ module ApiResource
 
     class AbstractCondition
 
+      # All conditions are collections and are therefore
+      # enumerable
       include Enumerable
 
-      # @!attribute [r] association
-      #   @return [Boolean] Are we an association?
-      attr_reader :association
-
-      # @!attribute [r] conditions
-      #   @return [Hash] Hash of conditions
-      attr_reader :conditions
-
-      # @!attribute [r] included_objects
-      #   @return [Array<Symbol>] List of associations to eager load
-      attr_reader :included_objects
+      # @!attribute [r] basis
+      # @return [Object] The object this class is a condition over,
+      # either an association proxy or a class
+      attr_reader :basis
 
       # @!attribute [r] internal_object
-      #   @return [Array<ApiResource::Base>] Underlying objects we found
+      # @return [Array<Object>] [description]
       attr_reader :internal_object
 
-      # @!attribute [r] klass
-      #   @return [Class] Owner class
-      attr_reader :klass
+      # @!attribute [r] owner
+      # @return [ApiResource::Conditions::AbstractCondition]
+      attr_reader :owner
 
-      # @!attribute [r] remote_path
-      #   @return [String] Path to hit when we find stuff
-      attr_reader :remote_path
-
-      # TODO: add the other load forcing methods here for collections
-      delegate :[], :[]=, :<<, :first, :second, :last, :blank?, :nil?,
-        :include?, :push, :pop, :+, :concat, :flatten, :flatten!, :compact,
-        :compact!, :empty?, :fetch, :map, :reject, :reject!, :reverse,
-        :select, :select!, :size, :sort, :sort!, :uniq, :uniq!, :to_a,
-        :sample, :slice, :slice!, :count, :present?, :delete_if,
-        :to => :internal_object
-
-      # need to figure out what to do with args in the subclass,
-      # parent is the set of scopes we have right now
-      def initialize(klass, args)
-        @klass = klass
-        @conditions = args.with_indifferent_access
-        @klass.load_resource_definition
-      end
-
-      def all(*args)
-        if args.blank?
-          self.internal_object
-        else
-          self.find(*([:all] + args))
-        end
+      #
+      # @param  basis [Object] Object to base this condition on,
+      # tells what class to load and where to find it
+      def initialize(basis)
+        @basis = basis
+        @is_loaded = false
       end
 
       #
-      # Is this a find without any conditions
+      # Causes the condition to load but wrapped in an AsyncDecorator
+      # and therefore in the background
       #
-      # @return [Boolean]
-      def blank_conditions?
-        self.conditions.blank?
+      # @param  &block [Block] Block that takes the results of loading
+      # the condition
+      #
+      # @return [ApiResource::Decorators::AsyncDecorator]
+      def async(&block)
+        ApiResource::Decorators::AsyncDecorator.new(
+          construct_finder,
+          &block
+        )
       end
 
       #
-      # Accessor for the current page if we
-      # are paginated.  Returns 1 if we are not
-      # paginated or have an invalid page
+      # Returns the hash of parameters that should be included when loading
+      # this condition
       #
-      # @return [Fixnum] [description]
-      def current_page
-        return 1 unless self.paginated?
-        return 1 if @conditions[:page].to_i < 1
-        return @conditions[:page].to_i
+      # @return [Hash]
+      def conditions
+        self.owner.try(:conditions) || {}
       end
 
+      #
+      # Implements enumerable for conditions
+      #
+      # @param  &block [Block] The block to pass to each
+      #
+      # @return [Iterator]
       def each(&block)
         self.internal_object.each(&block)
       end
 
       #
-      # Are we set up to eager load associations?
+      # Do we need to eager load associations?
       #
       # @return [Boolean]
       def eager_load?
-        self.included_objects.present?
+        self.owner.try(:eager_load?) || false
       end
 
+      #
+      # Cache the result of loading this association
+      #
+      # @param  time [Time] How long to cache for
+      #
+      # @return [ApiResource::Decorators::CachingDecorator]
       def expires_in(time)
         ApiResource::Decorators::CachingDecorator.new(self, time)
       end
 
-      # implement find that accepts an optional
-      # condition object
+      #
+      # Takes the same arguments as the normal class method
+      # finds but applies them to a condition.  Returns the actual
+      # objects.  Always blocks.
+      #
+      # @param  *args [Array<Object>] The extra arguments
+      #
+      # @return [Array<Object>] The resulting records
       def find(*args)
-        self.klass.find(*(args + [self]))
+        self.basis.find_with_condition(
+          self,
+          *args
+        )
       end
 
-      def included_objects
-        Array.wrap(@included_objects)
+      #
+      # Returns the list of objects to include when this condition
+      # gets loaded
+      #
+      # @return [Array<Symbol>] List of symbols of associations
+      # to include
+      def includes
+        self.owner.try(:includes) || []
       end
 
+      #
+      # Wrapper for the collection that will be
+      # returned by this connection
+      #
+      # @return [Array<Object>]
       def internal_object
-        return @internal_object if @loaded
-        @internal_object = self.instantiate_finder
-        @internal_object.load
-        @loaded = true
+        load unless @is_loaded
         @internal_object
-      end
-
-      # TODO: review the hierarchy that makes this necessary
-      # consider changing it to alias method
-      def load
-        self.internal_object
-      end
-
-      def loaded?
-        @loaded == true
-      end
-
-      # TODO: Remove the bang, this doesn't modify anything
-      def merge!(cond)
-
-        # merge included objects
-        @included_objects = self.included_objects | cond.included_objects
-
-        # handle pagination
-        if cond.paginated?
-          @paginated = true
-        end
-
-        # merge conditions
-        @conditions = @conditions.merge(cond.to_hash)
-
-        # handle associations
-        if cond.association
-          @association =  true
-        end
-        # handle remote path copying
-        @remote_path ||= cond.remote_path
-
-        return self
       end
 
       #
@@ -148,95 +122,108 @@ module ApiResource
       #
       # @return [Fixnum]
       def offset
-        return 0 unless self.paginated?
-        prev_page = self.current_page.to_i - 1
-        prev_page * self.per_page
+        self.owner.try(:offset) || 0
       end
 
       #
-      # Reader for whether or not we are paginated
+      # Implementation of method missing to deal
+      # with scopes
+      # @param  sym [Symbol] The name of the method
+      # @param  *args [Array<Object>] The arguments
+      # @param  &block [Block] Any block provided
+      #
+      # @return [Object]
+      def method_missing(sym, *args, &block)
+        # If this method call is a scope, proxy to the basis
+        # to get a condition object and make this its owner
+        if self.basis.scope?(sym)
+          condition = self.basis.__send__(sym, *args, &block)
+          condition.set_owner(self)
+          return condition
+        end
+
+        self.internal_object.__send__(sym, *args, &block)
+      end
+
+      #
+      # Reader for if this condition is paginated
       #
       # @return [Boolean]
       def paginated?
-        @paginated
+        self.owner.try(:paginated?) || false
       end
 
       #
-      # Number of records per page if paginated
-      # Returns 1 if number is out of range or if pagination
-      # is not enabled
+      # Number of records per page if this is paginated
+      # Returns 1 if not paginated
       #
       # @return [Fixnum]
       def per_page
-        return 1 unless self.paginated?
-        return 1 if @conditions["per_page"].to_i < 1
-        return @conditions["per_page"].to_i
-      end
-
-      def reload
-        if instance_variable_defined?(:@internal_object)
-          remove_instance_variable(:@internal_object)
-        end
-        @loaded = false
-      end
-
-      def to_query
-        CGI.unescape(to_query_safe_hash(self.to_hash).to_query)
-      end
-
-      def to_hash
-        self.conditions.to_hash
+        self.owner.try(:per_page) || 1
       end
 
       #
-      # Total number of records found in the collection
-      # if it is paginated
+      # Implementation of respond_to? that makes it look correct
+      # for dealing with scopes
       #
-      # @return [Fixnum]
-      def total_entries
-        self.internal_object.total_entries
+      # @param  symbol [Symbol] The name of the method
+      # @param  include_all = false [Boolean] Whether to search private
+      # and protected methods
+      #
+      # @return [Boolean]
+      def respond_to?(symbol, include_all = false)
+        self.basis.scope?(symbol.to_sym) || super
       end
 
       #
-      # The total number of pages in our collection
-      # or 1 if it is not paginated
+      # Sets the owner of this condition which helps form
+      # a chain of scopes
+      #
+      # @param  owner [ApiResource::Conditions::AbstractCondition]
+      #
+      # @return [Boolean] Always true
+      def set_owner(owner)
+        @owner = owner
+        true
+      end
+
+      #
+      # The total number of pages in our collection or
+      # 1 if it is not paginated
       #
       # @return [Fixnum]
       def total_pages
-        return 1 unless self.paginated?
-        return (self.total_entries / self.per_page.to_f).ceil
+        self.owner.try(:total_pages) || 1
       end
 
-      protected
+      private
 
-      #
-      # Proxy all calls to the base finder class
-      # @param  sym [Symbol] Method name
-      # @param  *args [Array<Mixed>] Args
-      # @param  &block [Proc] Block
-      #
-      # @return [Mixed]
-      def method_missing(sym, *args, &block)
-        result = @klass.send(sym, *args, &block)
-
-        if result.is_a?(ApiResource::Conditions::AbstractCondition)
-          return self.dup.merge!(result)
-        else
-          return result
+        #
+        # Creates a finder object and uses it to load
+        # the proper data.  Sets @internal_object and sets
+        # @is_loaded to true
+        #
+        # @return [Array<Object>]
+        def load
+          # Actually deals with getting the proper finder object
+          # and loading records
+          finder = construct_finder
+          # Now all we need to do is set internal_object
+          @internal_object = finder.internal_object
+          @is_loaded = true
+          @internal_object
         end
-      end
 
-      def instantiate_finder
-        ApiResource::Finders::ResourceFinder.new(self.klass, self)
-      end
-
-      def to_query_safe_hash(hash)
-        hash.each_pair do |k,v|
-          hash[k] = to_query_safe_hash(v) if v.is_a?(Hash)
-          hash[k] = true if v == {}
+        #
+        # Constructs the proper finder object
+        #
+        # @return [ApiResource::Finders::AbstractFinder] [description]
+        def construct_finder
+          ApiResource::Finders::MultiObjectFinder.new(
+            self.basis,
+            self
+          )
         end
-        return hash
-      end
 
     end
 

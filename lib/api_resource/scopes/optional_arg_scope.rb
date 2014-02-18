@@ -43,11 +43,12 @@ module ApiResource
       end
 
       #
-      # Applies
-      # @param  klass [type] [description]
-      # @param  *args [type] [description]
+      # Applies the scope to the given parameters
       #
-      # @return [type] [description]
+      # @param  klass [Class] The basis for the conditions
+      # @param  *args [Array<Object>] The arguments to the scope
+      #
+      # @return [ApiResource::Conditions::ScopeCondition]
       def apply(klass, *args)
         # Make sure we have a valid number of arguments
         if args.length < self.required_arg_names.length ||

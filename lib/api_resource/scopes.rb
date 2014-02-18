@@ -131,7 +131,13 @@ module ApiResource
         #
         # @return [Boolean] Always true
         def define_scope_method(name, definition)
-
+          # This creates the methods that can be
+          # called to access the scopes and produce
+          # condition objects
+          define_singleton_method name do |*args|
+            self.lookup_scope(name)
+                .apply(self, *args)
+          end
         end
 
         #

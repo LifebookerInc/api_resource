@@ -16,13 +16,13 @@ module ApiResource
     autoload :MultiObjectProxy
 
 
-    autoload :BelongsToRemoteObjectProxy
-    autoload :HasManyRemoteObjectProxy
-    autoload :HasManyThroughRemoteObjectProxy
-    autoload :HasOneRemoteObjectProxy
-    autoload :MultiObjectProxy
-    autoload :RelatedObjectHash
-    autoload :SingleObjectProxy
+    # autoload :BelongsToRemoteObjectProxy
+    # autoload :HasManyRemoteObjectProxy
+    # autoload :HasManyThroughRemoteObjectProxy
+    # autoload :HasOneRemoteObjectProxy
+    # autoload :MultiObjectProxy
+    # autoload :RelatedObjectHash
+    # autoload :SingleObjectProxy
 
     included do
 

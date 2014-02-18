@@ -11,7 +11,7 @@ describe ApiResource::Scopes::VariableArgScope do
     it 'sets the proper attributes' do
       result = subject.new(
         :var_arg_scope,
-        { arg1: :req, arg2: :req, arg3: :rest}
+        { arg1: :req, arg2: :req, arg3: :rest }
       )
       expect(result.name).to eql(:var_arg_scope)
       expect(result.arg_names).to eql([:arg1, :arg2, :arg3])

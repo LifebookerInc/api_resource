@@ -54,14 +54,14 @@ module ApiResource
           )
         end
         # First deal with the required arguments
-        required_args = self.required_arg_names.zip(args).take(
+        final_args = self.required_arg_names.zip(args).take(
           self.required_arg_names.length
         )
         # Then push everything else into the variable arg
-        final_args = required_args + [[
+        final_args.push([
           self.rest_arg_name,
           args.drop(self.required_arg_names.length)
-        ]]
+        ])
         # Then build the condition object
         condition_arg = {
           self.name => Hash[final_args]

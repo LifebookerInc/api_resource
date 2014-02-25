@@ -2,23 +2,30 @@
 
 [![Build Status](https://travis-ci.org/LifebookerInc/api_resource.png)](https://travis-ci.org/LifebookerInc/api_resource)
 
-## Installation
+ApiResource is an ActiveModel-compatible library for retrieving and
+persisting data via APIs
 
-Add this line to your application's Gemfile:
+## Getting Started
 
-    gem 'api_resource'
+1. Add this line to your application's Gemfile:
 
-And then execute:
+        gem 'api_resource'
 
-    $ bundle
+1. And then execute:
 
-Or install it yourself as:
+        $ bundle
 
-    $ gem install api_resource
+1. Follow our {file:docs/GettingStarted.md Getting Started Guide} to learn more about how to use ApiResource
 
-## Usage
+## Read more about some of the core concepts in ApiResource
 
-TODO: Write usage instructions here
+### {file:docs/ResourceDefinition.md The Resource Definition}
+### {file:docs/Attributes.md Attributes}
+### {file:docs/Relationships.md Relationships}
+### {file:docs/Retrieval.md Retrieving Records}
+### {file:docs/Serialization.md Serialization}
+### {file:docs/Caching.md Caching}
+
 
 ## Contributing
 

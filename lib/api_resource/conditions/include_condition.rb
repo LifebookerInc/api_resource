@@ -4,7 +4,13 @@ module ApiResource
 
 		class IncludeCondition < AbstractCondition
 
-			def initialize(klass, incs)
+      #
+      # Constructor
+      #
+      # @param  klass [Class] Finder
+      # @param  incs [Array<Symbol>, Symbol] Associations to include
+      #
+      def initialize(klass, incs)
 				super({}, klass)
 				@included_objects = Array.wrap(incs)
 			end

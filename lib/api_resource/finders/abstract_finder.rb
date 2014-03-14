@@ -152,7 +152,11 @@ module ApiResource
       end
 
       def apply_includes(objects, includes)
-        Array.wrap(objects).each do |obj|
+        if !objects.is_a?(Enumerable)
+          objects = Array.wrap(objects)
+        end
+
+        objects.each do |obj|
           includes.each_pair do |assoc, vals|
             ids_to_keep = Array.wrap(obj.send(obj.class.association_foreign_key_field(assoc)))
             to_keep = vals.select{|elm| ids_to_keep.include?(elm.id)}

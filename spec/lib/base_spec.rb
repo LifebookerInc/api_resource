@@ -209,7 +209,7 @@ describe "Base" do
 
   end
 
-  context "Saving with file upload", :focus do
+  context "Saving with file upload" do
 
     before(:all) do
       TestResource.reload_resource_definition

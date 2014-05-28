@@ -542,9 +542,21 @@ module ApiResource
 
     def method_missing(sym, *args, &block)
       sym = sym.to_sym
-      if @attributes.keys.symbolize_array.include?(sym)
+
+      # Maybe the resource definition sucks...
+      if self.class.resource_definition_is_invalid?
+        self.class.reload_resource_definition
+      end
+
+      # If we don't respond by now...
+      if self.respond_to?(sym)
+        return self.send(sym, *args, &block)
+      elsif @attributes.keys.symbolize_array.include?(sym)
+        # Try returning the attributes from the attributes hash
         return @attributes[sym]
       end
+
+      # Fall back to class method_missing
       super
     end
 

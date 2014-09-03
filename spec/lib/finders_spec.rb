@@ -28,12 +28,12 @@ describe ApiResource::Finders do
     TestResource.active.all(:passive => true)
   end
 
-  it "should be able to find a single object after a scope" do
+  it "should be able to find a single object as an enumerable after a scope" do
     TestResource.connection.expects(:get)
       .with("/test_resources.json?birthday%5Bdate%5D=5&find%5Bids%5D=1").returns([{"id" => 10}])
 
     val = TestResource.birthday(5).find(1)
-    val.should be_a(TestResource)
+    val.first.should be_a(TestResource)
   end
 
   it "should be able to find multiple objects after a scope" do

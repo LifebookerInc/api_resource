@@ -110,7 +110,7 @@ module ApiResource
       def arg_ary
         if @scope.blank?
           return :none
-        elsif Array.wrap(@scope).size == 1
+        elsif !@scope.is_a?(Array)
           return :single
         else
           return :multiple

@@ -34,11 +34,15 @@ module ApiResource
 
           self.apply_includes(@internal_object, included_objects)
 
-          # looks hacky, but we want to return only a single
-          # object in case of a find call.
-          if @internal_object.count == 1 && self.build_load_path =~ /(&|\?)find/
-            @internal_object = @internal_object.first
-          end
+
+          # Removed to mirror ActiveRecord
+          # e.g. LifebookerClient::Provider.find([1])
+          #
+          # # looks hacky, but we want to return only a single
+          # # object in case of a find call.
+          # if @internal_object.count == 1 && self.build_load_path =~ /(&|\?)find/
+          #   @internal_object = @internal_object.first
+          # end
 
           return @internal_object
         rescue ApiResource::ResourceNotFound

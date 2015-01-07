@@ -21,7 +21,7 @@ module ApiResource
         time_info = Date._parse(value)
         time_info[:micro] = ((time_info[:sec_fraction].to_f % 1) * 1_000_000).to_i
 
-        if time_info[:zone].present?
+        if time_info[:zone].present? && time_info[:zone] =~ /^(\+|\-)[0-9]{1,2}:[0-9]{2}$/
           new_time(true, *time_info.values_at(:year, :mon, :mday, :hour, :min, :sec, :zone))
         else
           new_time(false, *time_info.values_at(:year, :mon, :mday, :hour, :min, :sec, :micro))
@@ -38,6 +38,7 @@ module ApiResource
       def self.new_time(use_zone, *args)
         year = args.first
         return nil if year.nil? || year == 0
+
         if use_zone
           Time.new(*args).utc rescue nil
         else

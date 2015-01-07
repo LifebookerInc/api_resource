@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.21)
+    api_resource (0.6.22)
       activemodel
       colorize
       differ
@@ -40,7 +40,7 @@ GEM
     activesupport (3.2.10)
       i18n (~> 0.6)
       multi_json (~> 1.0)
-    arel (3.0.2)
+    arel (3.0.3)
     builder (3.0.4)
     byebug (2.3.0)
       columnize (~> 0.3.6)
@@ -84,7 +84,7 @@ GEM
       colorize
       i18n
     hike (1.2.3)
-    httpclient (2.3.4.1)
+    httpclient (2.4.0)
     i18n (0.6.1)
     journey (1.0.4)
     json (1.8.1)
@@ -97,11 +97,11 @@ GEM
       treetop (~> 1.4.8)
     metaclass (0.0.1)
     method_source (0.8.1)
-    mime-types (1.25)
+    mime-types (1.25.1)
     mocha (0.12.7)
       metaclass (~> 0.0.1)
     multi_json (1.5.0)
-    polyglot (0.3.3)
+    polyglot (0.3.5)
     pry (0.9.10)
       coderay (~> 1.0.5)
       method_source (~> 0.8)
@@ -109,7 +109,7 @@ GEM
     rack (1.4.5)
     rack-cache (1.2)
       rack (>= 0.4)
-    rack-ssl (1.3.3)
+    rack-ssl (1.3.4)
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
@@ -159,7 +159,7 @@ GEM
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
-    tzinfo (0.3.38)
+    tzinfo (0.3.41)
     yarjuf (1.0.5)
       builder
       rspec (>= 2.0)

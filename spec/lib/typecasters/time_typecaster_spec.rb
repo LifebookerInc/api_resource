@@ -29,6 +29,12 @@ describe ApiResource::Typecast::TimeTypecaster do
       val.day.should eql(28)
     end
 
+    it "should parse a date not in ISO format with a time zone" do
+      val = klass.from_api("2012-12-21T19:29:20-04:00")
+      val.hour.should eql(23)
+      val.zone.to_s.should eql("UTC")
+    end
+
     it "should parse a date not in ISO format" do
       val = klass.from_api("2012/08/09")
       val.year.should eql(2012)

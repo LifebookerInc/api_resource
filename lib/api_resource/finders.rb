@@ -36,14 +36,13 @@ module ApiResource
         expiry = @expiry
         ApiResource.with_ttl(expiry.to_f) do
           if numeric_find
-            if single_find && (@conditions.blank_conditions? || nested_find_only?)
+            if (single_find || empty_find) && (@conditions.blank_conditions? || nested_find_only?)
               # If we have no conditions or they are only prefixes or
               # includes, and only one argument (not a word) then we
               # only have a single item to find.
               # e.g. Class.includes(:association).find(1)
               #      Class.find(1)
               final_cond = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
-
               ApiResource::Finders::SingleFinder.new(self, final_cond).load
             else
               # e.g. Class.scope(1).find(1)
@@ -128,6 +127,10 @@ module ApiResource
           else
             :number
         end
+      end
+
+      def empty_find
+        arg_ary == :none
       end
 
       def numeric_find

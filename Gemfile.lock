@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    api_resource (0.6.23)
+    api_resource (0.6.24)
       activemodel
       colorize
       differ
@@ -84,10 +84,10 @@ GEM
       colorize
       i18n
     hike (1.2.3)
-    httpclient (2.4.0)
+    httpclient (2.6.0.1)
     i18n (0.6.1)
     journey (1.0.4)
-    json (1.8.1)
+    json (1.8.2)
     listen (0.7.1)
     log4r (1.1.10)
     lumberjack (1.0.2)
@@ -111,7 +111,7 @@ GEM
       rack (>= 0.4)
     rack-ssl (1.3.4)
       rack
-    rack-test (0.6.2)
+    rack-test (0.6.3)
       rack (>= 1.0)
     rails (3.2.10)
       actionmailer (= 3.2.10)
@@ -149,7 +149,7 @@ GEM
     simplecov-html (0.7.1)
     slop (3.3.3)
     spork (0.9.2)
-    sprockets (2.2.2)
+    sprockets (2.2.3)
       hike (~> 1.2)
       multi_json (~> 1.0)
       rack (~> 1.0)
@@ -159,7 +159,7 @@ GEM
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
-    tzinfo (0.3.41)
+    tzinfo (0.3.43)
     yarjuf (1.0.5)
       builder
       rspec (>= 2.0)

@@ -27,6 +27,7 @@ module ApiResource
       # => 6) Klass.includes(:assoc).find(:all, a => b)
       def find(*arguments)
         # make sure we have class data before loading
+        lb_logger.info{ "Loading resource definition. Arguments: #{arguments.inspect}" }
         self.load_resource_definition
 
         initialize_arguments!(arguments)
@@ -35,6 +36,7 @@ module ApiResource
         # this is a little bit of a hack because options can sometimes be a Condition
         expiry = @expiry
         ApiResource.with_ttl(expiry.to_f) do
+          lb_logger.info{ "ApiResource numeric find?: #{numeric_find}" }
           if numeric_find
             if (single_find || empty_find) && (@conditions.blank_conditions? || nested_find_only?)
               # If we have no conditions or they are only prefixes or
@@ -42,6 +44,7 @@ module ApiResource
               # only have a single item to find.
               # e.g. Class.includes(:association).find(1)
               #      Class.find(1)
+              lb_logger.info{ "Single or empty find: #{@scope.inspect}" }
               final_cond = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
               ApiResource::Finders::SingleFinder.new(self, final_cond).load
             else
@@ -49,6 +52,7 @@ module ApiResource
               #      Class.includes(:association).find(1,2)
               #      Class.find(1,2)
               #      Class.active.find(1)
+              lb_logger.info{ "Multiple find: #{@scope.inspect}" }
               fnd = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => @scope}}, self))
               fnd.send(:all)
             end

@@ -30,30 +30,27 @@ module ApiResource
         lb_logger.info{ "Loading resource definition. Arguments: #{arguments.inspect}" }
         self.load_resource_definition
 
-        initialize_arguments!(arguments)
+        final_conditions = initialize_arguments!(arguments)
 
         # TODO: Make this into a class attribute properly (if it isn't already)
         # this is a little bit of a hack because options can sometimes be a Condition
         expiry = @expiry
         ApiResource.with_ttl(expiry.to_f) do
-          lb_logger.info{ "ApiResource numeric find?: #{numeric_find}" }
           if numeric_find
-            if (single_find || empty_find) && (@conditions.blank_conditions? || nested_find_only?)
+            if (single_find || empty_find) && (final_conditions.blank_conditions? || nested_find_only?(final_conditions))
               # If we have no conditions or they are only prefixes or
               # includes, and only one argument (not a word) then we
               # only have a single item to find.
               # e.g. Class.includes(:association).find(1)
               #      Class.find(1)
-              lb_logger.info{ "Single or empty find: #{@scope.inspect}" }
-              final_cond = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
+              final_cond = final_conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:id => @scope}, self))
               ApiResource::Finders::SingleFinder.new(self, final_cond).load
             else
               # e.g. Class.scope(1).find(1)
               #      Class.includes(:association).find(1,2)
               #      Class.find(1,2)
               #      Class.active.find(1)
-              lb_logger.info{ "Multiple find: #{@scope.inspect}" }
-              fnd = @conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => @scope}}, self))
+              fnd = final_conditions.merge!(ApiResource::Conditions::ScopeCondition.new({:find => {:ids => @scope}}, self))
               fnd.send(:all)
             end
           else
@@ -61,7 +58,7 @@ module ApiResource
             #      Class.first
             new_condition = @scope == :all ? {} : {@scope => true}
 
-            final_cond = @conditions.merge!ApiResource::Conditions::ScopeCondition.new(new_condition, self)
+            final_cond = final_conditions.merge!ApiResource::Conditions::ScopeCondition.new(new_condition, self)
 
             fnd = ApiResource::Finders::ResourceFinder.new(self, final_cond)
             fnd.send(@scope)
@@ -112,10 +109,13 @@ module ApiResource
 
       def arg_ary
         if @scope.blank?
+          lb_logger{ "@scope.blank?: true"}
           return :none
         elsif !@scope.is_a?(Array)
+          lb_logger{ "!@scope.is_a?(Array): true"}
           return :single
         else
+          lb_logger{ "multiple: true"}
           return :multiple
         end
       end
@@ -142,6 +142,7 @@ module ApiResource
       end
 
       def single_find
+        lb_logger{ "arg_ary: #{arg_ary}"}
         return arg_ary == :single
       end
 
@@ -164,7 +165,7 @@ module ApiResource
 
         @expiry   = (options.is_a?(Hash) ? options.delete(:expires_in) : nil) || ApiResource::Base.ttl || 0
 
-        combine_conditions(options, cond)
+        final_conditions = combine_conditions(options, cond)
 
         # Remaining args are the scope.
         @scope    = args
@@ -173,7 +174,7 @@ module ApiResource
           @scope = @scope.first
         end
 
-        true
+        final_conditions
       end
 
       def combine_conditions(options, condition)
@@ -184,6 +185,7 @@ module ApiResource
         end
 
         final_cond = ApiResource::Conditions::ScopeCondition.new({}, self)
+
         # Combine all combinations of conditions and options
         if condition
           if options
@@ -195,15 +197,15 @@ module ApiResource
           final_cond = options
         end
 
-        @conditions = final_cond
+        final_cond
       end
 
-      def nested_find_only?
-        if @conditions.blank_conditions?
+      def nested_find_only?(conditions)
+        if conditions.blank_conditions?
           return false
         else
-          return @conditions.conditions.include?(:foreign_key_id) &&
-            @conditions.conditions.size == 1
+          return conditions.conditions.include?(:foreign_key_id) &&
+            conditions.conditions.size == 1
         end
       end
 
